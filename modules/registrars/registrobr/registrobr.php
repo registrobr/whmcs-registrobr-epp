@@ -19,7 +19,7 @@
 # This module is a fork from whmcs-coza-epp 
 
 # Official Website for whmcs-registrobr-epp
-http://github.com/registrobr/whmcs-registrobr-epp
+# http://github.com/registrobr/whmcs-registrobr-epp
 
 # Official Website for whmcs-coza-epp
 # http://devlabs.linuxassist.net/projects/whmcs-coza-epp
@@ -839,42 +839,53 @@ function _registrobr_Client() {
 
 
 	if (!isset($params['TestMode']) && !isset($params['Certificate'])) {
-		$values["error"] = "Please specifity path to certificate file"  ;
-		return $values ;
+		$errormsg =  "Please specifity path to certificate file"  ;
+		logModuleCall ("registrobr","config options err",$errormsg);
+		return $errormsg ;
 		}
 
 	if (!isset($params['TestMode']) && !file_exists($params['Certificate'])) {
-		$values["error"] = "Invalid path to certificate file"  ;
-		return $values ;
+		$errormsg =  "Invalid certificate file path"  ;
+		logModuleCall ("registrobr","config options err",$params,$errormsg);
+		return $errormsg ;
 		}
 	if (!isset($params['TestMode']) && !isset($params['Passphrase'])) {
-		$values["error"] = "Please specifity certificate passphrase"  ;
-		return $values ;
+		$errormsg =   "Please specifity certificate passphrase"  ;
+		logModuleCall ("registrobr","config options err",$params,errormsg);
+		return $errormsg ;
 		}
  
-	# Create SSL context
-	$context = stream_context_create();
 
 	# Use OT&E if test mode is set
  	if (!isset($params['TestMode'])) {
 	          $Server = 'epp.registro.br' ;
-   		  stream_context_set_option($context, 'ssl', 'passphrase', $params['Passphrase']);
-		  stream_context_set_option($context, 'ssl', 'local_cert', $params['Certificate']);
+		  $Options = array (
+			'ssl' => array (
+				'passphrase' => $params['Passphrase'],
+				'local_cert' => $params['Certificate']));
+
 		} else {
 		$Server = 'beta.registro.br' ;
-		stream_context_set_option($context, 'ssl', 'local_cert', '/var/www/whmcs/modules/registrar/registrobr/test-client.pem');
-                  }
-  
+		  $Options = array (
+			'ssl' => array (
+				'local_cert' =>  dirname(__FILE__) . '/test-client.pem' ));
 
-	logModuleCall("registrobr","eppsession",$params,$context);
-	
+                  }
+
+	# Create SSL context
+	$context = stream_context_create ($Options) ;
+
+  
 
 	# Create EPP client
 	$client = new Net_EPP_Client();
 	# Connect
-	$res = $client->connect($Server, 700, 30, 1, $context);
+	$Port = 700;
+	$use_ssl = true;
+	$res = $client->connect($Server, $Port, 3 , $use_ssl, $context);
 	# Check for error
 	if (PEAR::isError($res)) {
+		logModuleCall("registrobr","epp connect error",$Server,$res);
 		return $res;
 	}
 
