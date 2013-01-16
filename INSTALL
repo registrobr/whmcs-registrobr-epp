@@ -1,0 +1,11 @@
+- Copy the modules tree from the distribution files to the WHMCS folder. 
+- Access WHMCS admin area, Setup, Domain Registrars; activate and configure "Registro.br" module,
+either in TestMode (OT&T environment) or production mode.
+
+Please see https://github.com/registrobr/whmcs-registrobr-epp/ for further information.
+Portuguese language support from the community might be obtained at one of these forums:
+- https://eng.registro.br/mailman/listinfo/eppnicbr
+- http://www.webhostingtalk.com.br/
+- http://portaldohost.com.br/forum/
+
+

@@ -46,11 +46,12 @@ http://github.com/registrobr/whmcs-registrobr-epp
 # Configuration array
 function registrobr_getConfigArray() {
 	$configarray = array(
-		"Username" => array( "Type" => "text", "Size" => "20", "Description" => "Enter your username here" ),
-		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "Enter your password here" ),
+		"Username" => array( "Type" => "text", "Size" => "20", "Description" => "Provider ID(numerical)" ),
+		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
 		"TestMode" => array( "Type" => "yesno" ),
 		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
-		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Enter the passphrase to the certificate file here" )
+		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file here" ),
+		"FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
 	);
 	return $configarray;
 }
@@ -836,30 +837,42 @@ function _registrobr_Client() {
 	# Grab module parameters
 	$params = getregistrarconfigoptions('registrobr');
 
-	# Hard-coded values for .br
-	$Port = 700;
-	$use_ssl = true;
 
+	if (!isset($params['TestMode']) && !isset($params['Certificate'])) {
+		$values["error"] = "Please specifity path to certificate file"  ;
+		return $values ;
+		}
+
+	if (!isset($params['TestMode']) && !file_exists($params['Certificate'])) {
+		$values["error"] = "Invalid path to certificate file"  ;
+		return $values ;
+		}
+	if (!isset($params['TestMode']) && !isset($params['Passphrase'])) {
+		$values["error"] = "Please specifity certificate passphrase"  ;
+		return $values ;
+		}
+ 
 	# Create SSL context
 	$context = stream_context_create();
 
-	# Use OT&E if certificate is not set or test mode is set
- 	if (!$isset($params['Certificate']) && !file_exists($params['Certificate']) && $params['TestMode']='Yes') {
-		$Server = 'beta.registro.br' ;
-		stream_context_set_option($context, 'ssl', 'local_cert', 'test-certificates/client.pem');
-		} else {
+	# Use OT&E if test mode is set
+ 	if (!isset($params['TestMode'])) {
 	          $Server = 'epp.registro.br' ;
    		  stream_context_set_option($context, 'ssl', 'passphrase', $params['Passphrase']);
 		  stream_context_set_option($context, 'ssl', 'local_cert', $params['Certificate']);
+		} else {
+		$Server = 'beta.registro.br' ;
+		stream_context_set_option($context, 'ssl', 'local_cert', '/var/www/whmcs/modules/registrar/registrobr/test-client.pem');
                   }
   
 
+	logModuleCall("registrobr","eppsession",$params,$context);
 	
 
 	# Create EPP client
 	$client = new Net_EPP_Client();
 	# Connect
-	$res = $client->connect($Server, $Port, 30, $use_ssl, $context);
+	$res = $client->connect($Server, 700, 30, 1, $context);
 	# Check for error
 	if (PEAR::isError($res)) {
 		return $res;
