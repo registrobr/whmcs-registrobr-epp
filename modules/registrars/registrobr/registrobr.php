@@ -46,11 +46,13 @@
 # Configuration array
 function registrobr_getConfigArray() {
 	$configarray = array(
-		"Username" => array( "Type" => "text", "Size" => "20", "Description" => "Provider ID(numerical)" ),
+		"Username" => array( "Type" => "text", "Size" => "4", "Description" => "Provider ID(numerical)" ),
 		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
 		"TestMode" => array( "Type" => "yesno" ),
 		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
-		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file here" ),
+		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
+		"CPF" => array( "Type" => "text", "Size" => "20", "Description" => "Custom field for Tax Payer ID  (non-corporations)" ),
+		"CNPJ" => array( "Type" => "text", "Size" => "20", "Description" => "Custom field for Tax Payer ID  (corporations) (can be same as above and won't be used if CPF field exists for that customer)" ),
 		"FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
 	);
 	return $configarray;
