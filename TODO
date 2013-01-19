@@ -1,7 +1,19 @@
-* Syncing with upstream modifications from EPP-COZA module
+* Add upstream modifications from EPP-COZA module
 
-* Release of Registro.br renewal sync script
+* Release of Registro.br renewal sync functions (will only support ver 5.1+)
 
 * Release of EPP polling script
+
+* Figure out how to keep created domain at pending state until sync or poll
+
+* Automated patching of whoisservers.php or product configurations
+
+* Option to automate AGP if invoice does not clear out 
+
+* More documentation on parameters and usage
+
+* Create widget, possibly from EPP Reports files (production only)
+
+ 
 
 

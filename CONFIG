@@ -1,0 +1,19 @@
+- Access WHMCS admin area, Setup, Domain Registrars; activate and configure "Registro.br" module,
+either in TestMode (OT&E environment - beta.registro.br) or production mode.
+- Numeric EPP username and password must be configured 
+- Certificate and passphrase field are only used for production
+- CPF is the customfield where customers CPF or CPF and CNPJ are stored. It's usually "customfields1" if CPF is the first custom field defined. 
+CPF field is required.
+- CNPJ is an optional customfield if it's not the same as the CPF field. 
+- TechC is an optional field; if present, all domains are registered with this technical contact.
+- BillC is an optional field; if present, all domains are registered with this billing contact.
+
+
+
+Please see https://github.com/registrobr/whmcs-registrobr-epp/ for further information.
+Portuguese language support from the community might be obtained at one of these forums:
+- https://eng.registro.br/mailman/listinfo/eppnicbr
+- http://www.webhostingtalk.com.br/
+- http://portaldohost.com.br/forum/
+
+
