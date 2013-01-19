@@ -6,9 +6,13 @@
 
 * Figure out how to keep created domain at pending state until sync or poll
 
+* Preserve ticket number on the database, use the ticket number if
+  nameserver change is requested before domain creation completion. Domain
+delete before creation completion could be by removing nameservers
+
 * Automated patching of whoisservers.php or product configurations
 
-* Option to automate AGP if invoice does not clear out 
+* Option to automate AGP(Add Grace Period) if invoice does not clear out 
 
 * More documentation on parameters and usage
 
