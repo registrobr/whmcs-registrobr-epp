@@ -292,8 +292,13 @@ function registrobr_RegisterDomain($params) {
     # Get registrant details	
     $RegistrantFirstName = $params["firstname"];
     $RegistrantLastName = $params["lastname"];
-    $RegistrantAddress1 = $params["address1"];
-    $RegistrantAddress2 = $params["address2"];
+    
+    $parts=preg_split("/[0-9.]/",$params["address1"],NULL,PREG_SPLIT_NO_EMPTY);
+    $RegistrantAddress1=$parts[0];
+    $parts=preg_split("/[^0-9.]/",$params["address1"],NULL,PREG_SPLIT_NO_EMPTY);
+    $RegistrantAddress2=$parts[0];
+    
+    $RegistrantAddress3 = $params["address2"];
     $RegistrantCity = $params["city"];
     $RegistrantStateProvince = $params["state"];
     $RegistrantPostalCode = $params["postcode"];
@@ -305,17 +310,21 @@ function registrobr_RegisterDomain($params) {
 	# Get admin Details
 	$AdminFirstName = $params["adminfirstname"];
 	$AdminLastName = $params["adminlastname"];
-	$AdminAddress1 = $params["adminaddress1"];
-	$AdminAddress2 = $params["adminaddress2"];
+    
+    $parts=preg_split("/[0-9.]/",$params["adminaddress1"],NULL,PREG_SPLIT_NO_EMPTY);
+    $AdminAddress1=$parts[0];
+    $parts=preg_split("/[^0-9.]/",$params["adminaddress1"],NULL,PREG_SPLIT_NO_EMPTY);
+    $AdminAddress2=$parts[0];
+    
+    $AdminAddress3 = $params["adminaddress2"];
 	$AdminCity = $params["admincity"];
 	$AdminStateProvince = $params["adminstate"];
 	$AdminPostalCode = $params["adminpostcode"];
 	$AdminCountry = $params["admincountry"];
 	$AdminEmailAddress = $params["adminemail"];
-	$AdminPhone = substr($params["fullphonenumber"],1);
+	$AdminPhone = substr($params["adminfullphonenumber"],1);
                  
-    logModuleCall("registrobr","numbers",$RegistrantPhone,$AdminPhone);
-                               
+    
 	$client = _registrobr_Client();
                  
 	$request = '
@@ -376,6 +385,7 @@ function registrobr_RegisterDomain($params) {
                             <contact:addr>
                                 <contact:street>'.$RegistrantAddress1.'</contact:street>
                                 <contact:street>'.$RegistrantAddress2.'</contact:street>
+              <contact:street>'.$RegistrantAddress3.'</contact:street>
                                 <contact:city>'.$RegistrantCity.'</contact:city>
                                 <contact:sp>'.$RegistrantStateProvince.'</contact:sp>
                                 <contact:pc>'.$RegistrantPostalCode.'</contact:pc>
@@ -402,7 +412,7 @@ function registrobr_RegisterDomain($params) {
                  $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
                  $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
 	
-                 if($coderes != '1001') {
+                 if($coderes != '1000') {
                         $errormsg = "register: organizational contact creation error  code ".$coderes." msg '".$msg."'";
                         if (isset($reason)) {
                             $errormsg = $errormsg." reason '".$reason."'";
@@ -428,6 +438,7 @@ function registrobr_RegisterDomain($params) {
          <contact:addr>
          <contact:street>'.$RegistrantAddress1.'</contact:street>
          <contact:street>'.$RegistrantAddress2.'</contact:street>
+              <contact:street>'.$RegistrantAddress3.'</contact:street>
          <contact:city>'.$RegistrantCity.'</contact:city>
          <contact:sp>'.$RegistrantStateProvince.'</contact:sp>
          <contact:pc>'.$RegistrantPostalCode.'</contact:pc>
@@ -461,7 +472,7 @@ function registrobr_RegisterDomain($params) {
              $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
              $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
              
-             if($coderes != '1000') {
+             if($coderes != '1001') {
                  $errormsg = "register: organization creation error  code ".$coderes." msg '".$msg."'";
                  if (isset($reason)) {
                      $errormsg = $errormsg." reason '".$reason."'";
@@ -525,7 +536,8 @@ function registrobr_RegisterDomain($params) {
 					<contact:addr>
 						<contact:street>'.$AdminAddress1.'</contact:street>
 						<contact:street>'.$AdminAddress2.'</contact:street>
-						<contact:city>'.$AdminCity.'</contact:city>
+                        <contact:street>'.$AdminAddress3.'</contact:street>
+    					<contact:city>'.$AdminCity.'</contact:city>
 						<contact:sp>'.$AdminStateProvince.'</contact:sp>
 						<contact:pc>'.$AdminPostalCode.'</contact:pc>
 						<contact:cc>'.$AdminCountry.'</contact:cc>
@@ -600,7 +612,7 @@ function registrobr_RegisterDomain($params) {
 </epp>
 ';
         $domaincreate = $client->request($request);
-    logModuleCall("registrobr","debug",$request,$domaincreate);
+   
 		$doc= new DOMDocument();
 		$doc->loadXML($domaincreate);
 		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
@@ -768,8 +780,8 @@ function registrobr_GetContactDetails($params) {
 			# Setup return values
 			$values["Registrant"]["Contact Name"] = $doc->getElementsByTagName('name')->item(0)->nodeValue;
 			$values["Registrant"]["Organisation"] = $doc->getElementsByTagName('org')->item(0)->nodeValue;
-			$values["Registrant"]["Address line 1"] = $doc->getElementsByTagName('street')->item(0)->nodeValue;
-			$values["Registrant"]["Address line 2"] = $doc->getElementsByTagName('street')->item(1)->nodeValue;
+			$values["Registrant"]["Address line 1"] = $doc->getElementsByTagName('street')->item(0)->nodeValue." ".$doc->getElementsByTagName('street')->item(1)->nodeValue;
+            $values["Registrant"]["Address line 2"] = $doc->getElementsByTagName('street')->item(2)->nodeValue;
 			$values["Registrant"]["TownCity"] = $doc->getElementsByTagName('city')->item(0)->nodeValue;
 			$values["Registrant"]["State"] = $doc->getElementsByTagName('sp')->item(0)->nodeValue;
 			$values["Registrant"]["Zip code"] = $doc->getElementsByTagName('pc')->item(0)->nodeValue;
@@ -980,7 +992,7 @@ function _registrobr_Client() {
 	}
 
 	# Perform login
-	$result = $client->request('
+	$request='
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
 	<command>
 		<login>
@@ -1004,7 +1016,25 @@ function _registrobr_Client() {
                                <clTRID>'.mt_rand().'</clTRID>
 	</command>
 </epp>
-');
+';
+
+     $result = $client->request($request);
+   $doc= new DOMDocument();
+   $doc->loadXML($result);
+   $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+   $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+   $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+   
+   if($coderes != '1000') {
+                                    $errormsg = "epp login error code ".$coderes." msg '".$msg."'";
+                                    if (isset($reason)) {
+                                        $errormsg = $errormsg." reason '".$reason."'";
+                                    }
+                                    logModuleCall("registrobr",$errormsg,$request,$result);
+                                   
+   
+   }
+   
 
 	return $client;
 
