@@ -1,6 +1,6 @@
 * Add upstream modifications from EPP-COZA module
 
-* Release of Registro.br renewal sync functions (will only support ver 5.1+)
+* Release of Registro.br renewal sync functions (both 4.x and 5.1+ styles)
 
 * Release of EPP polling script
 
@@ -27,4 +27,10 @@ delete before creation completion could be by removing nameservers
 * If State/Province is long version, convert to two-letter for registration
 
 * Recreate TaxID from digits-only to avoid syntax error
+
+* Code most of the syntax check for .br restrictions
+  (ftp://ftp.registro.br/pub/libepp-nicbr/pt-policy-restrictions-espec.txt)
+  to avoid issues, like character limits, enconding and so forth
+
+
 
