@@ -1,6 +1,7 @@
 - Domain creation not setting admin contact
 - Domain name server change not working (possible WHMCS issue)
 - One test request was made with empty TechC/BillC contacts
+- One test request made renew e-mail be sent without new expiry date
 - Modify contact needs code rewriting
 - Testing with password-protected PEM file
 - Further testing is required for production; use only with beta.registro.br for the time being
