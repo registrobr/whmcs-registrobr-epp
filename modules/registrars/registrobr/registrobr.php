@@ -673,6 +673,7 @@ function registrobr_RenewDomain($params) {
 	$tld = $params["tld"];
 	$sld = $params["sld"];
 	$regperiod = $params["regperiod"];
+    
 
 	$client = _registrobr_Client();
     if (PEAR::isError($client)) {
@@ -725,6 +726,7 @@ function registrobr_RenewDomain($params) {
 			<domain:renew>
 				<domain:name>'.$sld.'.'.$tld.'</domain:name>
 				<domain:curExpDate>'.$expdate.'</domain:curExpDate>
+            <domain:period unit="y">'.$regperiod.'</domain:period>
 			</domain:renew>
 		</renew>
             <clTRID>'.mt_rand().mt_rand().'</clTRID>
@@ -733,6 +735,7 @@ function registrobr_RenewDomain($params) {
 ';
                                         
         $response = $client->request($request);
+            
                                         
 		# Parse XML result	
 		$doc= new DOMDocument();

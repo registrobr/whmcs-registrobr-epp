@@ -1,7 +1,8 @@
 - Domain creation not setting admin contact
 - Domain name server change not working (possible WHMCS issue)
 - One test request made renew e-mail be sent without new expiry date
-- Modify contact needs code rewriting
+- Modify contact is half-way thru wit getcontact working ;
+  now setcontact needs to be fixed
 - Testing with password-protected PEM file
 - Further testing is required for production; use only with beta.registro.br for the time being
 
