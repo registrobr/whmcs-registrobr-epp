@@ -67,6 +67,12 @@ function registrobr_GetNameservers($params) {
 		
 	# Create new EPP client
 	$client = _registrobr_Client();
+    
+    if (PEAR::isError($client)) {
+        $values["error"] = 'get nameservers: EPP connection error '.$client->toString();
+		return $values;
+	}
+    
 	$request = '
     <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
 	<command>
@@ -75,7 +81,7 @@ function registrobr_GetNameservers($params) {
 				<domain:name hosts="all">'.$params["sld"].".".$params["tld"].'</domain:name>
 			</domain:info>
 		</info>
-    <clTRID>'.mt_rand().'</clTRID>
+    <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
     </epp>
     ';
@@ -151,27 +157,34 @@ function registrobr_SaveNameservers($params) {
 	
 	# Grab list of current nameservers
 	$client = _registrobr_Client();
+    
+    if (PEAR::isError($client)) {
+        $values["error"] = 'set nameservers: EPP connection error '.$client->toString();
+		return $values;
+	}
+    
 	$request = '
-<epp:epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" 
+<epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
 		xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-	<epp:command>
-		<epp:info>
+	<command>
+		<info>
 			<domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
 				<domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
 			</domain:info>
-		</epp:info>
-	</epp:command>
-</epp:epp>
+		</info>
+	</command>
+</epp>
 ';
-    $registrarinfo = $client->request($request);
+    $response = $client->request($request);
     
 	# Parse XML
 	$doc= new DOMDocument();
-	$doc->loadXML($registrarinfo);
+	$doc->loadXML($response);
     $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     
+    # Check if result is ok
 	if($coderes != '1000') {
             $errormsg = "set nameservers: error getting nameservers code ".$coderes." msg '".$msg."'";
             if (isset($reason)) {
@@ -179,7 +192,7 @@ function registrobr_SaveNameservers($params) {
                 } ;
         
 		$values["error"] = $errormsg ; 
-        logModuleCall("registrobr",$errormsg,$request,$registrarinfo);
+        logModuleCall("registrobr",$errormsg,$request,$response);
     }  
     else { 
             # Generate list of nameservers to remove
@@ -206,7 +219,7 @@ function registrobr_SaveNameservers($params) {
                                 </domain:rem>
                             </domain:update>
                         </update>
-           <clTRID>'.mt_rand().'</clTRID>
+           <clTRID>'.mt_rand().mt_rand().'</clTRID>
                     </command>
                      </epp>
                 ';
@@ -239,20 +252,17 @@ function registrobr_SaveNameservers($params) {
                  
                  }
 
-function registrobr_RegisterNameserver($params) {
-    logModuleCall("registrobr","register name server",$params);
-    return ;
-}
+    #function registrobr_RegisterNameserver($params) {
+    #return ;
+    #}
 
-function registrobr_DeleteNameserver($params) {
-    logModuleCall("registrobr","delete name server",$params);
-    return ;
-}
+    #function registrobr_DeleteNameserver($params) {
+    #return ;
+    #}
 
-function registrobr_ModifyNameserver($params) {
-    logModuleCall("registrobr","modify name server",$params);
-    return ;
-}
+    #function registrobr_ModifyNameserver($params) {
+    #return ;
+    #}
 
         
 # Function to register domain
@@ -281,10 +291,20 @@ function registrobr_RegisterDomain($params) {
 		return $values;
 		}
 
-    $RegistrantTaxIDDigits = preg_replace("[^0-9]","",$RegistrantTaxID);
-		                                        
+    $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
     
-    # Grab varaibles
+    
+    
+    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
+        $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2); }
+        else {
+            $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,2).".".substr($RegistrantTaxIDDigits,2,3).".".substr($RegistrantTaxIDDigits,5,3)."/".substr($RegistrantTaxIDDigits,8,4)."-".substr($RegistrantTaxIDDigits,12,2);
+        }
+    
+   
+    
+    # Grab variaibles
+        
 	$tld = $params["tld"];
 	$sld = $params["sld"];
 	$regperiod = $params["regperiod"];
@@ -325,7 +345,14 @@ function registrobr_RegisterDomain($params) {
 	$AdminPhone = substr($params["adminfullphonenumber"],1);
                  
     
-	$client = _registrobr_Client();
+        $client = _registrobr_Client();
+        if (PEAR::isError($client)) {
+            $errormsg = 'register domain: EPP connection error '.$client->toString();
+            logModuleCall("registrobr",$errormsg);
+            $values["error"] = $errormsg;
+            return $values;
+        }
+    
                  
 	$request = '
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
@@ -346,23 +373,24 @@ function registrobr_RegisterDomain($params) {
     <brorg:organization>'.$RegistrantTaxID.'</brorg:organization>
     </brorg:info>
     </extension>
-       <clTRID>'.mt_rand().'</clTRID>
+       <clTRID>'.mt_rand().mt_rand().'</clTRID>
     </command>
     </epp>
     ';
 
 
-	$provider = $client->request($request);
-
+  
+        $response = $client->request($request);
+        
     # Parse XML result
     $doc= new DOMDocument();
-    $doc->loadXML($provider);
+    $doc->loadXML($response);
     $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
     if($coderes == '1000') {
             $orgprov = ltrim($doc->getElementsByTagName('clID')->item(0)->nodeValue,"0");
             if ($orgprov!=$moduleparams["Username"]) 
                                { $errormsg="entity can only register domains through designated registrar.";
-                               logModuleCall("registrobr",$errormsg,$request,$provider);
+                               logModuleCall("registrobr",$errormsg,$request,$response);
                                $values["error"]=$errormsg;
                                return $values;
                                } 
@@ -399,15 +427,15 @@ function registrobr_RegisterDomain($params) {
                         </contact:authInfo>
                     </contact:create>
                 </create>
-                <clTRID>'.mt_rand().'</clTRID>
+                <clTRID>'.mt_rand().mt_rand().'</clTRID>
                 </command>
                 </epp>';
                  
-                 $contact = $client->request($request);
-
+                 $response = $client->request($request);
+             
                  # Parse XML result
                  $doc= new DOMDocument();
-                 $doc->loadXML($contact);
+                 $doc->loadXML($response);
                  $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
                  $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
                  $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -417,7 +445,7 @@ function registrobr_RegisterDomain($params) {
                         if (isset($reason)) {
                             $errormsg = $errormsg." reason '".$reason."'";
                             }
-                    logModuleCall("registrobr",$errormsg,$request,$contact);
+                    logModuleCall("registrobr",$errormsg,$request,$response);
                     $values["error"]=$errormsg;
                     return $values;
                     }                   
@@ -460,14 +488,14 @@ function registrobr_RegisterDomain($params) {
          <brorg:contact type="admin">'.$doc->getElementsByTagName('id')->item(0)->nodeValue.'</brorg:contact>
              </brorg:create>
              </extension>
-                <clTRID>'.mt_rand().'</clTRID>
+                <clTRID>'.mt_rand().mt_rand().'</clTRID>
              </command>
              </epp>';
-             $org = $client->request($request);
+             $response = $client->request($request);
              
              # Parse XML result
              $doc= new DOMDocument();
-             $doc->loadXML($org);
+             $doc->loadXML($response);
              $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
              $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
              $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -477,7 +505,7 @@ function registrobr_RegisterDomain($params) {
                  if (isset($reason)) {
                      $errormsg = $errormsg." reason '".$reason."'";
                  }
-                 logModuleCall("registrobr",$errormsg,$request,$org);
+                 logModuleCall("registrobr",$errormsg,$request,$response);
                  $values["error"]=$errormsg;
                  return $values;
              }           
@@ -550,16 +578,16 @@ function registrobr_RegisterDomain($params) {
 				</contact:authInfo>
 			</contact:create>
 		</create>
-       <clTRID>'.mt_rand().'</clTRID>
+       <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
 </epp>';
                  
-    $contact = $client->request($request);
-
-                 
+    $response = $client->request($request);
+        
+        
 	# Parse XML result
 	$doc= new DOMDocument();
-	$doc->loadXML($contact);
+	$doc->loadXML($response);
 	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -573,7 +601,7 @@ function registrobr_RegisterDomain($params) {
             if (isset($reason)) {
                 $errormsg = $errormsg." reason '".$reason."'";
                 }
-            logModuleCall("registrobr",$errormsg,$request,$contact);
+            logModuleCall("registrobr",$errormsg,$request,$response);
             $values["error"]=$errormsg;
             return $values;
 	}
@@ -592,8 +620,8 @@ function registrobr_RegisterDomain($params) {
 				<domain:name>'.$sld.'.'.$tld.'</domain:name>
 				<domain:ns>'.$add_hosts.'</domain:ns>
                  <domain:contact type="admin">'.$admcontact.'</domain:contact>';
-                 if (isset($moduleparams['TechC'])) $request=$request.' <domain:contact type="tech">'.$moduleparams['TechC'].'</domain:contact>';
-                 if (isset($moduleparams['BillC'])) $request=$request.' <domain:contact type="billing">'.$moduleparams['BillC'].'</domain:contact>';
+                 if (strlen($moduleparams['TechC'])>2) $request=$request.' <domain:contact type="tech">'.$moduleparams['TechC'].'</domain:contact>';
+                 if (strlen($moduleparams['BillC'])>2) $request=$request.' <domain:contact type="billing">'.$moduleparams['BillC'].'</domain:contact>';
                  $request=$request.'
                  <domain:authInfo>
 				<domain:pw/>
@@ -607,17 +635,20 @@ function registrobr_RegisterDomain($params) {
                  <brdomain:organization>'.$RegistrantTaxID.'</brdomain:organization>
                  </brdomain:create>
                  </extension>
-    <clTRID>'.mt_rand().'</clTRID>
+    <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
 </epp>
 ';
-        $domaincreate = $client->request($request);
+        $response = $client->request($request);
    
 		$doc= new DOMDocument();
-		$doc->loadXML($domaincreate);
+    $doc->loadXML($response);
+   
 		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 		$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
         $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+    
+    
     
                                
                  if(($coderes != '1001')&&($coderes != '1000')) {
@@ -625,7 +656,7 @@ function registrobr_RegisterDomain($params) {
                                 if (isset($reason)) {
                                          $errormsg = $errormsg." reason '".$reason."'";
                                          }
-                                logModuleCall("registrobr",$errormsg,$request,$domaincreate);
+                                logModuleCall("registrobr",$errormsg,$request,$response);
                                 $values["error"]=$errormsg;
                                 } else {
                                          $values["status"] = $msg;
@@ -644,6 +675,13 @@ function registrobr_RenewDomain($params) {
 	$regperiod = $params["regperiod"];
 
 	$client = _registrobr_Client();
+    if (PEAR::isError($client)) {
+        $errormsg = 'renew domain: EPP connection error '.$client->toString();
+        logModuleCall("registrobr",$errormsg);
+        $values["error"] = $errormsg;
+		return $values;
+	}
+    
 	$request='
 <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" 
 		xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
@@ -653,15 +691,15 @@ function registrobr_RenewDomain($params) {
 				<domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
 			</domain:info>
 		</info>
-    <clTRID>'.mt_rand().'</clTRID>
+    <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
 </epp>
 ';
-    $registrarinfo = $client->request($request);
+    $response = $client->request($request);
                                       
 	# Parse XML result
 	$doc= new DOMDocument();
-	$doc->loadXML($registrarinfo);
+	$doc->loadXML($response);
 	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -671,7 +709,7 @@ function registrobr_RenewDomain($params) {
                  if (isset($reason)) {
                  $errormsg = $errormsg." reason '".$reason."'";
                  }
-                 logModuleCall("registrobr",$errormsg,$request,$registrarinfo);
+                 logModuleCall("registrobr",$errormsg,$request,$response);
                  $values["error"]=$errormsg;
                  }
                  
@@ -689,16 +727,16 @@ function registrobr_RenewDomain($params) {
 				<domain:curExpDate>'.$expdate.'</domain:curExpDate>
 			</domain:renew>
 		</renew>
-            <clTRID>'.mt_rand().'</clTRID>
+            <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
 </epp>
 ';
                                         
-        $domainrenew = $client->request($request);
+        $response = $client->request($request);
                                         
 		# Parse XML result	
 		$doc= new DOMDocument();
-		$doc->loadXML($domainrenew);
+		$doc->loadXML($response);
 		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
         $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
         $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -708,7 +746,7 @@ function registrobr_RenewDomain($params) {
                  if (isset($reason)) {
                  $errormsg = $errormsg." reason '".$reason."'";
                  }
-                 logModuleCall("registrobr",$errormsg,$request,$domainrenew);
+                 logModuleCall("registrobr",$errormsg,$request,$response);
                  $values["error"]=$errormsg;
                  }
                  else {
@@ -724,60 +762,139 @@ function registrobr_RenewDomain($params) {
 
 # Function to grab contact details
 function registrobr_GetContactDetails($params) {
+    # Setup include dir
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	# Include CPF and CNPJ stuff we need
+	require_once 'isCnpjValid.php';
+	require_once 'isCpfValid.php';
+    
 	# Grab variables	
 	$tld = $params["tld"];
 	$sld = $params["sld"];
 
 	# Grab contact details
 	$client = _registrobr_Client();
-	$registrarinfo = $client->request('
-<epp:epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" 
+    if (PEAR::isError($client)) {
+        $errormsg = 'get contact details: EPP connection error '.$client->toString();
+        logModuleCall("registrobr",$errormsg);
+        $values["error"] = $errormsg;
+		return $values;
+	}
+    
+	$request = '
+<epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
 		xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-	<epp:command>
-		<epp:info>
+	<command>
+		<info>
 			<domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
 				<domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
 			</domain:info>
-		</epp:info>
-	</epp:command>
-</epp:epp>
-');
+		</info>
+	</command>
+</epp>
+';
 
+    $response = $client->request($request);
+                                                              
 	# Parse XML result		
 	$doc= new DOMDocument();
-	$doc->loadXML($registrarinfo);
+	$doc->loadXML($response);
 	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+    
+    if($coderes != '1000') {
+        $errormsg = "get contact details: domain info error code ".$coderes." msg '".$msg."'";
+        if (isset($reason)) {
+            $errormsg = $errormsg." reason '".$reason."'";
+        }
+        logModuleCall("registrobr",$errormsg,$request,$response);
+        $values["error"]=$errormsg;
+    }
+    else {
+    
+        
+        # Grab module parameters
+        $moduleparams = getregistrarconfigoptions('registrobr');
+        
+        # Verify provider
+        
+        $prov = ltrim($doc->getElementsByTagName('clID')->item(0)->nodeValue,"0");
+       
+        if ($prov!=$moduleparams["Username"])
+        { $errormsg="get contact details: domain is not designated to this registrar.";
+            logModuleCall("registrobr",$errormsg,$request,$response);
+            $values["error"]=$errormsg;
+            return $values;
+        }
 
-	# Check result
-	if($coderes != '1000') {
-		$values["error"] = "Code (".$coderes.") ".$msg;
-	} else { 
-
-		# Grab contact info
-		$registrant = $doc->getElementsByTagName('registrant')->item(0)->nodeValue;
-		$domaininfo = $client->request('
-<epp:epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
-	<epp:command>
-		<epp:info>
-			<contact:info>
-				<contact:id>'.$registrant.'</contact:id>
-			</contact:info>
-		</epp:info>
-	</epp:command>
-</epp:epp>
-');
+       
+        
+        # Grab Admin, Tech ID
+        $Contacts["Admin"]=$doc->getElementsByTagName('contact')->item(0)->nodeValue;
+        $Contacts["Tech"]=$doc->getElementsByTagName('contact')->item(1)->nodeValue;
+                                                                                                        
+              
+        
+                                                           
+                # Get TaxPayer ID for obtaining Reg Info
+                
+        $RegistrantTaxID=$doc->getElementsByTagName('organization')->item(0)->nodeValue;
+                # Returned CNPJ has extra zero at left
+        if(isCpfValid($RegistrantTaxID)!=TRUE) { $RegistrantTaxID=substr($RegistrantTaxID,1); };
+        
+        $RegistrantTaxIDDigits = preg_replace("[^0-9]","",$RegistrantTaxID);
+                
+             
+                
+		# Grab reg info
+                
+                $request = '
+                <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+                <command>
+                <info>
+                <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"
+                xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0
+                contact-1.0.xsd">
+                <contact:id>'.$RegistrantTaxIDDigits.'</contact:id>
+                </contact:info>
+                </info>
+                <extension>
+                <brorg:info xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0"
+                xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0
+                brorg-1.0.xsd">
+                <brorg:organization>'.$RegistrantTaxID.'</brorg:organization>
+                </brorg:info>
+                </extension>
+                <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                </command>
+                </epp>
+                ';
+		
+         $response = $client->request($request);
+         
 		# Parse XML result
 		$doc= new DOMDocument();
-		$doc->loadXML($domaininfo);
-		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-		$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-
-		# Check result
-		if($coderes != '1000') {
-			$values["error"] = "Code (".$coderes.") ".$msg;
-		} else { 
-			# Setup return values
+		$doc->loadXML($response);
+                
+                $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+                $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+                $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+                
+                if($coderes != '1000') {
+                $errormsg = "get contact details: organization info error code ".$coderes." msg '".$msg."'";
+                if (isset($reason)) {
+                $errormsg = $errormsg." reason '".$reason."'";
+                }
+                logModuleCall("registrobr",$errormsg,$request,$response);
+                $values["error"]=$errormsg;
+                return $values;
+                }
+                
+		else { 
+			# Setup reg return values
 			$values["Registrant"]["Contact Name"] = $doc->getElementsByTagName('name')->item(0)->nodeValue;
 			$values["Registrant"]["Organisation"] = $doc->getElementsByTagName('org')->item(0)->nodeValue;
 			$values["Registrant"]["Address line 1"] = $doc->getElementsByTagName('street')->item(0)->nodeValue." ".$doc->getElementsByTagName('street')->item(1)->nodeValue;
@@ -788,6 +905,57 @@ function registrobr_GetContactDetails($params) {
 			$values["Registrant"]["Country Code"] = $doc->getElementsByTagName('cc')->item(0)->nodeValue;
 			$values["Registrant"]["Phone"] = $doc->getElementsByTagName('voice')->item(0)->nodeValue;
 			$values["Registrant"]["Email"] = $doc->getElementsByTagName('email')->item(0)->nodeValue;
+            
+                #Get Adm and Tech Contacts
+                foreach ($Contacts as $type => $value) {
+                   
+                    $request = '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+                            <command>
+                                <info>
+                                    <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0"
+                                    xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0
+                                    contact-1.0.xsd">
+                                        <contact:id>'.$value.'</contact:id>
+                                    </contact:info>
+                                </info>
+                                <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                            </command>
+                    </epp>';
+                
+                $response = $client->request($request);
+                
+                # Parse XML result
+                $doc= new DOMDocument();
+                $doc->loadXML($response);
+                
+                $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+                $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+                $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+                
+                if($coderes != '1000') {
+                    $errormsg = "get contact details: ".$type. "contact info error code ".$coderes." msg '".$msg."'";
+                    if (isset($reason)) {
+                    $errormsg = $errormsg." reason '".$reason."'";
+                    }
+                logModuleCall("registrobr",$errormsg,$request,$response);
+                $values["error"]=$errormsg;
+                return $values;
+                }
+
+                $values[$type]["Contact Name"] = $doc->getElementsByTagName('name')->item(0)->nodeValue;
+                $values[$type]["Organisation"] = $doc->getElementsByTagName('org')->item(0)->nodeValue;
+                $values[$type]["Address line 1"] = $doc->getElementsByTagName('street')->item(0)->nodeValue." ".$doc->getElementsByTagName('street')->item(1)->nodeValue;
+                $values[$type]["Address line 2"] = $doc->getElementsByTagName('street')->item(2)->nodeValue;
+                $values[$type]["TownCity"] = $doc->getElementsByTagName('city')->item(0)->nodeValue;
+                $values[$type]["State"] = $doc->getElementsByTagName('sp')->item(0)->nodeValue;
+                $values[$type]["Zip code"] = $doc->getElementsByTagName('pc')->item(0)->nodeValue;
+                $values[$type]["Country Code"] = $doc->getElementsByTagName('cc')->item(0)->nodeValue;
+                $values[$type]["Phone"] = $doc->getElementsByTagName('voice')->item(0)->nodeValue;
+                $values[$type]["Email"] = $doc->getElementsByTagName('email')->item(0)->nodeValue;
+                
+                }
 		}
 	}
 
@@ -815,21 +983,29 @@ function registrobr_SaveContactDetails($params) {
 
 	#Grab domain info
 	$client = _registrobr_Client();
-	$registrarinfo = $client->request('
-<epp:epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" 
+                if (PEAR::isError($client)) {
+                $errormsg = 'domain change contact: EPP connection error '.$client->toString();
+                logModuleCall("registrobr",$errormsg);
+                $values["error"] = $errormsg;
+                return $values;
+                }
+                
+	$request='
+<epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
 		xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-	<epp:command>
-		<epp:info>
+	<command>
+		<info>
 			<domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
 				<domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
 			</domain:info>
-		</epp:info>
-	</epp:command>
-</epp:epp>
-');
+		</info>
+	</command>
+</epp>
+';
+     $response = $client->request($request);
 	# Parse XML	result
 	$doc= new DOMDocument();
-	$doc->loadXML($registrarinfo);
+	$doc->loadXML($response);
 	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 	if($coderes != '1000') {
 		$values["error"] = "Code (".$coderes.") ".$msg;
@@ -886,8 +1062,14 @@ function registrobr_SaveContactDetails($params) {
 function registrobr_RequestDelete($params) {
                                     
 $client = _registrobr_Client();
-                                    
-$request = '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
+if (PEAR::isError($client)) {
+                                    $errormsg = 'domain delete: EPP connection error '.$client->toString();
+                                    logModuleCall("registrobr",$errormsg);
+                                    $values["error"] = $errormsg;
+                                    return $values;
+}
+
+$request = '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
 <command>
@@ -898,15 +1080,15 @@ domain-1.0.xsd">
 <domain:name>'.$params['sld'].'.'.$params['tld'].'</domain:name>
 </domain:delete>
 </delete>
-                                    <clTRID>'.mt_rand().'</clTRID>
+                                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
 </command>
 </epp>
 ';
-$delete = $client->request($request);
+$response = $client->request($request);
 
 # Parse XML
 $doc= new DOMDocument();
-$doc->loadXML($delete);
+$doc->loadXML($response);
 $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
 $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -918,7 +1100,7 @@ $errormsg = $errormsg." reason '".$reason."'";
 } ;
 
 $values["error"] = $errormsg ; 
-logModuleCall("registrobr",$errormsg,$request,$delete);
+logModuleCall("registrobr",$errormsg,$request,$response);
 }
 return $values ;
 }
@@ -1013,14 +1195,14 @@ function _registrobr_Client() {
     				</svcExtension>
 			</svcs>
 		</login>
-                               <clTRID>'.mt_rand().'</clTRID>
+                               <clTRID>'.mt_rand().mt_rand().'</clTRID>
 	</command>
 </epp>
 ';
 
-     $result = $client->request($request);
+     $response = $client->request($request);
    $doc= new DOMDocument();
-   $doc->loadXML($result);
+   $doc->loadXML($response);
    $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
    $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
    $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
@@ -1030,7 +1212,7 @@ function _registrobr_Client() {
                                     if (isset($reason)) {
                                         $errormsg = $errormsg." reason '".$reason."'";
                                     }
-                                    logModuleCall("registrobr",$errormsg,$request,$result);
+                                    logModuleCall("registrobr",$errormsg,$request,$response);
                                    
    
    }
