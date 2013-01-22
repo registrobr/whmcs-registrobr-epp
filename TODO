@@ -29,5 +29,6 @@ delete before creation completion could be by removing nameservers
   (ftp://ftp.registro.br/pub/libepp-nicbr/pt-policy-restrictions-espec.txt)
   to avoid issues, like character limits, enconding and so forth
 
+* Locall EPP-Proxy to speed-up transactions
 
 
