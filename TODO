@@ -1,3 +1,5 @@
+1) Short-term:
+
 * Release of Registro.br renewal sync functions (both 4.x and 5.1+ styles)
 
 * Release of EPP polling script
@@ -6,29 +8,30 @@
 
 * Preserve ticket number on the database, use the ticket number if
   nameserver change is requested before domain creation completion. Domain
-delete before creation completion could be by removing nameservers
+delete before creation completion could be done by removing nameservers.
 
 * Automated patching of whoisservers.php or product configurations
-
-* Option to automate AGP(Add Grace Period) if invoice does not clear out 
 
 * More documentation on parameters and usage, including tips to avoid issues
   like using numbers in street names ("Av Doze de Outubro" instead of
   "Av 12 de Outubro";
 
-* Create widget, possibly from EPP Reports files (production only)
-
-* Integrate with DNSSHIM 
-
 * Replace WHOIS/isavail with EPP domain info
-
-* If State/Province is long version, convert to two-letter for registration
-  or contact change
 
 * Code most of the syntax check for .br restrictions
   (ftp://ftp.registro.br/pub/libepp-nicbr/pt-policy-restrictions-espec.txt)
   to avoid issues, like character limits, enconding and so forth
 
-* Locall EPP-Proxy to speed-up transactions
+* Convert ISO 8859-1 back and forth at get/set contact, domain create
+
+* Option to use EPP-Proxy
+
+2) Long-term:
+
+* Option to automate AGP(Add Grace Period) if invoice does not clear out 
+
+* Create widget, possibly from EPP Reports files (production only)
+
+* Integrate with DNSSHIM 
 
 
