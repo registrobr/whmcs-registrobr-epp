@@ -2,11 +2,10 @@
 either in TestMode (OT&E environment - beta.registro.br) or production mode.
 - Numeric EPP username and password must be configured 
 - Certificate and passphrase field are only used for production
-- CPF is the customfield where customers CPF or CPF and CNPJ are stored. It's usually "customfields1" if CPF is the first custom field defined. 
-CPF field is required.
-- CNPJ is an optional customfield if it's not the same as the CPF field. 
+- CPF is the customfield where customers CPF are stored.
+- CNPJ is the customfield where customers CNPJ are stored. Can be the same
+  field as CPF. 
 - TechC is an optional field; if present, all domains are registered with this technical contact.
-- BillC is an optional field; if present, all domains are registered with this billing contact.
 
 
 
