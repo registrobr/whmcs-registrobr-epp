@@ -47,8 +47,8 @@ function registrobr_getConfigArray() {
 		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
 		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
 		"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
-        "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs  (can be same as above)", "Default" => "1"),                 
-        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations" ),            
+        "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
+        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations" ),
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
@@ -262,15 +262,11 @@ function registrobr_RegisterDomain($params) {
     require_once 'isCpfValid.php';
 
 	# Grab module parameters
-    $CPFField='customfields'.$moduleparams['CPF'];
-    $CNPJField='customfields'.$moduleparams['CNPJ'];
-    
-    $RegistrantTaxID = $params[$CPFField];
-    logModuleCall("registrobr","debug",$params,$RegistrantTaxID);
-    
+    $moduleparams = getregistrarconfigoptions('registrobr');
+    $RegistrantTaxID = $params['customfields'.$moduleparams['CPF']];
     if (!isCpfValid($RegistrantTaxID)) {
-                        $RegistrantTaxID = $params[$CNPJField] ;
-                        logModuleCall("registrobr","debug",$params,$RegistrantTaxID);
+                        $RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
+        
                         if (!isCnpjValid($RegistrantTaxID)) {
                             $values["error"] =_registrobr_lang("cpfcnpjrequired");
                             logModuleCall("registrobr",$values["error"],$params);
@@ -375,7 +371,7 @@ function registrobr_RegisterDomain($params) {
                         logModuleCall("registrobr",$errormsg,$request,$response);
                         $values["error"] = $errormsg;
                         return $values;
-                }
+    } else {
         
                 # Company or individual not in the database, proceed to org contact creation
                 $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
@@ -486,7 +482,7 @@ function registrobr_RegisterDomain($params) {
                         $values["error"] = $errormsg;
                         return $values;
                 }           
-
+    }
     # Generate XML for namseverss
 
 	if ($nameserver1 = $params["ns1"]) { 
