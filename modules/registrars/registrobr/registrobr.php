@@ -49,8 +49,9 @@ function registrobr_getConfigArray() {
         `ticket` int(10) unsigned NOT NULL,
         PRIMARY KEY (`domainid`),
         UNIQUE KEY `ticket` (`ticket`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci);";
-    mysql_query($query);
+    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci";
+    $results=mysql_query($query);
+    logModuleCall("registrobr","debug",$query,$results);
 
 	$configarray = array(
 		"Username" => array( "Type" => "text", "Size" => "4", "Description" => "Provider ID(numerical)" ),
