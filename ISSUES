@@ -3,6 +3,7 @@
   transactions got a blank screen; not clear yet if it's a bug or not
 - Contact details setting generates "invalid phone number".
   Can be fixed by replacing + with none or not do substr(1) with "Fone" 
+- Domain create needs to do domain check and rule out domains with ticket(s)
 - Testing with password-protected PEM file
 - Further testing is required for production; use only with beta.registro.br for the time being
 
