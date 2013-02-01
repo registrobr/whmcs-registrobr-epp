@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2012, AllWorldIT and (c) 2013, NIC.br (R)
+# Copyright (c) 2012-2013, AllWorldIT and (c) 2013, NIC.br (R)
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,6 +40,19 @@
 # Configuration array
 
 function registrobr_getConfigArray() {
+
+    # Create auxiliary table if it doesn't exist
+    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr` (
+        `clID` varchar(16) COLLATE latin1_general_ci NOT NULL,
+        `domainid` int(10) unsigned NOT NULL,
+        `domain` varchar(200) COLLATE latin1_general_ci NOT NULL,
+        `ticket` int(10) unsigned NOT NULL,
+        PRIMARY KEY (`domainid`),
+        UNIQUE KEY `ticket` (`ticket`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci";
+    $results=mysql_query($query);
+    logModuleCall("registrobr","debug",$query,$results);
+
 	$configarray = array(
 		"Username" => array( "Type" => "text", "Size" => "4", "Description" => "Provider ID(numerical)" ),
 		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
@@ -48,62 +61,117 @@ function registrobr_getConfigArray() {
 		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
 		"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
         "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
-        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations" ),
+        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
+        "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
+        "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
+        
+
 	);
     return $configarray;
 
 }
-   
+
+
+
     
 # Function to return current nameservers
 
 function registrobr_GetNameservers($params) {
 
+    # Grab module parameters
+    $moduleparams = getregistrarconfigoptions('registrobr');
+    
     # Create new EPP client
     $client = _registrobr_Client();
-    if (PEAR::isError($client)) 
-    {
+    if (PEAR::isError($client)) {
         $values["error"]=_registrobr_lang('getnsconnerror').$client;
         return $values;
     }
-	
-	$request = '
-    <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-	<command>
-		<info>
-			<domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-				<domain:name hosts="all">'.$params["sld"].".".$params["tld"].'</domain:name>
-			</domain:info>
-		</info>
-    <clTRID>'.mt_rand().mt_rand().'</clTRID>
-	</command>
-    </epp>
-    ';
+    
+    $domain = $params["sld"].".".$params["tld"];
+    $ticket='';
+    
+	do {
+        $request = '
+        <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+            <command>
+                <info>
+                    <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+                        <domain:name hosts="all">'.$domain.'</domain:name>
+                    </domain:info>
+                </info>';
+                if ($ticket!='') {
+                    $request.='
+                    <extension>
+                        <brdomain:info xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0" 
+                        xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0 
+                        brdomain-1.0.xsd"> 
+                            <brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
+                        </brdomain:info>
+                    </extension>';
+                    $ticket='';
+                }    
+                $request.='    
+                <clTRID>'.mt_rand().mt_rand().'</clTRID>
+            </command>
+        </epp>
+        ';
 
-    $response = $client->request($request);
+        $response = $client->request($request);
   
-	# Check results	
+        # Check results	
+        $doc= new DOMDocument();
+        $doc->loadXML($response);
+        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+        $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+        $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+    
+        # Check if result is ok
+        if($coderes != '1000') {
+            if ($coderes != '2303') {
+                $errormsg = _registrobr_lang('getnserrorcode').$coderes._registrobr_lang('msg').$msg."'";
+                if (!empty($reason)) {
+                    $errormsg.= _registrobr_lang("reason").$reason."'";
+                } ;
+                logModuleCall("registrobr",$errormsg,$request,$response);
+                $values["error"] = $errormsg;
+                return $values;
+            }
+            $table = "mod_registrobr";
+            $fields = "clID,domainid,domain,ticket";
+            # incluir domainid ?
+            $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain);
+            $result = select_query($table,$fields,$where);
+            $data = mysql_fetch_array($result);
+            $ticket = $data['ticket'];
+            
+            
+            }
+    } while ($ticket!='');
+    
+    if ($coderes == '2303') {
+             $values["error"] = _registrobr_lang('domainnotfound');
+             return $values;
+    }         
+	
+    # Parse XML
+   	$doc = new DOMDocument();
+	$doc->preserveWhiteSpace = false;
+	$doc->loadXML($response);
+ 
+    $ns = $doc->getElementsByTagName('hostName');
 
-	if(!is_array($response)) {
-
-		# Parse XML
-		$doc = new DOMDocument();
-		$doc->preserveWhiteSpace = false;
-		$doc->loadXML($response);
-		$ns = $doc->getElementsByTagName('hostName');
-
-		# Extract nameservers
-		$i =0;
-		$values = array();
-		foreach ($ns as $nn) {
-			$i++;
-			$values["ns{$i}"] = $nn->nodeValue;
-		}
-    }
-	return $values;
+	# Extract nameservers
+	$i =0;
+	$values = array();
+	foreach ($ns as $nn) {
+		$i++;
+        if ($nn->nodeName=='domain:hostName') $values["ns{$i}"] = $nn->nodeValue;
+	}
+    return $values;
 }
 
 # Function to save set of nameservers
@@ -111,9 +179,9 @@ function registrobr_GetNameservers($params) {
 function registrobr_SaveNameservers($params) {
 
     # Grab variables
-    $tld = $params["tld"];
-    $sld = $params["sld"];
-
+    $domain = $params["sld"].".".$params["tld"];
+    $moduleparams = getregistrarconfigoptions('registrobr');
+    
     # Generate XML for nameservers
     if ($nameserver1 = $params["ns1"]) { 
         $add_hosts = '
@@ -160,49 +228,81 @@ function registrobr_SaveNameservers($params) {
             $values["error"]=_registrobr_lang('setnsconnerror').$client;
             return $values ;
     }
-
-	$request = '
-    <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
-	xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+    
+    $ticket='';
+    $setticket='';
+    do {
+        $request = '
+        <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
         <command>
-            <info>
-                <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                    <domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
-                </domain:info>
-            </info>
-            <clTRID>'.mt_rand().mt_rand().'</clTRID>
+        <info>
+    <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+    <domain:name hosts="all">'.$domain.'</domain:name>
+        </domain:info>
+        </info>';
+        if ($ticket!='') {
+            $request.='
+            <extension>
+        <brdomain:info xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0"
+        xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0
+            brdomain-1.0.xsd">
+        <brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
+            </brdomain:info>
+            </extension>';
+            $setticket=$ticket;
+            $ticket='';
+        }
+        $request.='
+        <clTRID>'.mt_rand().mt_rand().'</clTRID>
         </command>
-    </epp>
-    ';
-
-    $response = $client->request($request);
-
-    # Parse XML
-	$doc= new DOMDocument();
-	$doc->loadXML($response);
-    $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-    $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-    $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
-
-    # Check if result is ok
-	if($coderes != '1000') {
-            $errormsg = _registrobr_lang('setnsgeterrorcode').$coderes._registrobr_lang('msg').$msg."'";
-            if (!empty($reason)) {
-                $errormsg.= _registrobr_lang("reason").$reason."'";
-            } ;
-            logModuleCall("registrobr",$errormsg,$request,$response);
-            $values["error"] = $errormsg;
-            return $values;
+        </epp>
+        ';
+        
+        $response = $client->request($request);
+        
+        # Check results
+        $doc= new DOMDocument();
+        $doc->loadXML($response);
+        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+        $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+        $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+        
+        # Check if result is ok
+        if($coderes != '1000') {
+            if ($coderes != '2303') {
+                $errormsg = _registrobr_lang('setnserrorcode').$coderes._registrobr_lang('msg').$msg."'";
+                if (!empty($reason)) {
+                    $errormsg.= _registrobr_lang("reason").$reason."'";
+                } ;
+                logModuleCall("registrobr",$errormsg,$request,$response);
+                $values["error"] = $errormsg;
+                return $values;
+            }
+            $table = "mod_registrobr";
+            $fields = "clID,domainid,domain,ticket";
+            # incluir domainid ?
+            $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain);
+            $result = select_query($table,$fields,$where);
+            $data = mysql_fetch_array($result);
+            $ticket = $data['ticket'];
+            
+        }
+    } while ($ticket!='');
+    
+    if ($coderes == '2303') {
+        $values["error"] = _registrobr_lang('domainnotfound');
+        return $values;
     }
-
+    
     # Generate list of nameservers to remove
     $hostlist = $doc->getElementsByTagName('hostName');
     foreach ($hostlist as $host) {
-        $rem_hosts .= '
-        <domain:hostAttr>
-        <domain:hostName>'.$host->nodeValue.'</domain:hostName>
-        </domain:hostAttr>
-        ';
+        if ($host->nodeName=='domain:hostName') 
+            $rem_hosts .= '
+            <domain:hostAttr>
+                <domain:hostName>'.$host->nodeValue.'</domain:hostName>
+            </domain:hostAttr>
+            ';
 
     }
 
@@ -212,16 +312,29 @@ function registrobr_SaveNameservers($params) {
                     <command>
                         <update>
                             <domain:update>
-                                <domain:name>'.$sld.'.'.$tld.'</domain:name>
-                                <domain:add>
-                                    <domain:ns>'.$add_hosts.' </domain:ns>
-                                </domain:add>								  
+                                <domain:name>'.$domain.'</domain:name>';
+                                if(!empty($add_hosts)) 
+                                   $request .=' <domain:add>
+                                   <domain:ns>'.$add_hosts.' </domain:ns>
+                                   </domain:add>';
+                                $request .='
                                 <domain:rem>
                                     <domain:ns>'.$rem_hosts.'</domain:ns>
                                 </domain:rem>
                             </domain:update>
-                        </update>
-                        <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                        </update>';
+                        if ($setticket!='') {
+                            $request.='
+                            <extension>
+                                <brdomain:update xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0"
+                                xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0
+                                brdomain-1.0.xsd">
+                                    <brdomain:ticketNumber>'.$setticket.'</brdomain:ticketNumber>
+                                </brdomain:update>
+                            </extension>';
+                        }
+                        $request.='
+                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
                     </command>
             </epp>
             ';
@@ -243,9 +356,7 @@ function registrobr_SaveNameservers($params) {
             logModuleCall("registrobr",$errormsg,$request,$response);
             $values["error"] = $errormsg;
             return $values;
-    } else { 
-        $values['status'] = _registrobr_lang("updatepending");
-    }
+    }  
     return $values;
 }
        
@@ -531,6 +642,8 @@ function registrobr_RegisterDomain($params) {
                                     <domain:name>'.$sld.'.'.$tld.'</domain:name>
                                     <domain:period unit="y">'.$regperiod.'</domain:period>
                                     <domain:ns>'.$add_hosts.'</domain:ns>';
+    
+                                    # Valid .br contacts have 3 or more letters and/or numbers
                                     if (strlen($moduleparams['TechC'])>2) $request.=' <domain:contact type="tech">'.$moduleparams['TechC'].'</domain:contact>';
                                     $request.='
                                     <domain:authInfo>
@@ -565,8 +678,11 @@ function registrobr_RegisterDomain($params) {
                         $values["error"] = $errormsg;
                         return $values;
     }
-    $values["status"] = $msg;
-	return $values;
+    
+    $table = "mod_registrobr";
+    $values = array("clID"=>$moduleparams['Username'],"domainid"=>$params['domainid'],"domain"=>$doc->getElementsByTagName('name')->item(0)->nodeValue,"ticket"=>$doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue);
+    $newid = insert_query($table,$values);
+    return $values;
 }
                                       
 # Function to renew domain
@@ -654,7 +770,6 @@ function registrobr_RenewDomain($params) {
                         $values["error"] = $errormsg;
                         return $values;
     }
-    $values["status"] = $msg;
     return $values;
 
 }
@@ -845,11 +960,9 @@ function registrobr_GetContactDetails($params) {
 
 function registrobr_SaveContactDetails($params) {
 
-    logModuleCall("registrobr","debug",$params["contactdetails"],$params["original"]["contactdetails"]);
-                  
     # If nothing was changed, return
     if ($params["contactdetails"]==$params["original"]["contactdetails"]) {
-        $values["status"] = _registrobr_lang("savecontactnochange");
+        $values=array();
         return $values;
     }
     
@@ -1184,6 +1297,7 @@ function registrobr_SaveContactDetails($params) {
 }
 
 # Domain Delete (used in .br only for Add Grace Period)
+    #bug: need to remove ticket from registrobrtickets table
 
 function registrobr_RequestDelete($params) {
     $client = _registrobr_Client();
@@ -1218,6 +1332,31 @@ function registrobr_RequestDelete($params) {
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+        
+        #If unknown domain, could be a ticket
+        if($coderes == '2303') {
+            $values=registrobr_Getnameservers($params);
+            logModuleCall("registrobr","debug",$params,$values);
+            
+            # If no error, domain is still a ticket, so we remove the nameservers to prevent it becoming a domain
+            if (empty($values["error"])) {
+                $setparams=$params;
+                $setparams["ns1"]='';
+                $setparams["ns2"]='';
+                $setparams["ns3"]='';
+                $setparams["ns4"]='';
+                $setparams["ns5"]='';
+                
+                $values=registrobr_SaveNameservers($setparams);
+                if (empty($values["error"])) {
+                    $values=array();
+                    return $values ;
+                }
+                    
+                return $values;
+            }
+        }
+        
         $errormsg = _registrobr_lang("deleteerrorcode").$coderes._registrobr_lang("msg").$msg."'";
         if (!empty($reason)) {
             $errormsg.= _registrobr_lang("reason").$reason."'";
@@ -1226,9 +1365,330 @@ function registrobr_RequestDelete($params) {
         $values["error"] = $errormsg;
         return $values;
     }
-    $values["status"] = _registrobr_lang("domaindeleted");
+
     return $values ;
 }
+
+function registrobr_Sync($params) {
+    
+    # Get an EPP connection
+    $client = _registrobr_Client();
+    if (PEAR::isError($client)) {
+        $values["error"] = _registrobr_lang("syncconnerror").$client;
+        logModuleCall("registrobr",$values["error"]);
+        return $values ;
+    }
+    
+    #For every domain sync, also do a poll queue clean
+    _registrobr_Poll($client);
+    
+    #Request a sync for the specified domain
+    $values = _registrobr_SyncRequest($client,$params);
+    return $values;
+}
+    
+function _registrobr_SyncRequest($client,$params) {
+
+    # Grab variables
+    $domain = $params['domain'];
+    $domainid = $params['domainid'];
+    $moduleparams = getregistrarconfigoptions('registrobr');
+    $table = "mod_registrobr";
+    $fields = "clID,domainid,domain,ticket";
+    $where = array("clID"=>$moduleparams['Username'],"domainid"=>$domainid,"domain"=>$domain);
+    $result = select_query($table,$fields,$where);
+    $data = mysql_fetch_array($result);
+    $ticket = $data['ticket'];
+    
+    #Initialize return values
+    $values=array();
+    
+    if(empty($ticket)) {
+        $values["error"]=_registrobr_lang("syncdomainnevercreated");
+        return $values;
+    }
+
+    $request = '
+            <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
+            xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+                <command>
+                    <info>
+                        <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+                            <domain:name hosts="all">'.$domain.'</domain:name>
+                        </domain:info>
+                    </info>
+                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                </command>
+            </epp>
+            ';
+    
+    $response = $client->request($request);
+    
+	# Parse XML result		
+	$doc= new DOMDocument();
+	$doc->loadXML($response);
+	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+    $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+    
+    # Check if result is ok
+	if($coderes != '1000') {
+        if ($coderes != '2303') {
+            $errormsg = _registrobr_lang('syncerrorcode').$coderes._registrobr_lang('msg').$msg."'";
+            if (!empty($reason)) {
+                $errormsg.= _registrobr_lang("reason").$reason."'";
+            } ;
+            logModuleCall("registrobr",$errormsg,$request,$response);
+            $values["error"] = $errormsg;
+            return $values;
+        }
+        
+        # See if domain not found is due to domain still being a ticket
+        $request = '
+            <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
+            xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+                <command>
+                    <info>
+                        <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+                            <domain:name hosts="all">'.$domain.'</domain:name>
+                        </domain:info>
+                    </info>
+                    <extension>
+                        <brdomain:info xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0"
+                        xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0
+                        brdomain-1.0.xsd">
+                            <brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
+                        </brdomain:info>
+                    </extension>
+                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                </command>
+            </epp>
+            ';
+        
+        $response = $client->request($request);
+        
+        # Parse XML result
+        $doc= new DOMDocument();
+        $doc->loadXML($response);
+        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+        $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+        $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+        if($coderes == '1000') {
+                
+            #Guess: no info equals pending
+            return $values;
+        }
+        
+        if ($coderes != '2303') {
+                    $errormsg = _registrobr_lang('syncerrorcode').$coderes._registrobr_lang('msg').$msg."'";
+                    if (!empty($reason)) {
+                        $errormsg.= _registrobr_lang("reason").$reason."'";
+                    } ;
+                    logModuleCall("registrobr",$errormsg,$request,$response);
+                    $values["error"] = $errormsg;
+                    return $values;
+        }
+        $values["error"] = _registrobr_lang('Domain').$domain._registrobr_lang('syncdomainnotfound');
+        return $values;
+    }
+    
+    $createdate = substr($doc->getElementsByTagName('crDate')->item(0)->nodeValue,0,10);
+    $values['registrationdate'] = $createdate;
+    $nextduedate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
+    $holdreasons = $doc->getElementsByTagName('onHoldReason');
+    
+    #if ticket number is different, this is actually a new domain with the same name
+    if ($doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue!=$ticket) {
+        $values['expired'] = true ;
+        $values['expirydate'] = $createdate;
+    } elseif (!empty($holdreasons)) {
+        if (array_search("billing",$holdreasons)!=FALSE) {
+            $values['expired'] = true;
+            $values['expirydate'] = $nextduedate;
+        }
+    } else {
+        $values['active'] = true;
+        $values['expirydate'] = $nextduedate;
+        
+    }
+    return $values;
+}
+
+function _registrobr_Poll($client) {
+          
+    # This file brings in a few constants we need
+    require_once dirname(__FILE__) . '/../../../dbconnect.php';
+    # Setup include dir
+    $include_path = ROOTDIR . '/modules/registrars/registrobr';
+    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+
+    # Additional functions we need
+    require_once ROOTDIR . '/includes/functions.php';
+    # Include registrar functions aswell
+    require_once ROOTDIR . '/includes/registrarfunctions.php';
+    # We need pear for the error handling
+    require_once "PEAR.php";
+    
+    require_once 'Net/EPP/Frame.php';
+    require_once 'Net/EPP/Frame/Command.php';
+    require_once 'Net/EPP/ObjectSpec.php';
+    
+    # Get module parameters
+    $moduleparams = getregistrarconfigoptions('registrobr');
+    
+    # Loop with message queue
+    while (!$last) {
+          
+        # Request messages
+        $request = '
+                    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+                        <command>
+                            <poll op="req"/>
+                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                        </command>
+                    </epp>
+                    ';
+        $response = $client->request($request);
+          
+        # Decode response
+        $doc= new DOMDocument();
+        $doc->loadXML($response);
+                                  
+        # Pull off code
+        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+        
+        
+        # This is the last one
+        if ($coderes == 1300) {
+            $last = 1;
+        } else  {
+            $msgid = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
+            $content = _registrobr_lang("Date").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,0,10)."\n";
+            $content .= _registrobr_lang("Time").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,11,10)." UTC\n";
+            $code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
+            $content .= _registrobr_lang("Code").$code."\n";
+            $content .= _registrobr_lang("Text").$doc->getElementsByTagName('txt')->item(0)->nodeValue."\n";
+            $reason = $doc->getElementsByTagName('reason');
+            if (!empty($reason)) $content .= _registrobr_lang("Reason").$doc->getElementsByTagName('reason')->item(0)->nodeValue."\n";
+            $content .= _registrobr_lang("FullXMLBelow");
+            $content .= $response;
+            
+            $ticket='';
+            $domain='';
+            $taxpayerID='';
+            
+            switch($code) {
+                case '1': case '22': case '28': case '29':
+                    $ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
+                    
+                    #no break, poll messages with ticketNumber also have domain in objectId
+                    
+                case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18':
+                case '20':
+                case '107': case '108':
+                case '304': case '305':
+                    
+                    $domain = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
+                    break;
+                
+                case '100': case '101': case '102': case '103': case '106':
+                    
+                    $taxpayerID = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
+                    break;
+            }
+            
+            $taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
+            
+            if (in_array($code,array('300','302','303','305'))==TRUE) {
+                            $issue["priority"] = "High";
+                            $issue["deptid"] = $moduleparams["FinanceDept"];
+            } elseif (in_array($code,array('301','304'))==TRUE) {
+                            $issue["priority"] = "Low";
+                            $issue["deptid"] = $moduleparams["FinanceDept"];
+            }
+            else {
+                            $issue["priority"] = "Low" ;
+                            $issue["deptid"] = $moduleparams["TechDept"];
+                
+            }
+                    
+            if (!empty($domain)) {
+                $table = "mod_registrobr";
+                $fields = "clID,domainid,domain,ticket";
+                $issue["domain"] =$domain;
+                
+                if (empty($ticket)) {
+                    $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain);
+                    $result = select_query($table,$fields,$where);
+                    $data = mysql_fetch_array($result);
+                    
+                    # if there is only one domain with this name, we can match it to a domainid without a ticket
+                    if (count($data)==1) {
+                        $issue["domainid"] = $data['domainid'];
+                    }
+                } else {
+                    $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain,"ticket"=>$ticket);
+                    $result = select_query($table,$fields,$where);
+                    $data = mysql_fetch_array($result);
+                    $issue["domainid"] = $data['domainid'];
+                }
+            }
+            
+            if (!empty($taxpayerID)) {
+                #$#$issue["clientid"] = "1";
+                
+            }
+        
+        $issue["subject"] = _registrobr_lang("Pollmsg");
+        $issue["message"] = $content;
+            
+        $results = localAPI("openticket",$issue,"admin");
+            if ($results['result']!="success") {
+                logModuleCall("registrobr",_registrobr_lang("epppollerror"),$issue,$results);
+                return;
+            }
+          
+        # Ack poll message
+        $request='
+                    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+                        <command>
+                            <poll op="ack" msgID="'.$msgid.'"/>
+                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
+                        </command>
+                    </epp>
+                    ';
+        $response = $client->request($request);
+
+        # Decipher XML
+        $doc = new DOMDocument();
+        $doc->loadXML($response);
+        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+        $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+        $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+
+        # Check result
+        if($coderes != '1000') {
+                $errormsg = _registrobr_lang('pollackerrorcode').$coderes._registrobr_lang('msg').$msg."'";
+                if (!empty($reason)) {
+                        $errormsg.= _registrobr_lang("reason").$reason."'";
+                } ;
+                return;
+            }
+    
+    #brace below close msg if
+    }
+
+    #brace below close while(!last) loop
+    }
+        
+    return;
+}
+
+
 
 # Function to create internal .br EPP request
 
@@ -1389,6 +1849,7 @@ function _registrobr_StateProvince($sp) {
                 "pernanbuco" => "PE",
                 "piaui" => "PI",
                 "riodejaneiro" => "RJ",
+                "rio" => "RJ",
                 "riograndedonorte" => "RN",
                 "riograndenorte" => "RN",
                 "rondonia" => "RO",
@@ -1414,7 +1875,7 @@ function _registrobr_lang($msgid) {
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
     $msgs = array (
-                    "epplogin" => array ("Erro no login EPP c&ocute;digo ","EPP login error code "),
+                    "epplogin" => array ("Erro no login EPP c&oacute;digo ","EPP login error code "),
                     "msg" => array (" mensagem '"," message '"),
                     "reason" => array (" motivo '"," reason '"),
                     "eppconnect" => array ("Erro de conex&atilde;o EPP","EPP connect error"),
@@ -1422,18 +1883,16 @@ function _registrobr_lang($msgid) {
                     "specifypath" => array ("Favor informar o caminho para o arquivo de certificado","Please specifity path to certificate file"),
                     "invalidpath" => array ("Caminho para o arquivo de certificado inv&aacute;lido", "Invalid certificate file path"),
                     "specifypassphrase" => array ("Favor especificar a frase secreta do certificado", "Please specifity certificate passphrase"),
-                    "domaindeleted" => array ("Remo&ccedil&atilde;o de dom&iacute;nio bem-sucedida","Sucessful domain deletion"),
                     "deleteerrorcode" => array ("Erro na remo&ccedil;&atilde;o de dom&iacutenio c&oacute;digo ","Domain delete: error code "),
                     "deleteconnerror" => array ("Falha na conex&atilde;o EPP ao tentar remover dom&iacuten;io erro ","Domain delete: EPP connection error "),
                     "getnsconnerror" => array ("Falha na conex&atilde;o EPP ao tentar obter servidores DNS erro ", "get nameservers: EPP connection error "),
                     "setnsconnerror" => array ("Falha na conex&atilde;o EPP ao tentar alterar servidores DNS erro ", "set nameservers: EPP connection error "),
                     "setnsgeterrorcode" => array ("Falha ao tentar obter servidores DNS atuais para alterar servidores DNS c&oacute;digo ", "set nameservers: error getting nameservers code "),
                     "setnsupdateerrorcode" => array ("Falha ao alterar servidores DNS c&oacute;digo ","set nameservers: update servers error code "),
-                    "updatepending" => array ("Servidores DNS do dom&iacutenio ser&atildeo atualizados em at&eacute; 30 minutos.","Domain update Pending. Based on .br policy, the estimated time taken is up to 30 minutes."),
                     "cpfcnpjrequired" => array ("Registro de dom&iacute;nios .br requer CPF ou CNPJ","register domain: .br registrations require valid CPF or CNPJ"),
                     "companynamerequired" => array ("Registros com CNPJ requerem nome da empresa preenchido",".br registrations with CNPJ require Company Name to be filled in"),
                     "registerconnerror" => array ("Falha na conex&atilde;o EPP ao tentar registrar dom&iacute;nio erro ", "register domain: EPP connection error "),
-                    "notallowed" => array ("Entidade s&ocute; pode registrar dom&iacute;nios por provedor atualmente designado.", "entity can only register domains through designated registrar."),
+                    "notallowed" => array ("Entidade s&oacute; pode registrar dom&iacute;nios por provedor atualmente designado.", "entity can only register domains through designated registrar."),
                     "registergetorgerrorcode" => array ("Falha ao obter status de entidade para registrar dom&iacute;nio erro ","register domain: get org status error code "),
                     "registercreateorgcontacterrorcode" => array ("Falha ao criar contato para entidade erro ","register domain: create org contact error code "),
                     "registercreateorgerrorcode" => array ("Falha ao criar entidade para registrar dom&iacute;nio erro ","register domain: create org error code "),
@@ -1446,16 +1905,34 @@ function _registrobr_lang($msgid) {
                     "getcontactnotallowed" => array ("Somente provedor designado pode obter dados deste dom&iacute;nio.","get contact details: domain is not designated to this registrar."),
                     "getcontactorginfoerrorcode" => array ("Falha ao obter informa&ccedil;&otilde;es de entidade detentora de dom&iacute;nio erro ","get contact details: organization info error code "),
                     "getcontacttypeerrorcode" => array ("Falha ao obter dados de contato do tipo ","get contact details: "),
-                    "getcontacterrorcode" => array ("c&ocute;digo de erro ","contact info error code "),
-                    "savecontactnochange" => array ("nenhuma altera&ccedil;&atilde;o","nothing to change"),
+                    "getcontacterrorcode" => array ("c&oacute;digo de erro ","contact info error code "),
                     "savecontactconnerror" => array ("Falha na conex&atilde;o EPP ao gravar contatos erro ", "save contact details: EPP connection error "),
                     "savecontactdomaininfoerrorcode" => array ("Falha ao obter dados de dom&iacute;nio para gravar contatos erro ","set contact details: domain info error code"),
                     "savecontactnotalloweed" => array ("Somente provedor designado pode alterar dados deste dom&iacute;nio.", "Set contact details: domain is not designated to this registrar."),
                     "savecontacttypeerrorcode" => array ("Falha ao criar novo contato do tipo ","save contact details: "),
-                    "savecontacterrorcode" => array ("c&ocute;digo de erro ","contact create error code "),
+                    "savecontacterrorcode" => array ("c&oacute;digo de erro ","contact create error code "),
                     "savecontactdomainupdateerrorcode" => array ("Falha ao atualizar dom&iacute;nio ao modificar contatos erro ","set contact: domain update error code "),
                     "savecontactorginfoeerrorcode" => array ("Falha de obten&ccedil;&atilde;o de informa&ccedil;&otilde;es de entidade ao modificar contatos erro ","set contact: org info error code "),
                     "savecontactorgupdateerrorcode" => array ("Falha ao atualizar entidade ao modificar contatos erro ","set contact: org update error code "),
+                    "domainnotfound" => array ("Dom&iacute;nio ainda n&atilde;o registrado.","Domain not yet registered"),
+                    "getnserrorcode" => array ("Falha ao obter dados de dom&iacute;nio erro ","get nameserver error code "),
+                    "syncconnerror" => array ("Falha na conex&atilde;o EPP ao sincronizar dom&iacute;nio erro ","domain sync: EPP connection error "),
+                    "syncerrorcode" => array ("Falha ao tentar obter informa&ccedil;&atilde;o de dom&iacute;nio c&oacute;digo ", "domain sync: error getting domain info code "),
+                    "syncdomainnotfound" => array ("n&atilde;o mais registrado."," no longer registered"),
+                    "syncdomainunknownstatus" => array(" apresentou status desconhecido: ","domain sync: unknown status code "),
+                    "Domain" => array ("Dom&iacute;nio ","Domain "),
+                    "domain" => array ("dom&iacute;nio ","domain "),
+                    "syncreport" => array("Relatorio de Sincronismo de Dominios Registro.br\n","Registro.br Domain Sync Report\n"),
+                    "syncreportdashes" => array ("------------------------------------------------\n","------------------------------\n"),
+                    "ERROR" => array ("ERRO: ","ERROR: "),
+                    "domainstatusok" => array ("Ativo","Active"),
+                    "domainstatusserverhold" => array ("CONGELADO","PENDING"),
+                    "domainstatusexpired" => array ("Vencido","Expired"),
+                    "is" => array (" est&aacute; "," is "),
+                    "registration" => array ("(Cria&ccedil;&atilde;o: ","(Registered: "),
+                   
+                                                   
+
                    
                        
                     "companynamefield" => array ("Razao Social","Company Name"),

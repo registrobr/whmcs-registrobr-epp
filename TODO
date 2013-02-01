@@ -1,14 +1,6 @@
 1) Short-term:
 
-* Release of Registro.br renewal sync functions (both 4.x and 5.1+ styles)
-
-* Release of EPP polling script
-
 * Figure out how to keep created domain at pending state until sync or poll
-
-* Preserve ticket number on the database, use the ticket number if
-  nameserver change is requested before domain creation completion. Domain
-delete before creation completion could be done by removing nameservers.
 
 * Automated patching of whoisservers.php or product configurations
 
@@ -30,8 +22,17 @@ delete before creation completion could be done by removing nameservers.
 
 * Option to automate AGP(Add Grace Period) if invoice does not clear out 
 
-* Create widget, possibly from EPP Reports files (production only)
+* Create account balance widget, possibly from EPP Reports files (production only)
+  plus code 3xx Poll Messages (all envirnoments)
 
 * Integrate with DNSSHIM 
 
+* Enable transfer-in of domains and organizations
 
+* Script to rebuild/resync domain/ticket database from EPP Reports file (production only)
+
+* IDN Support 
+
+ 
+
+teste
