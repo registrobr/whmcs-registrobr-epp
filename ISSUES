@@ -1,9 +1,2 @@
-- One test request made renew e-mail be sent without new expiry date
-- One test request (registration via admin interface) and some other 
-  transactions got a blank screen; not clear yet if it's a bug or not
-- Contact details setting generates "invalid phone number".
-  Can be fixed by replacing + with none or not do substr(1) with "Fone" 
-- Domain create needs to do domain check and rule out domains with ticket(s)
-- Testing with password-protected PEM file
-- Further testing is required for production; use only with beta.registro.br for the time being
-
+Please see
+https://github.com/registrobr/whmcs-registrobr-epp/issues?state=open
