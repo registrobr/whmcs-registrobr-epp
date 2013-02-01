@@ -36,17 +36,14 @@
 
 
 
-# This file brings in a few constants we need
+# Constants, functions and registrar functions we need
 require_once dirname(__FILE__) . '/../../../dbconnect.php';
-# Setup include dir
-$include_path = ROOTDIR . '/modules/registrars/registrobr';
-set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+require_once dirname(__FILE__) . '/../../../includes/functions.php';
+require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
+
 # Include EPP stuff we need
-require_once 'registrobr.php';
-# Additional functions we need
-require_once ROOTDIR . '/includes/functions.php';
-# Include registrar functions aswell
-require_once ROOTDIR . '/includes/registrarfunctions.php';
+require_once dirname(__FILE__) . '/registrobr.php';
+
 # We need pear for the error handling
 require_once "PEAR.php";
 
@@ -64,7 +61,7 @@ if (PEAR::isError($client)) {
 _registrobr_Poll($client);
 
 echo(_registrobr_lang("syncreport"));
-echo(_registrobr_lang("syncreportdashes");
+echo(_registrobr_lang("syncreportdashes"));
 
 # Pull list of domains which are registered using this module
 $queryresult = mysql_query("SELECT domain FROM tbldomains WHERE registrar = 'registrobr'");
@@ -92,7 +89,7 @@ foreach($domains as $domain) {
 	if ($domainvalues['active'] == TRUE) {
 		mysql_query(sprintf($querytemplate,"Active",
 				mysql_real_escape_string($domainvalues['registrationdate']),
-				mysql_real_escape_string($domainvalues['expirydate'],
+				mysql_real_escape_string($domainvalues['expirydate']),
 				mysql_real_escape_string($domainvalues['expirydate']),
 				mysql_real_escape_string($domain['domain'])
 		));
@@ -101,7 +98,7 @@ foreach($domains as $domain) {
     } elseif ($domainvalues['expired'] == TRUE) {
                 mysql_query(sprintf($querytemplate,"Expired",
                 mysql_real_escape_string($domainvalues['registrationdate']),
-                mysql_real_escape_string($domainvalues['expirydate'],
+                mysql_real_escape_string($domainvalues['expirydate']),
                 mysql_real_escape_string($domainvalues['expirydate']),
                 mysql_real_escape_string($domain['domain'])
             ));
@@ -110,11 +107,11 @@ foreach($domains as $domain) {
         else {
                 mysql_query(sprintf($querytemplate,"Pending",
                 mysql_real_escape_string($domainvalues['registrationdate']),
-                mysql_real_escape_string($domainvalues['expirydate'],
+                mysql_real_escape_string($domainvalues['expirydate']),
                 mysql_real_escape_string($domainvalues['expirydate']),
                 mysql_real_escape_string($domain['domain'])
 		));
-		echo _registrobr_lang("Domain").$domain._registrobr_lang("is")._registrobr_lang("domainstatusserverhold")._registrobr_lang("registration").$createdate._registrobr_lang("exp, Expiry: $nextduedate)\n";
+		echo _registrobr_lang("Domain").$domain._registrobr_lang("is")._registrobr_lang("domainstatusserverhold")._registrobr_lang("registration").$createdate._registrobr_lang("exp, Expiry: $nextduedate)\n");
 
 	} 
 }

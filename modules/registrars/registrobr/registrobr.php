@@ -50,11 +50,10 @@ function registrobr_getConfigArray() {
         PRIMARY KEY (`domainid`),
         UNIQUE KEY `ticket` (`ticket`)
     ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci";
-    $results=mysql_query($query);
-    logModuleCall("registrobr","debug",$query,$results);
-
+    mysql_query($query);
+    
 	$configarray = array(
-		"Username" => array( "Type" => "text", "Size" => "4", "Description" => "Provider ID(numerical)" ),
+		"Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
 		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
 		"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
 		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
@@ -64,6 +63,7 @@ function registrobr_getConfigArray() {
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
         "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
+        "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),                  
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
@@ -1297,8 +1297,7 @@ function registrobr_SaveContactDetails($params) {
 }
 
 # Domain Delete (used in .br only for Add Grace Period)
-    #bug: need to remove ticket from registrobrtickets table
-
+    
 function registrobr_RequestDelete($params) {
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
@@ -1336,8 +1335,7 @@ function registrobr_RequestDelete($params) {
         #If unknown domain, could be a ticket
         if($coderes == '2303') {
             $values=registrobr_Getnameservers($params);
-            logModuleCall("registrobr","debug",$params,$values);
-            
+                        
             # If no error, domain is still a ticket, so we remove the nameservers to prevent it becoming a domain
             if (empty($values["error"])) {
                 $setparams=$params;
@@ -1516,25 +1514,28 @@ function _registrobr_SyncRequest($client,$params) {
 
 function _registrobr_Poll($client) {
           
-    # This file brings in a few constants we need
+    # Constants, functions and registrar functions we need
     require_once dirname(__FILE__) . '/../../../dbconnect.php';
-    # Setup include dir
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-
-    # Additional functions we need
-    require_once ROOTDIR . '/includes/functions.php';
-    # Include registrar functions aswell
-    require_once ROOTDIR . '/includes/registrarfunctions.php';
+    require_once dirname(__FILE__) . '/../../../includes/functions.php';
+    require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
+    
     # We need pear for the error handling
     require_once "PEAR.php";
     
-    require_once 'Net/EPP/Frame.php';
-    require_once 'Net/EPP/Frame/Command.php';
-    require_once 'Net/EPP/ObjectSpec.php';
+    # We need XML beautifier for showing understable XML code
+    require_once dirname(__FILE__) . '/BeautyXML.class.php';
+    
+    
+    # We need EPP stuff
+    
+    require_once dirname(__FILE__) . '/Net/EPP/Frame.php';
+    require_once dirname(__FILE__) . '/Net/EPP/Frame/Command.php';
+    require_once dirname(__FILE__) . '/Net/EPP/ObjectSpec.php';
     
     # Get module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
+    
+   
     
     # Loop with message queue
     while (!$last) {
@@ -1565,7 +1566,7 @@ function _registrobr_Poll($client) {
             $last = 1;
         } else  {
             $msgid = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
-            $content = _registrobr_lang("Date").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,0,10)."\n";
+            $content = _registrobr_lang("Date").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,0,10)." ";
             $content .= _registrobr_lang("Time").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,11,10)." UTC\n";
             $code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
             $content .= _registrobr_lang("Code").$code."\n";
@@ -1573,7 +1574,9 @@ function _registrobr_Poll($client) {
             $reason = $doc->getElementsByTagName('reason');
             if (!empty($reason)) $content .= _registrobr_lang("Reason").$doc->getElementsByTagName('reason')->item(0)->nodeValue."\n";
             $content .= _registrobr_lang("FullXMLBelow");
-            $content .= $response;
+            $bc = new BeautyXML();
+            
+            $content .= htmlentities($bc->format($response));
             
             $ticket='';
             $domain='';
@@ -1615,46 +1618,64 @@ function _registrobr_Poll($client) {
                 
             }
                     
+            
+            $issue["clientid"]=0;
+            
             if (!empty($domain)) {
-                $table = "mod_registrobr";
-                $fields = "clID,domainid,domain,ticket";
+               
                 $issue["domain"] =$domain;
                 
                 if (empty($ticket)) {
-                    $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain);
-                    $result = select_query($table,$fields,$where);
-                    $data = mysql_fetch_array($result);
+                    $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
+                    $data = mysql_fetch_array($queryresult);
                     
                     # if there is only one domain with this name, we can match it to a domainid without a ticket
                     if (count($data)==1) {
-                        $issue["domainid"] = $data['domainid'];
+                        $domainid = $data['domainid'];
                     }
                 } else {
-                    $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain,"ticket"=>$ticket);
-                    $result = select_query($table,$fields,$where);
-                    $data = mysql_fetch_array($result);
-                    $issue["domainid"] = $data['domainid'];
+                    $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
+                    $data = mysql_fetch_array($queryresult);
+                    $domainid = $data['domainid'];
+                }
+                if (!empty($domainid)) {
+                    $issue["domainid"] = $domainid;
+                    $queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
+                    $data = mysql_fetch_array($queryresult);
+                    $issue["clientid"]=$data['userid'];
+
                 }
             }
             
-            if (!empty($taxpayerID)) {
-                #$#$issue["clientid"] = "1";
+            if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
+                $issue["clientid"] = "1";
                 
             }
         
+        
         $issue["subject"] = _registrobr_lang("Pollmsg");
         $issue["message"] = $content;
+        $user = $moduleparams['Sender'];
+        $queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
+        $data = mysql_fetch_array($queryresult);
+                                         
+        
+        $issue["name"] = $data["firstname"]." ".$data["lasttname"];
+        $issue["email"] = $data["email"];
             
-        $results = localAPI("openticket",$issue,"admin");
-            if ($results['result']!="success") {
+            
+        $results = localAPI("openticket",$issue,$user);
+        if ($results['result']!="success") {
                 logModuleCall("registrobr",_registrobr_lang("epppollerror"),$issue,$results);
                 return;
             }
-          
+        
+
+            
         # Ack poll message
-        $request='
-                    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+        $request='  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
                         <command>
                             <poll op="ack" msgID="'.$msgid.'"/>
                             <clTRID>'.mt_rand().mt_rand().'</clTRID>
@@ -1669,6 +1690,8 @@ function _registrobr_Poll($client) {
         $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
         $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
         $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+        
+
 
         # Check result
         if($coderes != '1000') {
@@ -1695,16 +1718,22 @@ function _registrobr_Poll($client) {
 function _registrobr_Client() {
 
 	# Setup include dir
-	$include_path = ROOTDIR . '/modules/registrars/registrobr';
-	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	$include_path = dirname(__FILE__);
+	set_include_path($include_path . ':' . get_include_path());
+    
+    # Constants, functions and registrar functions we need
+    require_once dirname(__FILE__) . '/../../../dbconnect.php';
+    require_once dirname(__FILE__) . '/../../../includes/functions.php';
+    require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
 
 	# Include EPP stuff we need
-	require_once 'Net/EPP/Client.php';
-	require_once 'Net/EPP/Protocol.php';
+	require_once dirname(__FILE__) . '/Net/EPP/Client.php';
+	require_once dirname(__FILE__) . '/Net/EPP/Protocol.php';
 
 	# Grab module parameters
 
 	$moduleparams = getregistrarconfigoptions('registrobr');
+    
 	if (!isset($moduleparams['TestMode']) && !empty($moduleparams['Certificate'])) {
 		$errormsg =  _registrobr_lang("specifypath") ;
 		logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
@@ -1750,6 +1779,8 @@ function _registrobr_Client() {
 	$use_ssl = true;
 	$res = $client->connect($Server, $Port, 3 , $use_ssl, $context);
 
+    
+    
 	# Check for error
 	if (PEAR::isError($res)) {
 		logModuleCall("registrobr",_registrobr_lang("eppconnect"),"tls://".$Server.":".$Port,$res);
@@ -1785,7 +1816,7 @@ function _registrobr_Client() {
             </command>
         </epp>
         ';
-
+    
    $response = $client->request($request);
    $doc= new DOMDocument();
    $doc->loadXML($response);
@@ -1930,8 +1961,16 @@ function _registrobr_lang($msgid) {
                     "domainstatusexpired" => array ("Vencido","Expired"),
                     "is" => array (" est&aacute; "," is "),
                     "registration" => array ("(Cria&ccedil;&atilde;o: ","(Registered: "),
+                    "epppollerror" => array ("Erro de ao fazer EPP Poll","EPP Polling error"),
+                    "Pollmsg" => array ("Mensagem de Poll relativa a dominios .br","Poll message about .br domains"),
+                    "pollackerrorcode" => array ("Falha ao dar recebimento de mensagem EPP Poll codigo ", "EPP Poll: error acknowledging a message error code "),
+                    "Date" => array ("Data ","Date "),
+                   "time" => array ("hora ","time "),
+                   "Code" => array ("Codigo ", "code "),
+                   "Text" => array ("Texto ","Text "),
+                   "FullXMLBelow" => array ("Mensagem XML completo abaixo:\n","Full XML message below:\n"),
                    
-                                                   
+                                                                   
 
                    
                        
