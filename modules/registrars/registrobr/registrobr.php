@@ -87,6 +87,7 @@ function registrobr_GetNameservers($params) {
     # Create new EPP client
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	$client = _set_encode($client);
         $values["error"]=_registrobr_lang('getnsconnerror').$client;
         return $values;
     }
@@ -132,8 +133,10 @@ function registrobr_GetNameservers($params) {
         # Check if result is ok
         if($coderes != '1000') {
             if ($coderes != '2303') {
+		$msg = _set_encode($msg);
                 $errormsg = _registrobr_lang('getnserrorcode').$coderes._registrobr_lang('msg').$msg."'";
                 if (!empty($reason)) {
+		    $reason = _set_encode($reason);
                     $errormsg.= _registrobr_lang("reason").$reason."'";
                 } ;
                 logModuleCall("registrobr",$errormsg,$request,$response);
@@ -225,6 +228,7 @@ function registrobr_SaveNameservers($params) {
 	# Grab list of current nameservers
 	$client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	    $client = _set_encode($client);
             $values["error"]=_registrobr_lang('setnsconnerror').$client;
             return $values ;
     }
@@ -270,8 +274,10 @@ function registrobr_SaveNameservers($params) {
         # Check if result is ok
         if($coderes != '1000') {
             if ($coderes != '2303') {
+	        $msg = _set_encode($msg);
                 $errormsg = _registrobr_lang('setnserrorcode').$coderes._registrobr_lang('msg').$msg."'";
                 if (!empty($reason)) {
+		    $reason = _set_encode($reason);
                     $errormsg.= _registrobr_lang("reason").$reason."'";
                 } ;
                 logModuleCall("registrobr",$errormsg,$request,$response);
@@ -349,8 +355,10 @@ function registrobr_SaveNameservers($params) {
 	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+            $msg = _set_encode($msg);
             $errormsg = _registrobr_lang('setnsupdateerrorcode').$coderes._registrobr_lang('msg').$msg."'";
             if (!empty($reason)) {
+		$reason = _set_encode($reason);
                 $errormsg.= _registrobr_lang("reason").$reason."'";
             } ;
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -427,6 +435,7 @@ function registrobr_RegisterDomain($params) {
     #Get an EPP connection
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+            $client = _set_encode($client);
             $values["error"] = _registrobr_lang("registerconnerror").$client;
             logModuleCall("registrobr",$values["error"]);
             return $values ;
@@ -475,8 +484,10 @@ function registrobr_RegisterDomain($params) {
             } 
 
     } elseif($coderes != '2303') {
+                        $msg = _set_encode($msg);
                         $errormsg = _registrobr_lang('registergetorgerrorcode').$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+                            $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         } ;
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -526,8 +537,10 @@ function registrobr_RegisterDomain($params) {
                 $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
                 $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
                 if($coderes != '1000') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("registercreateorgcontacterrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -585,8 +598,10 @@ function registrobr_RegisterDomain($params) {
                 $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
                 $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
                 if($coderes != '1001') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("registercreateorgerrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -670,10 +685,13 @@ function registrobr_RegisterDomain($params) {
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1001') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("registererrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
+
                         logModuleCall("registrobr",$errormsg,$request,$response);
                         $values["error"] = $errormsg;
                         return $values;
@@ -697,6 +715,7 @@ function registrobr_RenewDomain($params) {
     # Get an EPP Connection                    
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+			$client = _set_encode($client);
                         $values["error"] = _registrobr_lang("renewconnerror").$client;
                         logModuleCall("registrobr",$values["error"]);
                         return $values ;
@@ -725,8 +744,10 @@ function registrobr_RenewDomain($params) {
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("renewinfoerrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -762,8 +783,10 @@ function registrobr_RenewDomain($params) {
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("renewerrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -793,6 +816,7 @@ function registrobr_GetContactDetails($params) {
 	# Grab contact details
 	$client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	$client = _set_encode($client);
         $values["error"] = _registrobr_lang("getcontactconnerror").$client;
         logModuleCall("registrobr",$values["error"]);
         return $values ;
@@ -820,8 +844,10 @@ function registrobr_GetContactDetails($params) {
 	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+	$msg = _set_encode($msg);
         $errormsg = _registrobr_lang("getcontacterrorcode").$coderes._registrobr_lang('msg').$msg."'";
         if (!empty($reason)) {
+	    $reason = _set_encode($reason);
             $errormsg.= _registrobr_lang("reason").$reason."'";
         }
         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -889,8 +915,10 @@ function registrobr_GetContactDetails($params) {
     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+	$msg = _set_encode($msg);
         $errormsg = _registrobr_lang("getcontactorginfoerrorcode").$coderes._registrobr_lang('msg').$msg."'";
         if (!empty($reason)) {
+	    $reason = _set_encode($reason);
             $errormsg.= _registrobr_lang("reason").$reason."'";
         }
         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -933,8 +961,10 @@ function registrobr_GetContactDetails($params) {
                     $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
                     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
                     if($coderes != '1000') {
+			$msg = _set_encode($msg);
                         $errormsg = _registrobr_lang("getcontacttypeerrorcode").$type._registrobr_lang("getcontacterrorcode").$coderes._registrobr_lang('msg').$msg."'";
                         if (!empty($reason)) {
+			    $reason = _set_encode($reason);
                             $errormsg.= _registrobr_lang("reason").$reason."'";
                         }
                         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -981,6 +1011,7 @@ function registrobr_SaveContactDetails($params) {
     # Grab domain, organization and contact details
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	$client = _set_encode($client);
         $values["error"] = _registrobr_lang("savecontactconnerror").$client;
         logModuleCall("registrobr",$values["error"]);
         return $values ;
@@ -1008,8 +1039,10 @@ function registrobr_SaveContactDetails($params) {
 	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
     $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     if($coderes != '1000') {
+	    $msg = _set_encode($msg);
             $errormsg = _registrobr_lang("savecontactdomaininfoerrorcode").$coderes._registrobr_lang('msg').$msg."'";
             if (!empty($reason)) {
+		$reason = _set_encode($reason);
                 $errormsg.= _registrobr_lang("reason").$reason."'";
             }
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1104,8 +1137,10 @@ function registrobr_SaveContactDetails($params) {
         $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
         $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
         if($coderes != '1000') {
+	    $msg = _set_encode($msg);
             $errormsg = _registrobr_lang("savecontacttypeerrorcode").$type._registrobr_lang("savecontacterrorcode").$coderes._registrobr_lang('msg').$msg."'";
             if (!empty($reason)) {
+		$reason = _set_encode($reason);
                 $errormsg.= _registrobr_lang("reason").$reason."'";
             }
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1153,8 +1188,10 @@ function registrobr_SaveContactDetails($params) {
         $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
         $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
         if($coderes != '1000') {
+	    $msg = _set_encode($msg);
             $errormsg = _registrobr_lang("savecontactdomainupdateerrorcode").$coderes._registrobr_lang('msg').$msg."'";
             if (!empty($reason)) {
+		$reason = _set_encode($reason);
                 $errormsg.= _registrobr_lang("reason").$reason."'";
             }
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1201,8 +1238,10 @@ function registrobr_SaveContactDetails($params) {
             $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
             $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
             if($coderes != '1000') {
+		$msg = _set_encode($msg);
                 $errormsg = _registrobr_lang("savecontactorginfoeerrorcode").$coderes._registrobr_lang('msg').$msg."'";
                 if (!empty($reason)) {
+		    $reason = _set_encode($reason);
                     $errormsg.= _registrobr_lang("reason").$reason."'";
                 }
                 logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1282,8 +1321,10 @@ function registrobr_SaveContactDetails($params) {
             $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
             $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
             if($coderes != '1000') {
+		$msg = _set_encode($msg);
                 $errormsg = _registrobr_lang("savecontactorgupdateeerrorcode").$coderes._registrobr_lang('msg').$msg."'";
                 if (!empty($reason)) {
+		    $reason = _set_encode($reason);
                     $errormsg.= _registrobr_lang("reason").$reason."'";
                 }
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1301,6 +1342,7 @@ function registrobr_SaveContactDetails($params) {
 function registrobr_RequestDelete($params) {
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	$client = _set_encode($client);
         $values["error"] = _registrobr_lang("deleteconnerror").$client;
         logModuleCall("registrobr",$values["error"]);
         return $values;
@@ -1354,9 +1396,10 @@ function registrobr_RequestDelete($params) {
                 return $values;
             }
         }
-        
+        $msg = _set_encode($msg);
         $errormsg = _registrobr_lang("deleteerrorcode").$coderes._registrobr_lang("msg").$msg."'";
         if (!empty($reason)) {
+	    $reason = _set_encode($reason);
             $errormsg.= _registrobr_lang("reason").$reason."'";
         } ;
         logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1372,6 +1415,7 @@ function registrobr_Sync($params) {
     # Get an EPP connection
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
+	$client = _set_encode($client);
         $values["error"] = _registrobr_lang("syncconnerror").$client;
         logModuleCall("registrobr",$values["error"]);
         return $values ;
@@ -1427,13 +1471,15 @@ function _registrobr_SyncRequest($client,$params) {
 	$doc->loadXML($response);
 	$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 	$msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-    $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+   	$reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
     
     # Check if result is ok
 	if($coderes != '1000') {
         if ($coderes != '2303') {
+	    $msg = _set_encode($msg);
             $errormsg = _registrobr_lang('syncerrorcode').$coderes._registrobr_lang('msg').$msg."'";
             if (!empty($reason)) {
+		$reason = _set_encode($reason);
                 $errormsg.= _registrobr_lang("reason").$reason."'";
             } ;
             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1478,8 +1524,10 @@ function _registrobr_SyncRequest($client,$params) {
         }
         
         if ($coderes != '2303') {
+		    $msg = _set_encode($msg);
                     $errormsg = _registrobr_lang('syncerrorcode').$coderes._registrobr_lang('msg').$msg."'";
                     if (!empty($reason)) {
+			$reason = _set_encode($reason);
                         $errormsg.= _registrobr_lang("reason").$reason."'";
                     } ;
                     logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1695,8 +1743,10 @@ function _registrobr_Poll($client) {
 
         # Check result
         if($coderes != '1000') {
+		$msg = _set_encode($msg);
                 $errormsg = _registrobr_lang('pollackerrorcode').$coderes._registrobr_lang('msg').$msg."'";
                 if (!empty($reason)) {
+			$reason = _set_encode($reason);
                         $errormsg.= _registrobr_lang("reason").$reason."'";
                 } ;
                 return;
@@ -1824,8 +1874,10 @@ function _registrobr_Client() {
    $msg = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
    $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
    if($coderes != '1000') {
+			    $msg = _set_encode($msg);
                             $errormsg = _registrobr_lang("epplogin").$coderes._registrobr_lang("msg").$msg."'";
                             if (!empty($reason)) {
+					$reason = _set_encode($reason);
                                         $errormsg.= _registrobr_lang("reason").$reason."'";
                             }
                             logModuleCall("registrobr",$errormsg,$request,$response);
@@ -1901,12 +1953,12 @@ function _registrobr_StateProvince($sp) {
     }
                             
 
-function _identify_encode() {
+function _identify_env_encode() {
 	#Encoding default UTF-8
+
 
 	if(!empty($CONFIG['Charset'])){
                 
-
 		return $CONFIG['Charset'];
 	}
 	else {
@@ -1915,22 +1967,21 @@ function _identify_encode() {
     		$where = array();
     		$result = select_query($table,$fields,$where);
     		$data = mysql_fetch_array($result);
-return  $data;
-    	
 
-    		print_r($data);
     		if($data['Charset']) {
 			return $data['Charset'];
 		}
 		else {
-			return 0;
+			return 'UTF-8';
 		}
 	}
 
 }
 
-function _change_encode($text,$to_encode = 'UTF-8') {
+function _set_encode($text) {
     $current_encoding = mb_detect_encoding($text, 'auto');
+    $to_encode = _identify_env_encode();
+
     $text = iconv($current_encoding, $to_encode, $text);
     return $text;
 }
@@ -1993,12 +2044,8 @@ function _registrobr_lang($msgid) {
                     "domainstatusok" => array ("Ativo","Active"),
                     "domainstatusserverhold" => array ("CONGELADO","PENDING"),
                     "domainstatusexpired" => array ("Vencido","Expired"),
-<<<<<<< HEAD
                     "is" => array (" está "," is "),
                     "registration" => array ("(Criação: ","(Registered: "),
-=======
-                    "is" => array (" est&aacute; "," is "),
-                    "registration" => array ("(Cria&ccedil;&atilde;o: ","(Registered: "),
                     "epppollerror" => array ("Erro de ao fazer EPP Poll","EPP Polling error"),
                     "Pollmsg" => array ("Mensagem de Poll relativa a dominios .br","Poll message about .br domains"),
                     "pollackerrorcode" => array ("Falha ao dar recebimento de mensagem EPP Poll codigo ", "EPP Poll: error acknowledging a message error code "),
@@ -2007,11 +2054,6 @@ function _registrobr_lang($msgid) {
                    "Code" => array ("Codigo ", "code "),
                    "Text" => array ("Texto ","Text "),
                    "FullXMLBelow" => array ("Mensagem XML completo abaixo:\n","Full XML message below:\n"),
->>>>>>> 1f5f769c6a09bdd5da3ca61d8c21f22236fca69e
-                   
-                                                                   
-
-                   
                        
                     "companynamefield" => array ("Razao Social","Company Name"),
                     "fullnamefield" => array ("Nome e Sobrenome","Full Name"),
@@ -2026,9 +2068,7 @@ function _registrobr_lang($msgid) {
                     );                   
          
     $langmsg = ($moduleparams["Language"]=="Portuguese" ? $msgs["$msgid"][0] : $msgs["$msgid"][1] );
-    $langms = $msgs["$msgid"][0];
-    $encode = _identify_encode();
-    $langmsg = _change_encode($langmsg,$encode);
+    $langmsg = _set_encode($langmsg);
     return $langmsg;
 }
 
