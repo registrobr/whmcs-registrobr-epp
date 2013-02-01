@@ -1870,66 +1870,100 @@ function _registrobr_StateProvince($sp) {
     }
                             
 
+function _identify_encode() {
+	#Encoding default UTF-8
+
+	if(!empty($CONFIG['Charset'])){
+                
+
+		return $CONFIG['Charset'];
+	}
+	else {
+    		$table = "tblconfiguration";
+    		$fields = "Charset";
+    		$where = array();
+    		$result = select_query($table,$fields,$where);
+    		$data = mysql_fetch_array($result);
+return  $data;
+    	
+
+    		print_r($data);
+    		if($data['Charset']) {
+			return $data['Charset'];
+		}
+		else {
+			return 0;
+		}
+	}
+
+}
+
+function _change_encode($text,$to_encode = 'UTF-8') {
+    $current_encoding = mb_detect_encoding($text, 'auto');
+    $text = iconv($current_encoding, $to_encode, $text);
+    return $text;
+}
+
 function _registrobr_lang($msgid) {
 
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
     $msgs = array (
-                    "epplogin" => array ("Erro no login EPP c&oacute;digo ","EPP login error code "),
+                    "epplogin" => array ("Erro no login EPP código ","EPP login error code "),
                     "msg" => array (" mensagem '"," message '"),
                     "reason" => array (" motivo '"," reason '"),
-                    "eppconnect" => array ("Erro de conex&atilde;o EPP","EPP connect error"),
-                    "configerr" => array ("Erro nas op&ccedil;&otilde;es de configura&ccedil;&atilde;o","Config options errorr"),
+                    "eppconnect" => array ("Erro de conexão EPP","EPP connect error"),
+                    "configerr" => array ("Erro nas opções de configuração","Config options errorr"),
                     "specifypath" => array ("Favor informar o caminho para o arquivo de certificado","Please specifity path to certificate file"),
-                    "invalidpath" => array ("Caminho para o arquivo de certificado inv&aacute;lido", "Invalid certificate file path"),
+                    "invalidpath" => array ("Caminho para o arquivo de certificado inválido", "Invalid certificate file path"),
                     "specifypassphrase" => array ("Favor especificar a frase secreta do certificado", "Please specifity certificate passphrase"),
-                    "deleteerrorcode" => array ("Erro na remo&ccedil;&atilde;o de dom&iacutenio c&oacute;digo ","Domain delete: error code "),
-                    "deleteconnerror" => array ("Falha na conex&atilde;o EPP ao tentar remover dom&iacuten;io erro ","Domain delete: EPP connection error "),
-                    "getnsconnerror" => array ("Falha na conex&atilde;o EPP ao tentar obter servidores DNS erro ", "get nameservers: EPP connection error "),
-                    "setnsconnerror" => array ("Falha na conex&atilde;o EPP ao tentar alterar servidores DNS erro ", "set nameservers: EPP connection error "),
-                    "setnsgeterrorcode" => array ("Falha ao tentar obter servidores DNS atuais para alterar servidores DNS c&oacute;digo ", "set nameservers: error getting nameservers code "),
-                    "setnsupdateerrorcode" => array ("Falha ao alterar servidores DNS c&oacute;digo ","set nameservers: update servers error code "),
-                    "cpfcnpjrequired" => array ("Registro de dom&iacute;nios .br requer CPF ou CNPJ","register domain: .br registrations require valid CPF or CNPJ"),
+                    "deleteerrorcode" => array ("Erro na remoção de domíenio código ","Domain delete: error code "),
+                    "deleteconnerror" => array ("Falha na conexão EPP ao tentar remover domínio erro ","Domain delete: EPP connection error "),
+                    "getnsconnerror" => array ("Falha na conexão EPP ao tentar obter servidores DNS erro ", "get nameservers: EPP connection error "),
+                    "setnsconnerror" => array ("Falha na conexão EPP ao tentar alterar servidores DNS erro ", "set nameservers: EPP connection error "),
+                    "setnsgeterrorcode" => array ("Falha ao tentar obter servidores DNS atuais para alterar servidores DNS código ", "set nameservers: error getting nameservers code "),
+                    "setnsupdateerrorcode" => array ("Falha ao alterar servidores DNS código ","set nameservers: update servers error code "),
+                    "cpfcnpjrequired" => array ("Registro de domínios .br requer CPF ou CNPJ","register domain: .br registrations require valid CPF or CNPJ"),
                     "companynamerequired" => array ("Registros com CNPJ requerem nome da empresa preenchido",".br registrations with CNPJ require Company Name to be filled in"),
-                    "registerconnerror" => array ("Falha na conex&atilde;o EPP ao tentar registrar dom&iacute;nio erro ", "register domain: EPP connection error "),
-                    "notallowed" => array ("Entidade s&oacute; pode registrar dom&iacute;nios por provedor atualmente designado.", "entity can only register domains through designated registrar."),
-                    "registergetorgerrorcode" => array ("Falha ao obter status de entidade para registrar dom&iacute;nio erro ","register domain: get org status error code "),
+                    "registerconnerror" => array ("Falha na conexão EPP ao tentar registrar domínio erro ", "register domain: EPP connection error "),
+                    "notallowed" => array ("Entidade só pode registrar domínios por provedor atualmente designado.", "entity can only register domains through designated registrar."),
+                    "registergetorgerrorcode" => array ("Falha ao obter status de entidade para registrar domínio erro ","register domain: get org status error code "),
                     "registercreateorgcontacterrorcode" => array ("Falha ao criar contato para entidade erro ","register domain: create org contact error code "),
-                    "registercreateorgerrorcode" => array ("Falha ao criar entidade para registrar dom&iacute;nio erro ","register domain: create org error code "),
-                    "registererrorcode" => array ("Falha ao registrar dom&iacute;nio erro ","register domain error code "),
-                    "renewconnerror" => array ("Falha na conex&atildeo EPP ao renovar dom&iacute;nio erro ", "renew domain: EPP connection error "),
-                    "renewinfoerrorcode" => array ("Falha ao obter informa&ccedil;&otilde;es de dom&iacute;nio ao renovar dom&iacute;nio erro ", "renew: domain info error code "),
-                    "renewerrorcode" => array ("Falha ao renovar dom&iacute;nio erro ","domain renew: error code "),
-                    "getcontactconnerror" => array ("Falha na conex&atilde;o EPP ao obter dados de contato erro ","get contact details: EPP connection error "), 
+                    "registercreateorgerrorcode" => array ("Falha ao criar entidade para registrar domínio erro ","register domain: create org error code "),
+                    "registererrorcode" => array ("Falha ao registrar domínio erro ","register domain error code "),
+                    "renewconnerror" => array ("Falha na conexão EPP ao renovar domínio erro ", "renew domain: EPP connection error "),
+                    "renewinfoerrorcode" => array ("Falha ao obter informações de domínio ao renovar domínio erro ", "renew: domain info error code "),
+                    "renewerrorcode" => array ("Falha ao renovar domínio erro ","domain renew: error code "),
+                    "getcontactconnerror" => array ("Falha na conexão EPP ao obter dados de contato erro ","get contact details: EPP connection error "), 
                     "getcontacterrorcode" => array ("Falha ao obter dados de contato erro ", "get contact details: domain info error code "),
-                    "getcontactnotallowed" => array ("Somente provedor designado pode obter dados deste dom&iacute;nio.","get contact details: domain is not designated to this registrar."),
-                    "getcontactorginfoerrorcode" => array ("Falha ao obter informa&ccedil;&otilde;es de entidade detentora de dom&iacute;nio erro ","get contact details: organization info error code "),
+                    "getcontactnotallowed" => array ("Somente provedor designado pode obter dados deste domínio.","get contact details: domain is not designated to this registrar."),
+                    "getcontactorginfoerrorcode" => array ("Falha ao obter informações de entidade detentora de domínio erro ","get contact details: organization info error code "),
                     "getcontacttypeerrorcode" => array ("Falha ao obter dados de contato do tipo ","get contact details: "),
-                    "getcontacterrorcode" => array ("c&oacute;digo de erro ","contact info error code "),
-                    "savecontactconnerror" => array ("Falha na conex&atilde;o EPP ao gravar contatos erro ", "save contact details: EPP connection error "),
-                    "savecontactdomaininfoerrorcode" => array ("Falha ao obter dados de dom&iacute;nio para gravar contatos erro ","set contact details: domain info error code"),
-                    "savecontactnotalloweed" => array ("Somente provedor designado pode alterar dados deste dom&iacute;nio.", "Set contact details: domain is not designated to this registrar."),
+                    "getcontacterrorcode" => array ("código de erro ","contact info error code "),
+                    "savecontactconnerror" => array ("Falha na conexão EPP ao gravar contatos erro ", "save contact details: EPP connection error "),
+                    "savecontactdomaininfoerrorcode" => array ("Falha ao obter dados de domínio para gravar contatos erro ","set contact details: domain info error code"),
+                    "savecontactnotalloweed" => array ("Somente provedor designado pode alterar dados deste domínio.", "Set contact details: domain is not designated to this registrar."),
                     "savecontacttypeerrorcode" => array ("Falha ao criar novo contato do tipo ","save contact details: "),
-                    "savecontacterrorcode" => array ("c&oacute;digo de erro ","contact create error code "),
-                    "savecontactdomainupdateerrorcode" => array ("Falha ao atualizar dom&iacute;nio ao modificar contatos erro ","set contact: domain update error code "),
-                    "savecontactorginfoeerrorcode" => array ("Falha de obten&ccedil;&atilde;o de informa&ccedil;&otilde;es de entidade ao modificar contatos erro ","set contact: org info error code "),
+                    "savecontacterrorcode" => array ("código de erro ","contact create error code "),
+                    "savecontactdomainupdateerrorcode" => array ("Falha ao atualizar domínio ao modificar contatos erro ","set contact: domain update error code "),
+                    "savecontactorginfoeerrorcode" => array ("Falha de obtenção de informações de entidade ao modificar contatos erro ","set contact: org info error code "),
                     "savecontactorgupdateerrorcode" => array ("Falha ao atualizar entidade ao modificar contatos erro ","set contact: org update error code "),
-                    "domainnotfound" => array ("Dom&iacute;nio ainda n&atilde;o registrado.","Domain not yet registered"),
-                    "getnserrorcode" => array ("Falha ao obter dados de dom&iacute;nio erro ","get nameserver error code "),
-                    "syncconnerror" => array ("Falha na conex&atilde;o EPP ao sincronizar dom&iacute;nio erro ","domain sync: EPP connection error "),
-                    "syncerrorcode" => array ("Falha ao tentar obter informa&ccedil;&atilde;o de dom&iacute;nio c&oacute;digo ", "domain sync: error getting domain info code "),
-                    "syncdomainnotfound" => array ("n&atilde;o mais registrado."," no longer registered"),
+                    "domainnotfound" => array ("Domínio ainda não registrado.","Domain not yet registered"),
+                    "getnserrorcode" => array ("Falha ao obter dados de domínio erro ","get nameserver error code "),
+                    "syncconnerror" => array ("Falha na conexão EPP ao sincronizar domínio erro ","domain sync: EPP connection error "),
+                    "syncerrorcode" => array ("Falha ao tentar obter informação de domínio código ", "domain sync: error getting domain info code "),
+                    "syncdomainnotfound" => array ("não mais registrado."," no longer registered"),
                     "syncdomainunknownstatus" => array(" apresentou status desconhecido: ","domain sync: unknown status code "),
-                    "Domain" => array ("Dom&iacute;nio ","Domain "),
-                    "domain" => array ("dom&iacute;nio ","domain "),
+                    "Domain" => array ("Domínio ","Domain "),
+                    "domain" => array ("domínio ","domain "),
                     "syncreport" => array("Relatorio de Sincronismo de Dominios Registro.br\n","Registro.br Domain Sync Report\n"),
                     "syncreportdashes" => array ("------------------------------------------------\n","------------------------------\n"),
                     "ERROR" => array ("ERRO: ","ERROR: "),
                     "domainstatusok" => array ("Ativo","Active"),
                     "domainstatusserverhold" => array ("CONGELADO","PENDING"),
                     "domainstatusexpired" => array ("Vencido","Expired"),
-                    "is" => array (" est&aacute; "," is "),
-                    "registration" => array ("(Cria&ccedil;&atilde;o: ","(Registered: "),
+                    "is" => array (" está "," is "),
+                    "registration" => array ("(Criação: ","(Registered: "),
                    
                                                    
 
@@ -1948,8 +1982,10 @@ function _registrobr_lang($msgid) {
                     );                   
          
     $langmsg = ($moduleparams["Language"]=="Portuguese" ? $msgs["$msgid"][0] : $msgs["$msgid"][1] );
+    $langms = $msgs["$msgid"][0];
+    $encode = _identify_encode();
+    $langmsg = _change_encode($langmsg,$encode);
     return $langmsg;
 }
 
 ?>
-
