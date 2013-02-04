@@ -89,12 +89,12 @@ function _registrobr_pear_error($client,$strerror){
 #Parse xml response from epp server
 function _registrobr_parse_response($response){
 
-    $doc= new DOMDocument();
-    $doc->loadXML($response);
-    $atts = array();
-    $atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-    $atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-    $atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+	$doc= new DOMDocument();
+	$doc->loadXML($response);
+	$atts = array();
+	$atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+	$atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+	$atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
 	$atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
 	$atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
 	$atts['doc'] = $doc;
@@ -103,11 +103,11 @@ function _registrobr_parse_response($response){
 }
 #registro.br response error
 
-function _registrobr_server_error($strerror,$coderes,$msg,$reason){
+function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$response){
 
 	$msg = _registrobr_set_encode($msg);
-    $errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
-    if (!empty($reason)) {
+	$errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
+	if (!empty($reason)) {
 		$reason = _registrobr_set_encode($reason);
 		$errormsg.= _registrobr_lang("reason").$reason."'";
 	};
@@ -169,7 +169,7 @@ function registrobr_GetNameservers($params) {
 	
         if($coderes != '1000') {
             if ($coderes != '2303') {
-                return _registrobr_server_error('getnserrorcode',$coderes,$msg,$reason);
+                return _registrobr_server_error('getnserrorcode',$coderes,$msg,$reason,$request,$response);
             }
         $table = "mod_registrobr";
         $fields = "clID,domainid,domain,ticket";
@@ -297,7 +297,7 @@ function registrobr_SaveNameservers($params) {
         # Check if result is ok
         if($coderes != '1000') {
             if ($coderes != '2303') {
-                return _registrobr_server_error('setnserrorcode',$coderes,$msg,$reason);
+                return _registrobr_server_error('setnserrorcode',$coderes,$msg,$reason,$request,$response);
             }
         
         $table = "mod_registrobr";
@@ -373,7 +373,7 @@ function registrobr_SaveNameservers($params) {
     # Check results
 
     if($coderes != '1000') {
-        return _registrobr_server_error('setnsupdateerrorcode',$coderes,$msg,$reason);
+        return _registrobr_server_error('setnsupdateerrorcode',$coderes,$msg,$reason,$request,$response);
     }  
     
     return $values;
@@ -497,7 +497,7 @@ function registrobr_RegisterDomain($params) {
             } 
 
     } elseif($coderes != '2303') {
-	return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
     } else {
         
                 # Company or individual not in the database, proceed to org contact creation
@@ -545,7 +545,7 @@ function registrobr_RegisterDomain($params) {
 	# Check results
 
         if($coderes != '1000') {
-		return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason);
+		return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
         }                   
             
                 # Org creation
@@ -600,7 +600,7 @@ function registrobr_RegisterDomain($params) {
         $reason = $answer['reason'];
 	# Check results
         if($coderes != '1001') {
-            return _registrobr_server_error('registercreateorgerrorcode',$coderes,$msg,$reason);
+            return _registrobr_server_error('registercreateorgerrorcode',$coderes,$msg,$reason,$request,$response);
         }           
     }
     # Generate XML for namseverss
@@ -680,7 +680,7 @@ function registrobr_RegisterDomain($params) {
     $reason = $answer['reason'];
     # Check results
     if($coderes != '1001') {
-	return _registrobr_server_error('registererrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('registererrorcode',$coderes,$msg,$reason,$request,$response);
     }
     
     $table = "mod_registrobr";
@@ -730,7 +730,7 @@ function registrobr_RenewDomain($params) {
     $reason = $answer['reason'];
     # Check results
     if($coderes != '1000') {
-        return _registrobr_server_error('renewinfoerrorcode',$coderes,$msg,$reason);
+        return _registrobr_server_error('renewinfoerrorcode',$coderes,$msg,$reason,$request,$response);
     }
 	# Sanitize expiry date
 	$expdate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
@@ -761,7 +761,7 @@ function registrobr_RenewDomain($params) {
     # Check results
 
     if($coderes != '1000') {
-	return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
     }
     return $values;
 
@@ -816,7 +816,7 @@ function registrobr_GetContactDetails($params) {
 	# Check results
 
     if($coderes != '1000') {
-	return _registrobr_server_error('getcontacterrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('getcontacterrorcode',$coderes,$msg,$reason,$request,$response);
 
     }
     
@@ -883,7 +883,7 @@ function registrobr_GetContactDetails($params) {
 	# Check results
 
     if($coderes != '1000') {
-	return _registrobr_server_error('getcontactorginfoerrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('getcontactorginfoerrorcode',$coderes,$msg,$reason,$request,$response);
     }
 
     $Contacts["Registrant"]= $contact;
@@ -925,7 +925,7 @@ function registrobr_GetContactDetails($params) {
 
 	# Check results
                     if($coderes != '1000') {
-			return _registrobr_server_error('getcontacttypeerrorcode',$coderes,$msg,$reason);
+			return _registrobr_server_error('getcontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
                     }
     
                     $values[$type][_registrobr_lang("fullnamefield")] = $doc->getElementsByTagName('name')->item(0)->nodeValue;
@@ -997,7 +997,7 @@ function registrobr_SaveContactDetails($params) {
 	$contact = $answer['contact'];
 	# Check results
     if($coderes != '1000') {
-	return _registrobr_server_error('savecontactdomaininfoerrorcode',$coderes,$msg,$reason);
+	return _registrobr_server_error('savecontactdomaininfoerrorcode',$coderes,$msg,$reason,$request,$response);
 
     }
         
@@ -1089,7 +1089,7 @@ function registrobr_SaveContactDetails($params) {
 	$contact = $answer['contact'];
 	# Check results
         if($coderes != '1000') {
-		return _registrobr_server_error('savecontacttypeerrorcode',$coderes,$msg,$reason);
+		return _registrobr_server_error('savecontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
         }
         
         $NewContacts[$type]=$doc->getElementsByTagName('id')->item(0)->nodeValue;
@@ -1134,7 +1134,7 @@ function registrobr_SaveContactDetails($params) {
 	$contact = $answer['contact'];
 	# Check results
         if($coderes != '1000') {
-	    return _registrobr_server_error('savecontactdomainupdateerrorcode',$coderes,$msg,$reason);
+	    return _registrobr_server_error('savecontactdomainupdateerrorcode',$coderes,$msg,$reason,$request,$response);
 
         }
         
@@ -1179,7 +1179,7 @@ function registrobr_SaveContactDetails($params) {
 	$contact = $answer['contact'];
 	# Check results
             if($coderes != '1000') {
-		    return _registrobr_server_error('savecontactorginfoeerrorcode',$coderes,$msg,$reason);
+		    return _registrobr_server_error('savecontactorginfoeerrorcode',$coderes,$msg,$reason,$request,$response);
             }
 
             # Get current org contact
@@ -1256,7 +1256,7 @@ function registrobr_SaveContactDetails($params) {
 	$contact = $answer['contact'];
 	# Check results
             if($coderes != '1000') {
-		    return _registrobr_server_error('savecontactorgupdateeerrorcode',$coderes,$msg,$reason);
+		    return _registrobr_server_error('savecontactorgupdateeerrorcode',$coderes,$msg,$reason,$request,$response);
             }           
 
     }
@@ -1324,7 +1324,7 @@ function registrobr_RequestDelete($params) {
                 return $values;
             }
         }
-        return _registrobr_server_error('deleteerrorcode',$coderes,$msg,$reason);
+        return _registrobr_server_error('deleteerrorcode',$coderes,$msg,$reason,$request,$response);
 
     }
 
@@ -1396,7 +1396,7 @@ function _registrobr_SyncRequest($client,$params) {
     # Check if result is ok
 	if($coderes != '1000') {
         	if ($coderes != '2303') {
-			return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason);
+			return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
         	}
         
     # See if domain not found is due to domain still being a ticket
@@ -1437,7 +1437,7 @@ function _registrobr_SyncRequest($client,$params) {
     }
         
     if ($coderes != '2303') {
-		return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason);
+		return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
     }
     
     $values["error"] = _registrobr_lang('Domain').$domain._registrobr_lang('syncdomainnotfound');
@@ -1654,7 +1654,7 @@ function _registrobr_Poll($client) {
 
         # Check result
         if($coderes != '1000') {
-		return _registrobr_server_error('pollackerrorcode',$coderes,$msg,$reason);
+		return _registrobr_server_error('pollackerrorcode',$coderes,$msg,$reason,$request,$response);
         }
     
     #brace below close msg if
@@ -1781,7 +1781,7 @@ function _registrobr_Client() {
 	$contact = $answer['contact'];
 	# Check results
     if($coderes != '1000') {
-		return _registrobr_server_error('epplogin',$coderes,$msg,$reason);
+		return _registrobr_server_error('epplogin',$coderes,$msg,$reason,$request,$response);
 		//before,the code wasn't returning the error
     }
     return $client;
