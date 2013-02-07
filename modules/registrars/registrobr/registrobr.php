@@ -133,6 +133,8 @@ function registrobr_GetNameservers($params) {
     $domain = $params["sld"].".".$params["tld"];
     $ticket='';
     
+    //external links requrires
+    
 	do {
         $request = '
         <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
@@ -417,37 +419,37 @@ function registrobr_RegisterDomain($params) {
     $regperiod = $params["regperiod"];
 
     # Get registrant details	
-    $RegistrantFirstName = $params["firstname"];
-    $RegistrantLastName = $params["lastname"];
-    $RegistrantContactName = $params["firstname"]." ".$params["lastname"];
+    #$RegistrantFirstName = _registrobr_set_encode($params["firstname"],'ISO-8859-1');
+    $RegistrantFirstName = $params["original"]["firstname"];
+    $RegistrantLastName = $params["original"]["lastname"];
+    $RegistrantContactName = $params["original"]["firstname"]." ".$params["original"]["lastname"];
     if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
                         $RegistrantOrgName = substr($RegistrantContactName,0,40);
 
     } else {
-                        $RegistrantOrgName = substr($params["companyname"],0,50);
+                        $RegistrantOrgName = substr($params["original"]["companyname"],0,50);
                         if (empty($RegistrantOrgName)) {
                             $values['error'] = _registrobr_lang("companynamerequired");
                             return $values;
                         }   
     }
 
-    $parts=preg_split("/[0-9.]/",$params["address1"],NULL,PREG_SPLIT_NO_EMPTY);
-    $RegistrantAddress1=$parts[0];
-    $parts=preg_split("/[^0-9.]/",$params["address1"],NULL,PREG_SPLIT_NO_EMPTY);
-    $RegistrantAddress2=$parts[0];
-    $RegistrantAddress3 = $params["address2"];
-    $RegistrantCity = $params["city"];
-    $RegistrantStateProvince = _registrobr_StateProvince($params["state"]);
-    $RegistrantPostalCode = $params["postcode"];
-    $RegistrantCountry = $params["country"];
-    $RegistrantEmailAddress = $params["email"];
-    $RegistrantPhone = substr($params["fullphonenumber"],1);
+    $RegistrantAddress1 = $params["original"]["address1"];
+    $RegistrantAddress2 = $params["original"]["address2"];
+    $RegistrantCity = $params["original"]["city"];
+    $RegistrantStateProvince = _registrobr_StateProvince($params["original"]["state"]);
+    $RegistrantPostalCode = $params["original"]["postcode"];
+    $RegistrantCountry = $params["original"]["country"];
+    $RegistrantEmailAddress = $params["original"]["email"];
+    $RegistrantPhone = substr($params["original"]["fullphonenumber"],1);
+    
+
     
     #Get an EPP connection
     $client = _registrobr_Client();
     # Create new EPP client
     if (PEAR::isError($client)) {
-	return _registrobr_pear_error($client,'registerconnerror');
+		return _registrobr_pear_error($client,'registerconnerror');
     }
     # Create new EPP client
     
@@ -477,7 +479,6 @@ function registrobr_RegisterDomain($params) {
     ';
  
     $response = $client->request($request);
-
     # Check results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
@@ -497,7 +498,7 @@ function registrobr_RegisterDomain($params) {
             } 
 
     } elseif($coderes != '2303') {
-	return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
     } else {
         
                 # Company or individual not in the database, proceed to org contact creation
@@ -532,20 +533,21 @@ function registrobr_RegisterDomain($params) {
                             <clTRID>'.mt_rand().mt_rand().'</clTRID>
                         </command>
                         </epp>';
-                
-                $response = $client->request($request);
-
-                # Parse XML result
-        # Check results	
-	$answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-	$idt = $answer['id'];
-	# Check results
+		$request = _registrobr_set_encode($request,'ISO-8859-1');
+     
+		$response = $client->request($request);
+			
+		# Parse XML result
+		# Check results	
+		$answer = _registrobr_parse_response($response);
+		$coderes = $answer['coderes'];
+		$msg = $answer['msg'];
+		$reason = $answer['reason'];
+		$idt = $answer['id'];
+		# Check results
 
         if($coderes != '1000') {
-		return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
+			return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
         }                   
             
                 # Org creation
@@ -588,17 +590,18 @@ function registrobr_RegisterDomain($params) {
                                 <clTRID>'.mt_rand().mt_rand().'</clTRID>
                             </command>
                         </epp>';
-
+        		$request = _registrobr_set_encode($request,'ISO-8859-1');
                 $response = $client->request($request);
 
                 # Parse XML result
 
-        # Check results	
-	$answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-	# Check results
+				# Check results	
+				$answer = _registrobr_parse_response($response);
+				$coderes = $answer['coderes'];
+				$msg = $answer['msg'];
+				$reason = $answer['reason'];
+				# Check results
+
         if($coderes != '1001') {
             return _registrobr_server_error('registercreateorgerrorcode',$coderes,$msg,$reason,$request,$response);
         }           
@@ -761,7 +764,7 @@ function registrobr_RenewDomain($params) {
     # Check results
 
     if($coderes != '1000') {
-	return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
     }
     return $values;
 
@@ -1805,7 +1808,7 @@ function _registrobr_normaliza($string) {
 function _registrobr_StateProvince($sp) {
         
     if (strlen($sp)==2) return $sp;
-    $estado = _normaliza($sp);
+    $estado = _registrobr_normaliza($sp);
     $map = array(
                 "acre" => "AC",
                 "alagoas" => "AL",
@@ -1879,10 +1882,26 @@ function _registrobr_identify_env_encode() {
 	}
 
 }
+function _registrobr_detect_encode($text){
+	$current_encoding = mb_detect_encoding($text, 'auto');
+	if(empty($current_encoding)){
+		return 'UTF-8';
+	}
+	else {
+		return $current_encoding;
+	}
+	
+}
 
-function _registrobr_set_encode($text) {
-    $current_encoding = mb_detect_encoding($text, 'auto');
-    $to_encode = _registrobr_identify_env_encode();
+function _registrobr_set_encode($text,$encode) {
+	
+	$current_encoding = _registrobr_detect_encode($text);
+    if(empty($encode)){
+    	$to_encode = _registrobr_identify_env_encode();
+    }
+    else {
+    	$to_encode = $encode."//TRANSLIT";
+    }
 
     $text = iconv($current_encoding, $to_encode, $text);
     return $text;
