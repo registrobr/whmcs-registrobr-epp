@@ -41,6 +41,29 @@
 
 function registrobr_getConfigArray() {
 
+    # Create version table if it doesn't exist
+    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr_version` (
+    `version` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`version`)
+    ) ";
+    mysql_query($query);
+    
+    $current_version = 1 ;
+    $queryresult = mysql_query("SELECT version FROM mod_registrobr_version");
+    $data = mysql_fetch_array($queryresult);
+    $version=$data['version'];
+    
+    if ($version!=$current_version) {
+        #include code to alter table mod_registrobr
+        
+        #only update version if alter table above succeeds
+        mysql_query("UPDATE mod_registrobr_version SET version='".$current_version."'");
+        if (mysql_affected_rows()==0) {
+            mysql_query("insert into mod_registrobr_version (version) values ('".$current_version."')");
+        }
+    }
+  
+    
     # Create auxiliary table if it doesn't exist
     $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr` (
         `clID` varchar(16) COLLATE latin1_general_ci NOT NULL,
