@@ -1470,6 +1470,7 @@ function _registrobr_SyncRequest($client,$params) {
     return $values;
     }
     
+    $doc=$answer['doc'];
     $createdate = substr($doc->getElementsByTagName('crDate')->item(0)->nodeValue,0,10);
     $values['registrationdate'] = $createdate;
     $nextduedate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
@@ -1494,10 +1495,7 @@ function _registrobr_SyncRequest($client,$params) {
 
 function _registrobr_Poll($client) {
           
-    # Constants, functions and registrar functions we need
-    require_once dirname(__FILE__) . '/../../../dbconnect.php';
-    require_once dirname(__FILE__) . '/../../../includes/functions.php';
-    require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
+  
     
     # We need pear for the error handling
     require_once "PEAR.php";
@@ -1702,10 +1700,6 @@ function _registrobr_Client() {
 	$include_path = dirname(__FILE__);
 	set_include_path($include_path . ':' . get_include_path());
     
-    # Constants, functions and registrar functions we need
-    require_once dirname(__FILE__) . '/../../../dbconnect.php';
-    require_once dirname(__FILE__) . '/../../../includes/functions.php';
-    require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
 
 	# Include EPP stuff we need
 	require_once dirname(__FILE__) . '/Net/EPP/Client.php';
