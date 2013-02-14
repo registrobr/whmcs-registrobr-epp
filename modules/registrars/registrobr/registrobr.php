@@ -38,7 +38,6 @@
 
 
 # Configuration array
-
 function registrobr_getConfigArray() {
 
     # Create version table if it doesn't exist
@@ -437,8 +436,14 @@ function registrobr_RegisterDomain($params) {
     }
 
     # Grab variaibles
-    $tld = $params["tld"];
-    $sld = $params["sld"];
+    $tld = _registrobr_convert_to_punycode($params["original"]["tld"]);
+    $sld = _registrobr_convert_to_punycode($params["original"]["sld"]);
+    
+    $domain_punycode = $sld.'.'.$tld;
+
+    //print_r($domain_punycode);exit;
+    
+    
     $regperiod = $params["regperiod"];
 
     # Get registrant details	
@@ -666,6 +671,8 @@ function registrobr_RegisterDomain($params) {
 	}
 
     # Carry on to domain registration
+
+	
     $request = '
                  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -674,7 +681,7 @@ function registrobr_RegisterDomain($params) {
                             <create>
                                 <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" 
                                 xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                                    <domain:name>'.$sld.'.'.$tld.'</domain:name>
+                                    <domain:name>'.$domain_punycode.'</domain:name>
                                     <domain:period unit="y">'.$regperiod.'</domain:period>
                                     <domain:ns>'.$add_hosts.'</domain:ns>';
     
@@ -1898,6 +1905,21 @@ function _registrobr_identify_env_encode() {
 		}
 	}
 
+}
+function _registrobr_convert_to_punycode($string){
+
+	# Setup include dir
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	
+	require_once('Idna/idna_convert.class.php');
+		
+	$IDN = new idna_convert(array('idn_version' => '2008'));
+	
+	$encoded = $IDN->encode($string);
+	
+	return $encoded;
+	
 }
 function _registrobr_detect_encode($text){
 	$current_encoding = mb_detect_encoding($text, 'auto');
