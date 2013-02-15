@@ -34,7 +34,8 @@
 # integration, customizations and consulting all available from 
 # http://allworldit.com
 
-
+# This cron job should only be used with versions up to 5.0.x ; 5.1.x will work with this file although it's not necessary, and 5.2.x and up won't work with this file
+# For 5.1.x and later versions, use WHMCS crons/domainsync.php instead
 
 # Constants, functions and registrar functions we need
 require_once dirname(__FILE__) . '/../../../dbconnect.php';
