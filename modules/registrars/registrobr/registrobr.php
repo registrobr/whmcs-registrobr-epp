@@ -46,9 +46,7 @@ function registrobr_getConfigArray() {
     PRIMARY KEY (`version`)
     ) ";
     mysql_query($query);
-    
-    
-    
+   
     $current_version = 1.01 ;
     $queryresult = mysql_query("SELECT version FROM mod_registrobr_version");
     $data = mysql_fetch_array($queryresult);
@@ -999,7 +997,6 @@ function registrobr_SaveContactDetails($params) {
     require_once 'isCpfValid.php';
 
     	
-    #toccos - verificar
     $tld = _registrobr_convert_to_punycode($params["original"]["tld"]);
     $sld = _registrobr_convert_to_punycode($params["original"]["sld"]);
     	
@@ -1087,7 +1084,6 @@ function registrobr_SaveContactDetails($params) {
         if ($params["contactdetails"][$type]!=$params["original"][$type]) {
         	
 			if (empty($params["contactdetails"][$type][_registrobr_lang("streetnamefield")])) {
-				#toccos - verificar esse trecho
 				$contact_street1 = $params["contactdetails"][$type]["Address 1"];
 				$contact_street2 = $params["contactdetails"][$type]["Address 2"];
 			}
