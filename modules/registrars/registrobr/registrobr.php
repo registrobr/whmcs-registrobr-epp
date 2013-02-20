@@ -152,6 +152,9 @@ function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$resp
 # Function to return current nameservers
 
 function registrobr_GetNameservers($params) {
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
 
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
@@ -238,7 +241,10 @@ function registrobr_GetNameservers($params) {
 # Function to save set of nameservers
 
 function registrobr_SaveNameservers($params) {
-
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
+    
     # Grab variables
     $domain = $params["sld"].".".$params["tld"];
     $moduleparams = getregistrarconfigoptions('registrobr');
@@ -424,6 +430,9 @@ function registrobr_RegisterDomain($params) {
     # Include CPF and CNPJ stuff we need
     require_once 'isCnpjValid.php';
     require_once 'isCpfValid.php';
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
 
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
@@ -735,6 +744,9 @@ function registrobr_RegisterDomain($params) {
 # Function to renew domain
 
 function registrobr_RenewDomain($params) {
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
 
 	# Grab variables
 	$tld = $params["tld"];
@@ -821,6 +833,9 @@ function registrobr_GetContactDetails($params) {
 	# Include CPF and CNPJ stuff we need
 	require_once 'isCnpjValid.php';
 	require_once 'isCpfValid.php';
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
   
 	# Grab variables	
 	$tld = $params["tld"];
@@ -1003,6 +1018,9 @@ function registrobr_SaveContactDetails($params) {
     # Include CPF and CNPJ stuff we need
     require_once 'isCnpjValid.php';
     require_once 'isCpfValid.php';
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
 
     	
     $tld = _registrobr_convert_to_punycode($params["original"]["tld"]);
@@ -1337,6 +1355,9 @@ function registrobr_SaveContactDetails($params) {
     
 function registrobr_RequestDelete($params) {
 
+    # We need pear for the error handling
+    require_once "PEAR.php";
+    
     # Create new EPP client
     $client = _registrobr_Client();
     if (PEAR::isError($client)) {
@@ -1401,6 +1422,9 @@ function registrobr_RequestDelete($params) {
 }
 
 function registrobr_Sync($params) {
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
     
     # Get an EPP connection
     $client = _registrobr_Client();
@@ -1747,12 +1771,15 @@ function _registrobr_Client() {
 	# Include EPP stuff we need
 	require_once dirname(__FILE__) . '/Net/EPP/Client.php';
 	require_once dirname(__FILE__) . '/Net/EPP/Protocol.php';
+    
+    # We need pear for the error handling
+    require_once "PEAR.php";
 
 	# Grab module parameters
 
 	$moduleparams = getregistrarconfigoptions('registrobr');
     
-	if (!isset($moduleparams['TestMode']) && !empty($moduleparams['Certificate'])) {
+	if (!isset($moduleparams['TestMode']) && empty($moduleparams['Certificate'])) {
 		$errormsg =  _registrobr_lang("specifypath") ;
 		logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
 		return $errormsg ;
@@ -1764,7 +1791,7 @@ function _registrobr_Client() {
         return $errormsg ;
     }
 
-	if (!isset($moduleparams['TestMode']) && !empty($moduleparams['Passphrase'])) {
+	if (!isset($moduleparams['TestMode']) && empty($moduleparams['Passphrase'])) {
         $errormsg =   _registrobr_lang("specifypassphrase")  ;
         logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
         return $errormsg ;
