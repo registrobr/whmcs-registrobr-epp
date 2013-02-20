@@ -39,62 +39,70 @@
 
 # Configuration array
 function registrobr_getConfigArray() {
+	
+	###########support to version > 5.5.0
+	if (version_compare(PHP_VERSION, '5.5.0') <= 0) {
 
-    # Create version table if it doesn't exist
-    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr_version` (
-    `version` int(10) unsigned NOT NULL,
-    PRIMARY KEY (`version`)
-    ) ";
-    mysql_query($query);
-   
-    $current_version = 1.01 ;
-    $queryresult = mysql_query("SELECT version FROM mod_registrobr_version");
-    $data = mysql_fetch_array($queryresult);
-    
-    $version=$data['version'];
-    
-    if ($version!=$current_version) {
-        #include code to alter table mod_registrobr
-        
-        #only update version if alter table above succeeds
-        mysql_query("UPDATE mod_registrobr_version SET version='".$current_version."'");
-        if (mysql_affected_rows()==0) {
-            mysql_query("insert into mod_registrobr_version (version) values ('".$current_version."')");
-            mysql_query("ALTER TABLE mod_registrobr CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci");
-        }
-    }
-  
-    
-    # Create auxiliary table if it doesn't exist
-    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr` (
-        `clID` varchar(16) COLLATE latin1_general_ci NOT NULL,
-        `domainid` int(10) unsigned NOT NULL,
-        `domain` varchar(200) COLLATE latin1_general_ci NOT NULL,
-        `ticket` int(10) unsigned NOT NULL,
-        PRIMARY KEY (`domainid`),
-        UNIQUE KEY `ticket` (`ticket`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
-    mysql_query($query);
-    
-	$configarray = array(
-		"Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
-		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
-		"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
-		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
-		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
-		"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
-        "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
-        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
-        "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
-        "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
-        "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),                  
-        "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
-        "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
-        "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
-        
-
-	);
-    return $configarray;
+	    # Create version table if it doesn't exist
+	    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr_version` (
+	    `version` int(10) unsigned NOT NULL,
+	    PRIMARY KEY (`version`)
+	    ) ";
+	    mysql_query($query);
+	   
+	    $current_version = 1.01 ;
+	    $queryresult = mysql_query("SELECT version FROM mod_registrobr_version");
+	    $data = mysql_fetch_array($queryresult);
+	    
+	    $version=$data['version'];
+	    
+	    if ($version!=$current_version) {
+	        #include code to alter table mod_registrobr
+	        
+	        #only update version if alter table above succeeds
+	        mysql_query("UPDATE mod_registrobr_version SET version='".$current_version."'");
+	        if (mysql_affected_rows()==0) {
+	            mysql_query("insert into mod_registrobr_version (version) values ('".$current_version."')");
+	            mysql_query("ALTER TABLE mod_registrobr CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci");
+	        }
+	    }
+	  
+	    
+	    # Create auxiliary table if it doesn't exist
+	    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr` (
+	        `clID` varchar(16) COLLATE latin1_general_ci NOT NULL,
+	        `domainid` int(10) unsigned NOT NULL,
+	        `domain` varchar(200) COLLATE latin1_general_ci NOT NULL,
+	        `ticket` int(10) unsigned NOT NULL,
+	        PRIMARY KEY (`domainid`),
+	        UNIQUE KEY `ticket` (`ticket`)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
+	    mysql_query($query);
+	    
+		$configarray = array(
+			"Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
+			"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
+			"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
+			"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
+			"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
+			"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
+	        "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
+	        "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
+	        "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
+	        "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
+	        "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),                  
+	        "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
+	        "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
+	        "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
+	        
+	
+		);
+	    return $configarray;
+	}
+	else {
+		
+		
+	}
 
 }
 
