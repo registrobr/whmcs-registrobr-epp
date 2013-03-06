@@ -325,7 +325,7 @@ function registrobr_SaveNameservers($params) {
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-        $doc = $anser['doc'];
+        $doc = $answer['doc'];
 	  
         # Check if result is ok
         if($coderes != '1000') {
