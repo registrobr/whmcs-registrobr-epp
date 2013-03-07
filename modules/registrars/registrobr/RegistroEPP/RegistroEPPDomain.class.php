@@ -4,6 +4,7 @@ require_once("RegistroEPP.class.php");
 
 class RegistroEPPDomain extends RegistroEPP {
 
+	
 	public function getInfo(){
 		require_once('ParserResponse/ParserResponse.class.php');
 
@@ -35,13 +36,40 @@ class RegistroEPPDomain extends RegistroEPP {
         $this->set('clID',$objParser->get('clID'));
         $this->set('contacts',$objParser->getContacts());
         $this->set('organization',$objParser->getOrganization());
-                
-
-		
-		
+ 		
 	}
+	
+	public function updateNameServers($OldNameservers,$NewNameservers){
+		require_once('ParserResponse/ParserResponse.class.php');
+	
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+	
+		$requestXML = $this->_getXMLupdateNameserver($OldNameservers,$NewNameservers);
+		$responseXML = $client->request($requestXML);
+	
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+	
+		$coderes = $objParser->get('coderes',$coderes);
+		$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML,$language);
+		
+		if ($coderes != '1000') {
+			$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML,$language);
+			throw new Exception($msg);
+		}
+	
+	
+		$this->set('coderes',$coderes);
+
+			
+	}
+	
 	public function updateInfo($OldContacts,$NewContacts){
 		
+		require_once('ParserResponse/ParserResponse.class.php');
 		
 		$client = $this->get('netClient');
 		if(empty($client)){
@@ -140,6 +168,76 @@ class RegistroEPPDomain extends RegistroEPP {
         ';
 
 		return $request;
+    }
+    
+    private function _getXMLupdateNameserver($OldNameservers,$NewNameservers){
+    	
+
+    	$ticket = $this->get('ticket');
+    	$domain = $this->get('domain');
+    	
+    	$addhosts = '';
+    	$remhosts = '';
+    	
+    	foreach ($NewNameservers as $key => $ns){
+    		# Generate XML for nameservers
+    		if (!empty($ns)) {
+    			$add_hosts.= '
+    				<domain:hostAttr>
+    				<domain:hostName>'.$ns.'</domain:hostName>
+    				</domain:hostAttr>
+    			';
+    		}
+    	}
+    	
+    	
+    	foreach ($OldNameservers as $key => $ns) {
+    		if (!empty($ns)){
+    			$rem_hosts .= '
+    				<domain:hostAttr>
+    				<domain:hostName>'.$ns.'</domain:hostName>
+    				</domain:hostAttr>
+    			';
+    		}
+    	}
+    	
+    	
+    	# Build request
+    	$request='
+    	<epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+    	<command>
+    	<update>
+    	<domain:update>
+    	<domain:name>'.$domain.'</domain:name>';
+    	if(!empty($add_hosts))
+    		$request .='
+    		<domain:add>
+    			<domain:ns>'.$add_hosts.' </domain:ns>
+    		</domain:add>';
+    		
+    		$request .='
+    		<domain:rem>
+    			<domain:ns>'.$rem_hosts.'</domain:ns>
+    		</domain:rem>
+    	</domain:update>
+    	</update>';
+    	if ($ticket!='') {
+    		$request.='
+    		<extension>
+    		<brdomain:update xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0"
+    		xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0
+    		brdomain-1.0.xsd">
+    		<brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
+    		</brdomain:update>
+    		</extension>';
+    	}
+    	$request.='
+    	<clTRID>'.mt_rand().mt_rand().'</clTRID>
+    	</command>
+    	</epp>
+    	';
+    	
+    	return $request;
     }
     
     public function verifyProvider($prov,$prov_module){
