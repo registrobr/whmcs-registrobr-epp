@@ -4,6 +4,10 @@ require_once("RegistroEPP.class.php");
 
 class RegistroEPPDomain extends RegistroEPP {
 
+	protected $tech;
+	protected $regperiod;
+	protected $contactIDDigits;
+	protected $contactID;
 	
 	public function getInfo(){
 		require_once('ParserResponse/ParserResponse.class.php');
@@ -39,6 +43,29 @@ class RegistroEPPDomain extends RegistroEPP {
  		
 	}
 	
+	public function createDomain($Nameservers = null){
+		require_once('ParserResponse/ParserResponse.class.php');
+		
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+		
+		$requestXML = $this->_createXMLDomain($Nameservers);
+		$responseXML = $client->request($requestXML);
+		
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+		
+		$coderes = $objParser->get('coderes',$coderes);
+		
+		if ($coderes != '1001') {
+			$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML,$language);				
+			throw new Exception($msg);
+		}
+				 
+	
+	}
 	public function updateNameServers($OldNameservers,$NewNameservers){
 		require_once('ParserResponse/ParserResponse.class.php');
 	
@@ -89,6 +116,56 @@ class RegistroEPPDomain extends RegistroEPP {
 			throw new Exception($msg);
 		}
 
+	}
+	
+	public function deleteDomain(){
+		
+		require_once('ParserResponse/ParserResponse.class.php');
+		
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+		
+		$requestXML = $this->_deleteXMLDomain();
+		$responseXML = $client->request($requestXML);
+		
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+		
+		$coderes = $objParser->get('coderes',$coderes);
+		$this->set('coderes',$coderes);
+		
+		if ($coderes != '1000' and $coderes != '2303') {
+			$msg = $this->errorEPP('deleteerrorcode',$objParser,$requestXML,$responseXML,$language);
+			throw new Exception($msg);
+		}		
+		
+		
+
+	}
+	private function _deleteXMLDomain(){
+		
+		$domain = $this->get('domain');
+		
+		if(!$domain){
+			throw new Exception("Domain not set ");
+		}
+		
+		$request = '
+		<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+			<command>
+			<delete>
+				<domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+					<domain:name>'.$domain.'</domain:name>
+				</domain:delete>
+			</delete>
+			<clTRID>'.mt_rand().mt_rand().'</clTRID>
+			</command>
+		</epp>
+		';
+		
+		return $request;
 	}
 	
 	private function _updateXMLinfo($OldContacts,$NewContacts){
@@ -167,6 +244,61 @@ class RegistroEPPDomain extends RegistroEPP {
         </epp>
         ';
 
+		return $request;
+    }
+
+    private function _createXMLDomain($Nameservers = null){
+    	
+    	$domain 		 = $this->get('domain');
+    	$regperiod 		 = $this->get('regperiod');
+    	$contactIDDigits = $this->get('contactIDDigits');
+    	$contactID 		 = $this->get('contactID');
+    	$tech   		 = $this->get('tech');
+    	
+    	$addhosts = '';
+    	 
+    	foreach ($Nameservers as $key => $ns){
+    		# Generate XML for nameservers
+    		if (!empty($ns)) {
+	    		$add_hosts.= '
+	    		<domain:hostAttr>
+	    		<domain:hostName>'.$ns.'</domain:hostName>
+	    		</domain:hostAttr>
+	    		';
+    		}
+    	}
+
+    	 
+    	
+    	$request = '
+    	<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+	    	<command>
+	    	<create>
+		    	<domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
+			    	<domain:name>'.$domain.'</domain:name>
+			    	<domain:period unit="y">'.$regperiod.'</domain:period>
+			    	<domain:ns>'.$add_hosts.'</domain:ns>';
+			    	 
+			    	# Valid .br contacts have 3 or more letters and/or numbers
+			    	if (strlen($tech)>2) 
+			    		$request.=' <domain:contact type="tech">'.$tech.'</domain:contact>';
+			    	
+			    	$request.='
+			    	<domain:authInfo>
+			    	<domain:pw/>
+			    	</domain:authInfo>
+			    	</domain:create>
+	    	</create>
+	    	<extension>
+		    	<brdomain:create xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0 brdomain-1.0.xsd">
+		    		<brdomain:organization>'.$contactID.'</brdomain:organization>
+		    	</brdomain:create>
+	    	</extension>
+	    	<clTRID>'.mt_rand().mt_rand().'</clTRID>
+	    	</command>
+    	</epp>
+    	';
+			    	
 		return $request;
     }
     

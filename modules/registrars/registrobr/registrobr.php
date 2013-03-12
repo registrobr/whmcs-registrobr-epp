@@ -120,48 +120,7 @@ function registrobr_getConfigArray() {
 }
 
 
-#Aux functions
 
-#Pear error
-
-function _registrobr_pear_error($client,$strerror){
-    $client = _registrobr_set_encode($client);
-    $values["error"]=_registrobr_lang($strerror).$client;
-    logModuleCall("registrobr",$values["error"]);
-    return $values;
-}
-
-#Parse xml response from epp server
-function _registrobr_parse_response($response){
-
-	$doc= new DOMDocument();
-	$doc->loadXML($response);
-	$atts = array();
-	$atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-	$atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-	$atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
-	$atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
-	$atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
-	$atts['doc'] = $doc;
-
-	return $atts;         
-}
-#registro.br response error
-
-function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$response){
-
-	$msg = _registrobr_set_encode($msg);
-	$errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
-	if (!empty($reason)) {
-		$reason = _registrobr_set_encode($reason);
-		$errormsg.= _registrobr_lang("reason").$reason."'";
-	};
-	logModuleCall("registrobr",$errormsg,$request,$response);
-	$values["error"] = $errormsg;
-	return $values;
-}
-
-    
 
 # Function to return current nameservers
 
@@ -265,24 +224,29 @@ function registrobr_RegisterDomain($params){
 	require_once ('isCpfValid.php');
 	
 	$domain = $params["sld"].".".$params["tld"];
+	
+	# Grab module parameters
+	$moduleparams = getregistrarconfigoptions('registrobr');
 
 	$RegistrantTaxID = $params['customfields'.$moduleparams['CPF']];
-	if (!isCpfValid($RegistrantTaxID)) {
-		$RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
-		if (!isCnpjValid($RegistrantTaxID)) {
-			$values["error"] =_registrobr_lang("cpfcnpjrequired");
-			logModuleCall("registrobr",$values["error"],$params);
+
+    if (!isCpfValid($RegistrantTaxID)) {
+    	$RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
+        
+        if (!isCnpjValid($RegistrantTaxID)) {
+        	$values["error"] =_registrobr_lang("cpfcnpjrequired");
+            logModuleCall("registrobr",$values["error"],$params);
 			return $values;
 		}
-	}
-	
-	$RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
-	if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
+    }
+  
+    $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
+    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
 		$RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2);
-	} 
-	else {
-		$RegistrantTaxID = substr($RegistrantTaxIDDigits,0,2).".".substr($RegistrantTaxIDDigits,2,3).".".substr($RegistrantTaxIDDigits,5,3)."/".substr($RegistrantTaxIDDigits,8,4)."-".substr($RegistrantTaxIDDigits,12,2);
-	}
+    } 
+    else {
+        $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,2).".".substr($RegistrantTaxIDDigits,2,3).".".substr($RegistrantTaxIDDigits,5,3)."/".substr($RegistrantTaxIDDigits,8,4)."-".substr($RegistrantTaxIDDigits,12,2);
+    }
 	
 	$regperiod = $params["regperiod"];
 	
@@ -301,431 +265,125 @@ function registrobr_RegisterDomain($params){
 		}
 	}
 	
-	$street1 = $params["original"]["address1"];
-	$street2 = $params["original"]["address2"];
-	$city = $params["original"]["city"];
-	$sp = _registrobr_StateProvince($params["original"]["state"]);
-	$pc = $params["original"]["postcode"];
-	$cc = $params["original"]["country"];
-	$email = $params["original"]["email"];
-	$voice = substr($params["original"]["fullphonenumber"],1);
+	
 
-	
-	$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
-	$objRegistroEPPBrorg->set('domain',$domain);
-	$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
-	$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
-	
-	$objRegistroEPPBrorg->set('name',$name);
-	$objRegistroEPPBrorg->set('street1',$street1);
-	$objRegistroEPPBrorg->set('street2',$street2);
-	$objRegistroEPPBrorg->set('street3',$street3);
-	
-	$objRegistroEPPBrorg->set('city',$city);
-	$objRegistroEPPBrorg->set('sp',$sp);
-	$objRegistroEPPBrorg->set('pc',$pc);
-	$objRegistroEPPBrorg->set('cc',$cc);
-	$objRegistroEPPBrorg->set('voice',$voice);
-	$objRegistroEPPBrorg->set('email',$email);
-	
-	
-	try {
-		$objRegistroEPPBrorg->createData();
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
+
 	
 	# Domain information and check provider
 	
-	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
-	$objRegistroEPP->set('domain',$domain);
-	
-	try {
-		$objRegistroEPP->login($moduleparams);
-		$objRegistroEPP->getInfo();
-		$providerID = $objRegistroEPP->get('clID');
-		 
-		$objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
-	
-	
-	# Does the company or individual is already in the .br database ?
-	
-	try {
-		#Get info about the brorg
-		$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
-		$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
-		$objRegistroEPPBrorg->set('domain',$domain);
-		$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
-		$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
-		$objRegistroEPPBrorg->getInfo();
-	}
-	catch(Exception $e){
-		$values["error"] = $e->getMessage();
-		
-		//return $values;
-	}
-	
-	
-	# Create contact
 	$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
-	$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
-	$objRegistroEPPBrorg->set('domain',$domain);
+	
 	$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
 	$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
 	
-	$objRegistroEPPBrorg->set('name',$name);
-	$objRegistroEPPBrorg->set('street1',$street1);
-	$objRegistroEPPBrorg->set('street2',$street2);
-	$objRegistroEPPBrorg->set('street3',$street3);
 	
-	$objRegistroEPPBrorg->set('city',$city);
-	$objRegistroEPPBrorg->set('sp',$sp);
-	$objRegistroEPPBrorg->set('pc',$pc);
-	$objRegistroEPPBrorg->set('cc',$cc);
-	$objRegistroEPPBrorg->set('voice',$voice);
-	$objRegistroEPPBrorg->set('email',$email);
-	
-	try {
-		$objRegistroEPPBrorg->createData();
+	try {		
+		$objRegistroEPPBrorg->login($moduleparams);
+		$objRegistroEPPBrorg->getInfo(true);
+		
+		$coderes = $objRegistroEPPBrorg->get('coderes');
+		
+		if($coderes == '1000'){
+			# If it's already on the database, verify new domains can be registered	
+			$providerID = $objRegistroEPPBrorg->get('clID');
+			$objRegistroEPPBrorg->verifyProvider($providerID,$moduleparams["Username"]);
+		}
+		else {
+			# Company or individual not in the database, proceed to org contact creation
+			
+			
+			$street1	= $params["original"]["address1"];
+			$street2	= $params["original"]["address2"];
+			$city 		= $params["original"]["city"];
+			$sp			= _registrobr_StateProvince($params["original"]["state"]);
+			$pc			= $params["original"]["postcode"];
+			$cc			= $params["original"]["country"];
+			$email		= $params["original"]["email"];
+			$voice		= substr($params["original"]["fullphonenumber"],1);
+						
+			$objRegistroEPPBrorg->set('domain',$domain);			
+			$objRegistroEPPBrorg->set('name',$name);
+			$objRegistroEPPBrorg->set('street1',$street1);
+			$objRegistroEPPBrorg->set('street2',$street2);
+			$objRegistroEPPBrorg->set('street3',$street3);			
+			$objRegistroEPPBrorg->set('city',$city);
+			$objRegistroEPPBrorg->set('sp',$sp);
+			$objRegistroEPPBrorg->set('pc',$pc);
+			$objRegistroEPPBrorg->set('cc',$cc);
+			$objRegistroEPPBrorg->set('voice',$voice);
+			$objRegistroEPPBrorg->set('email',$email);
+			
+			$objRegistroEPPBrorg->createData();
+			
+			
+			$idt = $objRegistroEPPBrorg->get('id');
+			
+			# Create Org
+			$objRegistroEPPRegistrant = RegistroEPPFactory::build('RegistroEPPBrorg');
+			$objRegistroEPPRegistrant->set('netClient',$objRegistroEPPBrorg->get('netClient'));
+			$objRegistroEPPRegistrant->set('domain',$domain);
+			$objRegistroEPPRegistrant->set('contactID',$RegistrantTaxID);
+			$objRegistroEPPRegistrant->set('contactIDDigits',$RegistrantTaxIDDigits);
+			$objRegistroEPPRegistrant->set('idt',$idt);
+			
+			$objRegistroEPPRegistrant->set('name',$name);
+			$objRegistroEPPRegistrant->set('street1',$street1);
+			$objRegistroEPPRegistrant->set('street2',$street2);
+			$objRegistroEPPRegistrant->set('street3',$street3);
+			
+			$objRegistroEPPRegistrant->set('city',$city);
+			$objRegistroEPPRegistrant->set('sp',$sp);
+			$objRegistroEPPRegistrant->set('pc',$pc);
+			$objRegistroEPPRegistrant->set('cc',$cc);
+			$objRegistroEPPRegistrant->set('voice',$voice);
+			$objRegistroEPPRegistrant->set('email',$email);
+			
+			$objRegistroEPPRegistrant->createOrgData();
+		
+				
+							
+		}
+		
 	}
 	catch (Exception $e){
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
+	
+
+	
+	##### Create domain
+	
+	
+	$Nameservers["ns1"] = $params["ns1"];
+	$Nameservers["ns2"] = $params["ns2"];
+	$Nameservers["ns3"] = $params["ns3"];
+	$Nameservers["ns4"] = $params["ns4"];
+	$Nameservers["ns5"] = $params["ns5"];
+	
+	$objRegistroEPPNewDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPPNewDomain->set('netClient',$objRegistroEPPBrorg->get('netClient'));
+	
+	$objRegistroEPPNewDomain->set('domain',$domain);
+	$objRegistroEPPNewDomain->set('regperiod',$regperiod);
+	$objRegistroEPPNewDomain->set('contactIDDigits',$RegistrantTaxIDDigits);
+	$objRegistroEPPNewDomain->set('contactID',$RegistrantTaxID);
+	$objRegistroEPPNewDomain->set('tech',$moduleparams['TechC']);
+	
+	try {
+		$objRegistroEPPNewDomain->createDomain($Nameservers);
+	}
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
+	}
+	
 	
 }
        
 # Function to register domain
 
-function registrobr_RegisterDomain_ORG($params) {
 
-    # Setup include dir
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-
-    # Include CPF and CNPJ stuff we need
-    require_once 'isCnpjValid.php';
-    require_once 'isCpfValid.php';
-    
-    # We need pear for the error handling
-    require_once "PEAR.php";
-
-    # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
-    
-    
-    $RegistrantTaxID = $params['customfields'.$moduleparams['CPF']];
-    if (!isCpfValid($RegistrantTaxID)) {
-                        $RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
-        
-                        if (!isCnpjValid($RegistrantTaxID)) {
-                            $values["error"] =_registrobr_lang("cpfcnpjrequired");
-                            logModuleCall("registrobr",$values["error"],$params);
-                            return $values;
-                        }
-    }
-  
-    $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
-    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
-                        $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2);
-    } else {
-                        $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,2).".".substr($RegistrantTaxIDDigits,2,3).".".substr($RegistrantTaxIDDigits,5,3)."/".substr($RegistrantTaxIDDigits,8,4)."-".substr($RegistrantTaxIDDigits,12,2);
-    }
-
-    # Grab variaibles
-    $tld = _registrobr_convert_to_punycode($params["original"]["tld"]);
-    $sld = _registrobr_convert_to_punycode($params["original"]["sld"]);
-    
-    $domain_punycode = $sld.'.'.$tld;
-
-    
-    
-    $regperiod = $params["regperiod"];
-
-    # Get registrant details	
-    #$RegistrantFirstName = _registrobr_set_encode($params["firstname"],'ISO-8859-1');
-    $RegistrantFirstName = $params["original"]["firstname"];
-    $RegistrantLastName = $params["original"]["lastname"];
-    $RegistrantContactName = $params["original"]["firstname"]." ".$params["original"]["lastname"];
-    
-    
-    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
-                        $RegistrantOrgName = substr($RegistrantContactName,0,40);
-
-    } else {
-                        $RegistrantOrgName = substr($params["original"]["companyname"],0,50);
-                        if (empty($RegistrantOrgName)) {
-                            $values['error'] = _registrobr_lang("companynamerequired");
-                            return $values;
-                        }   
-    }
-
-    $RegistrantAddress1 = $params["original"]["address1"];
-    $RegistrantAddress2 = $params["original"]["address2"];
-    $RegistrantCity = $params["original"]["city"];
-    $RegistrantStateProvince = _registrobr_StateProvince($params["original"]["state"]);
-    $RegistrantPostalCode = $params["original"]["postcode"];
-    $RegistrantCountry = $params["original"]["country"];
-    $RegistrantEmailAddress = $params["original"]["email"];
-    $RegistrantPhone = substr($params["original"]["fullphonenumber"],1);
-    
-
-    
-    #Get an EPP connection
-    $client = _registrobr_Client();
-    # Create new EPP client
-    if (PEAR::isError($client)) {
-		return _registrobr_pear_error($client,'registerconnerror');
-    }
-    # Create new EPP client
-    
-    # Does the company or individual is already in the .br database ?
-    $request = '
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                        <command>
-                            <info>
-                                <contact:info xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" 
-                                xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 
-                                contact-1.0.xsd">
-                                    <contact:id>'.$RegistrantTaxIDDigits.'</contact:id>
-                                    </contact:info>
-                            </info>
-                            <extension>
-                                <brorg:info xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" 
-                                xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 
-                                brorg-1.0.xsd"> 
-                                    <brorg:organization>'.$RegistrantTaxID.'</brorg:organization>
-                                </brorg:info>
-                            </extension>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                      </command>
-    </epp>
-    ';
- 
-    $response = $client->request($request);
-    # Check results	
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-    $doc = $answer['doc'];
-    # Check results
-
-
-    if($coderes == '1000') {
-            # If it's already on the database, verify new domains can be registered 
-            $orgprov = ltrim($doc->getElementsByTagName('clID')->item(0)->nodeValue,"0");
-            if ($orgprov!=$moduleparams["Username"]) {
-                        $values["error"]=_registrobr_lang("notallowed");
-                        logModuleCall("registrobr",$values["error"],$request,$response);
-                        return $values ;
-            } 
-
-    } elseif($coderes != '2303') {
-		return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
-    } else {
-        
-                # Company or individual not in the database, proceed to org contact creation
-                $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                        xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                        <command>
-                            <create>
-                                <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" 
-                                xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 
-                                contact-1.0.xsd"> 
-                                    <contact:id>dummy</contact:id>
-                                    <contact:postalInfo type="loc">
-                                        <contact:name>'.$RegistrantContactName.'</contact:name>
-                                        <contact:addr>
-                                            <contact:street>'.$RegistrantAddress1.'</contact:street>
-                                            <contact:street>'.$RegistrantAddress2.'</contact:street>
-                                            <contact:street>'.$RegistrantAddress3.'</contact:street>
-                                            <contact:city>'.$RegistrantCity.'</contact:city>
-                                            <contact:sp>'.$RegistrantStateProvince.'</contact:sp>
-                                            <contact:pc>'.$RegistrantPostalCode.'</contact:pc>
-                                            <contact:cc>'.$RegistrantCountry.'</contact:cc>
-                                        </contact:addr>
-                                    </contact:postalInfo>
-                                    <contact:voice>'.$RegistrantPhone.'</contact:voice>
-                                    <contact:email>'.$RegistrantEmailAddress.'</contact:email>
-                                    <contact:authInfo>
-                                        <contact:pw/>
-                                    </contact:authInfo>
-                                </contact:create>
-                            </create>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                        </command>
-                        </epp>';
-		$request = _registrobr_set_encode($request,'ISO-8859-1');
-     
-		$response = $client->request($request);
-			
-		# Parse XML result
-		# Check results	
-		$answer = _registrobr_parse_response($response);
-		$coderes = $answer['coderes'];
-		$msg = $answer['msg'];
-		$reason = $answer['reason'];
-		$idt = $answer['id'];
-		# Check results
-
-        if($coderes != '1000') {
-			return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
-        }                   
-            
-                # Org creation
-                $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                        xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                            <command>
-                                <create>
-                                    <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" 
-                                    xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 
-                                    contact-1.0.xsd"> 
-                                        <contact:id>'.$RegistrantTaxIDDigits.'</contact:id>
-                                        <contact:postalInfo type="loc">
-                                            <contact:name>'.$RegistrantOrgName.'</contact:name>
-                                            <contact:addr>
-                                                <contact:street>'.$RegistrantAddress1.'</contact:street>
-                                                <contact:street>'.$RegistrantAddress2.'</contact:street>
-                                                <contact:street>'.$RegistrantAddress3.'</contact:street>
-                                                <contact:city>'.$RegistrantCity.'</contact:city>
-                                                <contact:sp>'.$RegistrantStateProvince.'</contact:sp>
-                                                <contact:pc>'.$RegistrantPostalCode.'</contact:pc>
-                                                <contact:cc>'.$RegistrantCountry.'</contact:cc>
-                                            </contact:addr>
-                                        </contact:postalInfo>
-                                        <contact:voice>'.$RegistrantPhone.'</contact:voice>
-                                        <contact:email>'.$RegistrantEmailAddress.'</contact:email>
-                                        <contact:authInfo>
-                                            <contact:pw/>
-                                        </contact:authInfo>
-                                    </contact:create>
-                                </create>
-                                <extension>
-                                    <brorg:create xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" 
-                                    xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 
-                                    brorg-1.0.xsd"> 
-                                        <brorg:organization>'.$RegistrantTaxID.'</brorg:organization>
-                                        <brorg:contact type="admin">'.$idt.'</brorg:contact>
-                                    </brorg:create>
-                                </extension>
-                                <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                            </command>
-                        </epp>';
-        		$request = _registrobr_set_encode($request,'ISO-8859-1');
-                $response = $client->request($request);
-
-                # Parse XML result
-
-				# Check results	
-				$answer = _registrobr_parse_response($response);
-				$coderes = $answer['coderes'];
-				$msg = $answer['msg'];
-				$reason = $answer['reason'];
-				# Check results
-
-        if($coderes != '1001') {
-            return _registrobr_server_error('registercreateorgerrorcode',$coderes,$msg,$reason,$request,$response);
-        }           
-    }
-    # Generate XML for namseverss
-
-	if ($nameserver1 = $params["ns1"]) { 
-                        $add_hosts = '
-                        <domain:hostAttr>
-                            <domain:hostName>'.$nameserver1.'</domain:hostName>
-                        </domain:hostAttr>
-                        ';
-	}
-	if ($nameserver2 = $params["ns2"]) { 
-                        $add_hosts .= '
-                        <domain:hostAttr>
-                            <domain:hostName>'.$nameserver2.'</domain:hostName>
-                        </domain:hostAttr>
-                        ';
-	}
-	if ($nameserver3 = $params["ns3"]) { 
-                        $add_hosts .= '
-                        <domain:hostAttr>
-                            <domain:hostName>'.$nameserver3.'</domain:hostName>
-                        </domain:hostAttr>
-                        ';
-	}
-	if ($nameserver4 = $params["ns4"]) { 
-                        $add_hosts .= '
-                        <domain:hostAttr>
-                            <domain:hostName>'.$nameserver4.'</domain:hostName>
-                        </domain:hostAttr>';
-	}
-	if ($nameserver5 = $params["ns5"]) { 
-                        $add_hosts .= '
-                        <domain:hostAttr>
-                            <domain:hostName>'.$nameserver5.'</domain:hostName>
-                        </domain:hostAttr>';
-	}
-
-    # Carry on to domain registration
-
-	
-    $request = '
-                 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                 xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                        <command>
-                            <create>
-                                <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" 
-                                xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                                    <domain:name>'.$domain_punycode.'</domain:name>
-                                    <domain:period unit="y">'.$regperiod.'</domain:period>
-                                    <domain:ns>'.$add_hosts.'</domain:ns>';
-    
-                                    # Valid .br contacts have 3 or more letters and/or numbers
-                                    if (strlen($moduleparams['TechC'])>2) $request.=' <domain:contact type="tech">'.$moduleparams['TechC'].'</domain:contact>';
-                                    $request.='
-                                    <domain:authInfo>
-                                        <domain:pw/>
-                                    </domain:authInfo>
-                                </domain:create>
-                            </create>
-                            <extension>
-                                <brdomain:create xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0" 
-                                xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0 
-                                brdomain-1.0.xsd"> 
-                                    <brdomain:organization>'.$RegistrantTaxID.'</brdomain:organization>
-                                </brdomain:create>
-                            </extension>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                        </command>
-                    </epp>
-                ';
-
-    $response = $client->request($request);
-    # Check results	
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-    # Check results
-    if($coderes != '1001') {
-	return _registrobr_server_error('registererrorcode',$coderes,$msg,$reason,$request,$response);
-    }
-    
-    $table = "mod_registrobr";
-    $values = array("clID"=>$moduleparams['Username'],"domainid"=>$params['domainid'],"domain"=>$doc->getElementsByTagName('name')->item(0)->nodeValue,"ticket"=>$doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue);
-    $newid = insert_query($table,$values);
-    return $values;
-}
                                       
 # Function to renew domain
 
@@ -1151,74 +809,51 @@ function registrobr_SaveContactDetails($params) {
 }
 
 # Domain Delete (used in .br only for Add Grace Period)
-    
 function registrobr_RequestDelete($params) {
+	require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	
+	$domain = $params["sld"].".".$params["tld"];
+	
+	# Grab module parameters
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	
+	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPPDomain->set('domain',$domain);
+	
+	try {
+		$objRegistroEPPDomain->login($moduleparams);
+		$objRegistroEPPDomain->deleteDomain();
+		
+		$coderes = $objRegistroEPPDomain->get('coderes');
+	}
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
+	}
+	
+	if($coderes == '2303') {
+			$values = registrobr_Getnameservers($params);
+		
+			# If no error, domain is still a ticket, so we remove the nameservers to prevent it becoming a domain
+			if (empty($values["error"])) {
+				$setparams=$params;
+				$setparams["ns1"]='';
+				$setparams["ns2"]='';
+				$setparams["ns3"]='';
+				$setparams["ns4"]='';
+				$setparams["ns5"]='';
+			
+				$values = registrobr_SaveNameservers($setparams);
+				if (empty($values["error"])) {
+					$values=array();
+					return $values ;
+				}
+			}
+	}
 
-    # We need pear for the error handling
-    require_once "PEAR.php";
-    
-    # Create new EPP client
-    $client = _registrobr_Client();
-    if (PEAR::isError($client)) {
-        return _registrobr_pear_error($client,'deleteconnerror');
-
-    }
-
-    $request = '<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                    <command>
-                        <delete>
-                            <domain:delete xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" 
-                            xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 
-                            domain-1.0.xsd"> 
-                                <domain:name>'.$params['sld'].'.'.$params['tld'].'</domain:name>
-                            </domain:delete>
-                        </delete>
-                        <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                    </command>
-                </epp>
-                ';
-
-    $response = $client->request($request);
-
-    # Parse XML
-	$answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-	$contact = $answer['contact'];
-	# Check results
-    if($coderes != '1000') {
-        
-        #If unknown domain, could be a ticket
-        if($coderes == '2303') {
-            $values=registrobr_Getnameservers($params);
-                        
-            # If no error, domain is still a ticket, so we remove the nameservers to prevent it becoming a domain
-            if (empty($values["error"])) {
-                $setparams=$params;
-                $setparams["ns1"]='';
-                $setparams["ns2"]='';
-                $setparams["ns3"]='';
-                $setparams["ns4"]='';
-                $setparams["ns5"]='';
-                
-                $values=registrobr_SaveNameservers($setparams);
-                if (empty($values["error"])) {
-                    $values=array();
-                    return $values ;
-                }
-                    
-                return $values;
-            }
-        }
-        return _registrobr_server_error('deleteerrorcode',$coderes,$msg,$reason,$request,$response);
-
-    }
-
-    return $values ;
 }
+
+
 
 function registrobr_Sync($params) {
     
@@ -1641,11 +1276,12 @@ function _registrobr_StateProvince($sp) {
                 "saopaulo" => "SP",
                 "tocantins" => "TO"
                 );
-    if(!empty($map[$estado])){
-            return $map[$estado];
-        } else {
-                return $sp;
-        }
+			    if(!empty($map[$estado])){
+					return $map[$estado];
+			    }
+			    else {
+			    	return $sp;
+			    }
     }
                             
 
@@ -1673,6 +1309,49 @@ function _registrobr_identify_env_encode() {
 	}
 
 }
+
+#Aux functions
+
+#Pear error
+
+function _registrobr_pear_error($client,$strerror){
+	$client = _registrobr_set_encode($client);
+	$values["error"]=_registrobr_lang($strerror).$client;
+	logModuleCall("registrobr",$values["error"]);
+	return $values;
+}
+
+#Parse xml response from epp server
+function _registrobr_parse_response($response){
+
+	$doc= new DOMDocument();
+	$doc->loadXML($response);
+	$atts = array();
+	$atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+	$atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+	$atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+	$atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
+	$atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
+	$atts['doc'] = $doc;
+
+	return $atts;
+}
+#registro.br response error
+
+function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$response){
+
+	$msg = _registrobr_set_encode($msg);
+	$errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
+	if (!empty($reason)) {
+		$reason = _registrobr_set_encode($reason);
+		$errormsg.= _registrobr_lang("reason").$reason."'";
+	};
+	logModuleCall("registrobr",$errormsg,$request,$response);
+	$values["error"] = $errormsg;
+	return $values;
+}
+
+
 function _registrobr_convert_to_punycode($string){
 
 	# Setup include dir
