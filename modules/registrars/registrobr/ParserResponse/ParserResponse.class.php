@@ -19,6 +19,7 @@ class ParserResponse {
 	private $cc;
 	private $voice;
 	private $email;
+	private $exDate;
 		
 	#Parse xml response from epp server
 	public function parse($response){
@@ -34,7 +35,7 @@ class ParserResponse {
 		$this->set('contact',$doc->getElementsByTagName('contact')->item(0)->nodeValue);
 		$this->set('clID',$doc->getElementsByTagName('clID')->item(0)->nodeValue);
 		$this->set('name',$doc->getElementsByTagName('name')->item(0)->nodeValue);
-		
+		$this->set('exDate',$doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
 		
 		$this->set('doc',$doc);
 	}

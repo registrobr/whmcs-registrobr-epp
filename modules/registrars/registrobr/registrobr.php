@@ -128,7 +128,7 @@ function registrobr_GetNameservers($params) {
 
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-	require_once('ParserResponse/ParserResponse.class.php');
+	#require_once('ParserResponse/ParserResponse.class.php');
 
 	$domain = $params["sld"].".".$params["tld"];
 
@@ -383,88 +383,45 @@ function registrobr_RegisterDomain($params){
        
 # Function to register domain
 
-
-                                      
 # Function to renew domain
 
-function registrobr_RenewDomain($params) {
-    
-    # We need pear for the error handling
-    require_once "PEAR.php";
-
-	# Grab variables
-	$tld = $params["tld"];
-	$sld = $params["sld"];
+function registrobr_RenewDomain($params){
+	
+	require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	
+	$domain = $params["sld"].".".$params["tld"];
 	$regperiod = $params["regperiod"];
-
-    # Get an EPP Connection                    
-    $client = _registrobr_Client();
-    # Create new EPP client
-    if (PEAR::isError($client)) {
-	return _registrobr_pear_error($client,'renewconnerror');
-    }
-    # Create new EPP client
-                        
-    $request='
-            <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" 
-            xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-                        <command>
-                            <info>
-                                <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                                    <domain:name hosts="all">'.$sld.'.'.$tld.'</domain:name>
-                                </domain:info>
-                            </info>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                        </command>
-            </epp>
-            ';
-
-    $response = $client->request($request);
-                                     
-    # Parse XML result
-    # Check results	
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-    # Check results
-    if($coderes != '1000') {
-        return _registrobr_server_error('renewinfoerrorcode',$coderes,$msg,$reason,$request,$response);
-    }
-	# Sanitize expiry date
-	$expdate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
-
-	# Send request to renew
-	$request='
-            <epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-                <command>
-                    <renew>
-                        <domain:renew>
-                            <domain:name>'.$sld.'.'.$tld.'</domain:name>
-                            <domain:curExpDate>'.$expdate.'</domain:curExpDate>
-                            <domain:period unit="y">'.$regperiod.'</domain:period>
-                        </domain:renew>
-                    </renew>
-                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                </command>
-            </epp>
-            ';
-                                      
-    $response = $client->request($request);
-   
-    # Check results	
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-    # Check results
-
-    if($coderes != '1000') {
-		return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
-    }
-    return $values;
-
+	
+	
+	# Grab module parameters
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	
+	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPP->set('domain',$domain);
+	
+	try {
+		$objRegistroEPP->login($moduleparams);
+	}
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
+	}
+	
+	try {
+		//Request domain info
+		$objRegistroEPP->getInfo();
+		$objRegistroEPP->set('regperiod',$regperiod);
+		$objRegistroEPP->renewDomain();
+	}
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
+	}
+	
+	return $values;
+	
 }
+
 
 # Function to grab contact details
 
@@ -830,6 +787,7 @@ function registrobr_RequestDelete($params) {
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
+	#If unknown domain, could be a ticket
 	
 	if($coderes == '2303') {
 			$values = registrobr_Getnameservers($params);

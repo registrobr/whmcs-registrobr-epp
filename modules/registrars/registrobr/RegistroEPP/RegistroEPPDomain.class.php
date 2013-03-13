@@ -8,6 +8,8 @@ class RegistroEPPDomain extends RegistroEPP {
 	protected $regperiod;
 	protected $contactIDDigits;
 	protected $contactID;
+	protected $exDate;
+
 	
 	public function getInfo(){
 		require_once('ParserResponse/ParserResponse.class.php');
@@ -22,7 +24,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		
 		$objParser = New ParserResponse();		
 		$objParser->parse($responseXML);
-		
+				
 		$coderes = $objParser->get('coderes',$coderes);
 		
 		if ($coderes == '2303') {
@@ -40,6 +42,8 @@ class RegistroEPPDomain extends RegistroEPP {
         $this->set('clID',$objParser->get('clID'));
         $this->set('contacts',$objParser->getContacts());
         $this->set('organization',$objParser->getOrganization());
+        $this->set('exDate',$objParser->get('exDate'));
+        
  		
 	}
 	
@@ -139,10 +143,56 @@ class RegistroEPPDomain extends RegistroEPP {
 		if ($coderes != '1000' and $coderes != '2303') {
 			$msg = $this->errorEPP('deleteerrorcode',$objParser,$requestXML,$responseXML,$language);
 			throw new Exception($msg);
-		}		
-		
-		
+		}	
+	}
 
+	public function renewDomain(){
+	
+		require_once('ParserResponse/ParserResponse.class.php');
+	
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+	
+		$requestXML = $this->_renewXMLDomain();
+		$responseXML = $client->request($requestXML);
+	
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+	
+		$coderes = $objParser->get('coderes',$coderes);
+		$this->set('coderes',$coderes);
+	
+		if ($coderes != '1000') {
+			$msg = $this->errorEPP('renewerrorcode',$objParser,$requestXML,$responseXML,$language);
+			throw new Exception($msg);
+		}
+	}
+	
+	private function _renewXMLDomain(){
+		
+		$domain = $this->get('domain');
+		$exDate = $this->get('exDate');
+		$regperiod  = $this->get('regperiod');
+		
+		
+		$request='
+		<epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+			<command>
+			<renew>
+				<domain:renew>
+					<domain:name>'.$domain.'</domain:name>
+					<domain:curExpDate>'.$exDate.'</domain:curExpDate>
+					<domain:period unit="y">'.$regperiod.'</domain:period>
+				</domain:renew>
+			</renew>
+			<clTRID>'.mt_rand().mt_rand().'</clTRID>
+			</command>
+		</epp>
+		';
+		
+		return $request;
 	}
 	private function _deleteXMLDomain(){
 		
