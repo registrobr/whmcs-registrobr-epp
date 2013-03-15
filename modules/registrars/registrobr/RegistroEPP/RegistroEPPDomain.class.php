@@ -9,8 +9,9 @@ class RegistroEPPDomain extends RegistroEPP {
 	protected $contactIDDigits;
 	protected $contactID;
 	protected $exDate;
-
-	
+	protected $crDate;
+	protected $onHoldReason;
+		
 	public function getInfo(){
 		require_once('ParserResponse/ParserResponse.class.php');
 
@@ -28,11 +29,11 @@ class RegistroEPPDomain extends RegistroEPP {
 		$coderes = $objParser->get('coderes',$coderes);
 		
 		if ($coderes == '2303') {
-			$msg = $this->errorEPP('domainnotfound',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('domainnotfound',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 		elseif ($coderes != '1000') {
-			$msg = $this->errorEPP('getnserrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('getnserrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 
@@ -43,7 +44,9 @@ class RegistroEPPDomain extends RegistroEPP {
         $this->set('contacts',$objParser->getContacts());
         $this->set('organization',$objParser->getOrganization());
         $this->set('exDate',$objParser->get('exDate'));
-        
+        $this->set('exDate',$objParser->get('exDate'));
+        $this->set('crDate',$objParser->get('crDate'));
+        $this->set('onHoldReason',$objParser->get('onHoldReason'));
  		
 	}
 	
@@ -64,7 +67,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		$coderes = $objParser->get('coderes',$coderes);
 		
 		if ($coderes != '1001') {
-			$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML,$language);				
+			$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML);				
 			throw new Exception($msg);
 		}
 				 
@@ -85,10 +88,10 @@ class RegistroEPPDomain extends RegistroEPP {
 		$objParser->parse($responseXML);
 	
 		$coderes = $objParser->get('coderes',$coderes);
-		$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML,$language);
+		$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML);
 		
 		if ($coderes != '1000') {
-			$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 	
@@ -116,7 +119,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		$coderes = $objParser->get('coderes',$coderes);
 		
 		if ($coderes != '1000') {
-			$msg = $this->errorEPP('savecontactdomainupdateerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('savecontactdomainupdateerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 
@@ -141,7 +144,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		$this->set('coderes',$coderes);
 		
 		if ($coderes != '1000' and $coderes != '2303') {
-			$msg = $this->errorEPP('deleteerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('deleteerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}	
 	}
@@ -165,7 +168,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		$this->set('coderes',$coderes);
 	
 		if ($coderes != '1000') {
-			$msg = $this->errorEPP('renewerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('renewerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 	}
@@ -428,6 +431,8 @@ class RegistroEPPDomain extends RegistroEPP {
     		throw new Exception($msg);
     	}
     }
+    
+ 
 }
 
 ?>

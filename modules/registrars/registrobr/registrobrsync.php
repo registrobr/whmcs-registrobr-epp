@@ -76,7 +76,7 @@ foreach($domains as $domain) {
 	sleep(1);
 
 	# Query domain
-     $domainvalues=_registrobr_SyncRequest($client,$domain);
+     $domainvalues=_registrobr_SyncRequest($domain);
      if (!empty($domainvalues['error'])) {
         echo $domainvalues['error']."\n";
         continue;

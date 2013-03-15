@@ -75,13 +75,20 @@ abstract class RegistroEPP {
     	return $encoded;
     	
     }
-    public function errorEPP($StringError,$ObjParser,$XmlRequest,$XmlResponse,$language){
+    public function language($string){
+    	
+    	$this->set('language',$string);
+    	
+    }
+    public function errorEPP($StringError,$ObjParser,$XmlRequest,$XmlResponse){
+    	
     	//$msg = _registrobr_set_encode($msg);
     	$coderes = $ObjParser->get('coderes');
     	$msg = $ObjParser->get('msg');
     	$reason = $ObjParser->get('reason');
-
-    	$errormsg = $this->_registrobr_lang($StringError,$language)." ".$coderes.": "._registrobr_lang('msg').$msg."'";
+		$language = $this->get('language');
+		
+    	$errormsg = $this->_registrobr_lang($StringError)." ".$coderes.": ".$this->_registrobr_lang('msg').$msg."'";
 
     	if (!empty($reason)) {
     		#$reason = _registrobr_set_encode($reason);
@@ -93,7 +100,7 @@ abstract class RegistroEPP {
     }
     
     public function error($StringError,$param1,$errormsg){
-
+    	 
 		$translate = $this->_registrobr_lang($StringError);
 		logModuleCall("registrobr",$translate,$param1,$errormsg);
 		return $errormsg;
@@ -179,7 +186,7 @@ abstract class RegistroEPP {
      	
      	
     	if($coderes != '1000') {
-    		$msg = $this->errorEPP('epplogin',$objParser,$requestXML,$responseXML,$language);
+    		$msg = $this->errorEPP('epplogin',$objParser,$requestXML,$responseXML);
     		throw new Exception($msg);
     	}
     }
@@ -230,7 +237,14 @@ abstract class RegistroEPP {
     
     	return $request;
     }
-	protected function _registrobr_lang($msgid,$language) {
+    public function getMsgLang($string){
+    	
+    	return $this->_registrobr_lang($string);
+    	
+    }
+	protected function _registrobr_lang($msgid) {
+		
+		
 	
 	    # Grab module parameters
 	    $moduleparams = getregistrarconfigoptions('registrobr');
@@ -311,10 +325,104 @@ abstract class RegistroEPP {
 			"phonenumberfield" => array ("Fone","Phone"),
 			);                   
 	
+	    $language = $this->get('language');
+	    
 	    $langmsg = ($language=="Portuguese" ? $msgs["$msgid"][0] : $msgs["$msgid"][1] );
 	    
 	    #$langmsg = _registrobr_set_encode($langmsg);
 	    return $langmsg;
+	}
+	
+	public function normaliza($string) {
+	
+		$string = str_replace('&nbsp;',' ',$string);
+		$string = trim($string);
+		$string = html_entity_decode($string,ENT_QUOTES,'UTF-8');
+	
+		//Instead of The Normalizer class ... requires (PHP 5 >= 5.3.0, PECL intl >= 1.0.0)
+		$normalized_chars = array( 'Š'=>'S', 'š'=>'s', 'Ð'=>'Dj','Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E', 'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss','à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y', 'ƒ'=>'f', ' ' => '');
+	
+		$string = strtr($string,$normalized_chars);
+		$string = strtolower($string);
+		return $string;
+	}
+	
+	public function StateProvince($sp) {
+	
+		if (strlen($sp)==2) return $sp;
+		$estado = $this->normaliza($sp);
+		$map = array(
+				"acre" => "AC",
+				"alagoas" => "AL",
+				"amazonas" => "AM",
+				"amapa" => "AP",
+				"bahia" => "BA",
+				"baia" => "BA",
+				"ceara" => "CE",
+				"distritofederal" => "DF",
+				"espiritosanto" => "ES",
+				"espiritusanto" => "ES",
+				"goias" => "GO",
+				"goia" => "GO",
+				"maranhao" => "MA",
+				"matogrosso" => "MT",
+				"matogroso" => "MT",
+				"matogrossodosul" => "MS",
+				"matogrossosul" => "MS",
+				"matogrossodesul" => "MS",
+				"minasgerais" => "MG",
+				"minasgeral" => "MG",
+				"para" => "PA",
+				"paraiba" => "PB",
+				"parana" => "PR",
+				"pernambuco" => "PE",
+				"pernanbuco" => "PE",
+				"piaui" => "PI",
+				"riodejaneiro" => "RJ",
+				"rio" => "RJ",
+				"riograndedonorte" => "RN",
+				"riograndenorte" => "RN",
+				"rondonia" => "RO",
+				"riograndedosul" => "RS",
+				"riograndedesul" => "RS",
+				"riograndesul" => "RS",
+				"roraima" => "RR",
+				"santacatarina" => "SC",
+				"sergipe" => "SE",
+				"saopaulo" => "SP",
+				"tocantins" => "TO"
+		);
+		if(!empty($map[$estado])){
+			return $map[$estado];
+		}
+		else {
+			return $sp;
+		}
+	}
+	
+	
+	private function _registrobr_identify_env_encode() {
+		#Encoding default UTF-8
+	
+	
+		if(!empty($CONFIG['Charset'])){
+	
+			return $CONFIG['Charset'];
+		}
+		else {
+			$table = "tblconfiguration";
+			$fields = "Charset";
+			$where = array();
+			$result = select_query($table,$fields,$where);
+			$data = mysql_fetch_array($result);
+		
+			if($data['Charset']) {
+				return $data['Charset'];
+			}
+			else {
+				return 'UTF-8';
+			}
+		}
 	}
 
 }

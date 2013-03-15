@@ -119,16 +119,49 @@ function registrobr_getConfigArray() {
 
 }
 
-
+function _registro_test(){
+	
+	registrobr_GetNameservers($params);
+	
+	
+	//Utilize os nameservers antigo e inverta a ordem, depois consultar novamente.
+	registrobr_SaveNameservers($params);
+	
+}
 
 
 # Function to return current nameservers
 
 function registrobr_GetNameservers($params) {
 
+	/*
+	 $params example:
+	 
+	  Array
+	(
+    [domainid] => 54
+    [sld] => toccos17
+    [tld] => com.br
+    [regperiod] => 1
+    [registrar] => registrobr
+    [regtype] => Register
+    [Certificate] => 
+    [CNPJ] => 1
+    [CPF] => 1
+    [FinanceDept] => 1
+    [Language] => English
+    [Passphrase] => 
+    [Password] => 
+    [TechC] => 
+    [TechDept] => 1
+    [TestMode] => on
+    [Username] => 237
+	)
+	
+	 * 
+	 */
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-	#require_once('ParserResponse/ParserResponse.class.php');
 
 	$domain = $params["sld"].".".$params["tld"];
 
@@ -137,6 +170,7 @@ function registrobr_GetNameservers($params) {
 	
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPP->set('domain',$domain);
+	$objRegistroEPP->set('language',$params['Language']);
 	
 	try {
 		$objRegistroEPP->login($moduleparams);
@@ -173,8 +207,19 @@ function registrobr_GetNameservers($params) {
         }
     } while ($ticket);
     
+    $nameservers = $objRegistroEPP->get('nameservers');
     
-    return $objRegistroEPP->get('nameservers');
+    return $nameservers;
+    
+    /*
+     Expected Output
+     Array
+	(
+    [ns1] => dns1.stabletransit.com
+    [ns2] => dns2.stabletransit.com
+	) 
+     
+     */
 
 }
 
@@ -182,6 +227,34 @@ function registrobr_GetNameservers($params) {
 
 function registrobr_SaveNameservers($params) {
     
+	/*
+	 Array
+	 ( 
+	 [domainid] => 54 
+	 [sld] => toccos17 
+	 [tld] => com.br 
+	 [regperiod] => 1 
+	 [registrar] => registrobr 
+	 [regtype] => Register 
+	 [ns1] => dns2.stabletransit.com 
+	 [ns2] => dns1.stabletransit.com 
+	 [ns3] => 
+	 [ns4] => 
+	 [ns5] => 
+	 [Certificate] => 
+	 [CNPJ] => 1 
+	 [CPF] => 1 
+	 [FinanceDept] => 1 
+	 [Language] => English 
+	 [Passphrase] => 
+	 [Password] =>  
+	 [TechC] => 
+	 [TechDept] => 1 
+	 [TestMode] => on 
+	 [Username] => 237 
+	 )  
+	 
+	 */
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
@@ -192,6 +265,8 @@ function registrobr_SaveNameservers($params) {
 	
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPP->set('domain',$domain);
+	$objRegistroEPP->set('language',$params['Language']);
+	
 	
 	try {
 		$objRegistroEPP->login($moduleparams);
@@ -212,6 +287,7 @@ function registrobr_SaveNameservers($params) {
 	
 	
 	$objRegistroEPP->updateNameServers($OldNameservers,$NewNameservers);
+	
 	
     return $values;
 }
@@ -272,6 +348,8 @@ function registrobr_RegisterDomain($params){
 	# Domain information and check provider
 	
 	$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+	$objRegistroEPP->set('language',$params['Language']);
+	
 	
 	$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
 	$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
@@ -295,7 +373,7 @@ function registrobr_RegisterDomain($params){
 			$street1	= $params["original"]["address1"];
 			$street2	= $params["original"]["address2"];
 			$city 		= $params["original"]["city"];
-			$sp			= _registrobr_StateProvince($params["original"]["state"]);
+			$sp			= $objRegistroEPPBrorg->StateProvince($params["original"]["state"]);
 			$pc			= $params["original"]["postcode"];
 			$cc			= $params["original"]["country"];
 			$email		= $params["original"]["email"];
@@ -320,6 +398,8 @@ function registrobr_RegisterDomain($params){
 			
 			# Create Org
 			$objRegistroEPPRegistrant = RegistroEPPFactory::build('RegistroEPPBrorg');
+			$objRegistroEPPRegistrant->set('language',$params['Language']);
+				
 			$objRegistroEPPRegistrant->set('netClient',$objRegistroEPPBrorg->get('netClient'));
 			$objRegistroEPPRegistrant->set('domain',$domain);
 			$objRegistroEPPRegistrant->set('contactID',$RegistrantTaxID);
@@ -362,6 +442,7 @@ function registrobr_RegisterDomain($params){
 	$Nameservers["ns5"] = $params["ns5"];
 	
 	$objRegistroEPPNewDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPPNewDomain->set('language',$params['Language']);
 	$objRegistroEPPNewDomain->set('netClient',$objRegistroEPPBrorg->get('netClient'));
 	
 	$objRegistroEPPNewDomain->set('domain',$domain);
@@ -397,6 +478,7 @@ function registrobr_RenewDomain($params){
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPP->set('language',$params['Language']);
 	$objRegistroEPP->set('domain',$domain);
 	
 	try {
@@ -427,21 +509,45 @@ function registrobr_RenewDomain($params){
 
 function registrobr_GetContactDetails($params) {
 
+	
+	/*
+	 Array
+	(
+    [domainid] => 54
+    [sld] => toccos17
+    [tld] => com.br
+    [regperiod] => 1
+    [registrar] => registrobr
+    [Certificate] => 
+    [CNPJ] => 1
+    [CPF] => 1
+    [FinanceDept] => 1
+    [Language] => English
+    [Passphrase] => 
+    [Password] => 
+    [TechC] => 
+    [TechDept] => 1
+    [TestMode] => on
+    [Username] => 237
+	)
+	 */
+	
 	# Include CPF and CNPJ stuff we need
 	require_once 'isCnpjValid.php';
 	require_once 'isCpfValid.php';
 
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
-    require_once('ParserResponse/ParserResponse.class.php');
-    
-    $domain = $params["sld"].".".$params["tld"];
-    
+    #require_once('ParserResponse/ParserResponse.class.php');
     
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
     
+    $domain = $params["sld"].".".$params["tld"];    
+    
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
+    $objRegistroEPP->set('language',$params['Language']);
+    
     
     try {
     	$objRegistroEPP->login($moduleparams);
@@ -472,6 +578,8 @@ function registrobr_GetContactDetails($params) {
     try {
 	    #Get info about the brorg 
 	    $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+    	$objRegistroEPPBrorg->set('language',$params['Language']);
+    	
 	    $objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
 	    $objRegistroEPPBrorg->set('domain',$domain);
 	    $objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
@@ -489,10 +597,10 @@ function registrobr_GetContactDetails($params) {
     
     # Companies have both company name and contact name, individuals only have their own name 
     if (isCnpjValid($RegistrantTaxIDDigits)==TRUE) {
-        $values["Registrant"][_registrobr_lang("companynamefield")] = $Name;
+        $values["Registrant"][$objRegistroEPPBrorg->getMsgLang("companynamefield")] = $Name;
     }
     else { 
-    	$values["Registrant"][_registrobr_lang("fullnamefield")] = $Name;
+    	$values["Registrant"][$objRegistroEPPBrorg->getMsgLang("fullnamefield")] = $Name;
     }
     
     #Get Org, Adm and Tech Contacts
@@ -511,26 +619,199 @@ function registrobr_GetContactDetails($params) {
 			return $values;
 		}
 		
-		$values[$key][_registrobr_lang("fullnamefield")] = $objRegistroEPPBrorg->get('name');
-		$values[$key][_registrobr_lang("streetnamefield")] = $objRegistroEPPBrorg->get('street1');
-		$values[$key][_registrobr_lang("streetnumberfield")] = $objRegistroEPPBrorg->get('street2');
-		$values[$key][_registrobr_lang("addresscomplementsfield")] = $objRegistroEPPBrorg->get('street3');
-		$values[$key][_registrobr_lang("citynamefield")] = $objRegistroEPPBrorg->get('city');
-		$values[$key][_registrobr_lang("stateprovincefield")] = $objRegistroEPPBrorg->get('sp');
-		$values[$key][_registrobr_lang("zipcodefield")] = $objRegistroEPPBrorg->get('pc');
-		$values[$key][_registrobr_lang("countrycodefield")] = $objRegistroEPPBrorg->get('cc');
-		$values[$key][_registrobr_lang("phonenumberfield")] = $objRegistroEPPBrorg->get('voice');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("fullnamefield")] = $objRegistroEPPBrorg->get('name');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("streetnamefield")] = $objRegistroEPPBrorg->get('street1');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("streetnumberfield")] = $objRegistroEPPBrorg->get('street2');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("addresscomplementsfield")] = $objRegistroEPPBrorg->get('street3');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("citynamefield")] = $objRegistroEPPBrorg->get('city');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("stateprovincefield")] = $objRegistroEPPBrorg->get('sp');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("zipcodefield")] = $objRegistroEPPBrorg->get('pc');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("countrycodefield")] = $objRegistroEPPBrorg->get('cc');
+		$values[$key][$objRegistroEPPBrorg->getMsgLang("phonenumberfield")] = $objRegistroEPPBrorg->get('voice');
 		$values[$key]["Email"] = $objRegistroEPPBrorg->get('email');
  	
-	}        
- 	return $values;
+	}    
+	/*
+	 
+	 Array
+(
+    [Registrant] => Array
+        (
+            [Full Name] => Flávio Novo Client Yanai
+            [Street Name] => Av Nações Unidas, 333
+            [Street Number] => 2222
+            [Address Complements] => 
+            [City] => São Paulo
+            [State or Province] => SP
+            [Zip code] => 03182-040
+            [Country] => BR
+            [Phone] => +55.33343434
+            [Email] => flavio2.yanai@gmail.com
+        )
+
+    [Admin] => Array
+        (
+            [Full Name] => Flávio Novo Client Yanai
+            [Street Name] => Av Nações Unidas, 333
+            [Street Number] => 2222
+            [Address Complements] => 
+            [City] => São Paulo
+            [State or Province] => SP
+            [Zip code] => 03182-040
+            [Country] => BR
+            [Phone] => +55.33343434
+            [Email] => flavio2.yanai@gmail.com
+        )
+
+    [Tech] => Array
+        (
+            [Full Name] => Flávio Novo Client Yanai
+            [Street Name] => Av Nações Unidas, 333
+            [Street Number] => 2222
+            [Address Complements] => 
+            [City] => São Paulo
+            [State or Province] => SP
+            [Zip code] => 03182-040
+            [Country] => BR
+            [Phone] => +55.33343434
+            [Email] => flavio2.yanai@gmail.com
+        )
+
+)
+	  
+	 */
+	
+	return $values;
 }
 
 # Function to save contact details
 
 function registrobr_SaveContactDetails($params) {
 	
-	
+	/*
+
+	 * Array
+(
+    [domainid] => 54
+    [sld] => toccos17
+    [tld] => com.br
+    [regperiod] => 1
+    [registrar] => registrobr
+    [contactdetails] => Array
+        (
+            [Registrant] => Array
+                (
+                    [Full Name] => Flavio Newest Yanai
+                    [Street Name] => Av Nacoes Unidas, 444
+                    [Street Number] => 1111
+                    [Address Complements] => 1111
+                    [City] => Sao Paulo
+                    [State or Province] => SP
+                    [Zip code] => 03182-040
+                    [Country] => BR
+                    [Phone] => +55.33343434
+                    [Email] => flavio2.yanai@gmail.com
+                )
+
+            [Admin] => Array
+                (
+                    [Full Name] => Flavio Novo Client Yanai2
+                    [Street Name] => Av Nacoes Unidas, 2222
+                    [Street Number] => 2222
+                    [Address Complements] => 
+                    [City] => Sao Paulo
+                    [State or Province] => SP
+                    [Zip code] => 03182-040
+                    [Country] => BR
+                    [Phone] => +55.33343434
+                    [Email] => flavio2.yanai@gmail.com
+                )
+
+            [Tech] => Array
+                (
+                    [Full Name] => Flavio Novo Client Yanai
+                    [Street Name] => Av Nacoes Unidas, 3333
+                    [Street Number] => 3333
+                    [Address Complements] => 
+                    [City] => Sao Paulo
+                    [State or Province] => SP
+                    [Zip code] => 03182-040
+                    [Country] => BR
+                    [Phone] => +55.33343434
+                    [Email] => flavio2.yanai@gmail.com
+                )
+
+        )
+
+    [original] => Array
+        (
+            [domainid] => 54
+            [sld] => toccos17
+            [tld] => com.br
+            [regperiod] => 1
+            [registrar] => registrobr
+            [contactdetails] => Array
+                (
+                    [Registrant] => Array
+                        (
+                            [Full Name] => Flávio Newest Yanai
+                            [Street Name] => Av Nações Unidas, 444
+                            [Street Number] => 1111
+                            [Address Complements] => 1111
+                            [City] => São Paulo
+                            [State or Province] => SP
+                            [Zip code] => 03182-040
+                            [Country] => BR
+                            [Phone] => +55.33343434
+                            [Email] => flavio2.yanai@gmail.com
+                        )
+
+                    [Admin] => Array
+                        (
+                            [Full Name] => Flávio Novo Client Yanai2
+                            [Street Name] => Av Nações Unidas, 2222
+                            [Street Number] => 2222
+                            [Address Complements] => 
+                            [City] => São Paulo
+                            [State or Province] => SP
+                            [Zip code] => 03182-040
+                            [Country] => BR
+                            [Phone] => +55.33343434
+                            [Email] => flavio2.yanai@gmail.com
+                        )
+
+                    [Tech] => Array
+                        (
+                            [Full Name] => Flávio Novo Client Yanai
+                            [Street Name] => Av Nações Unidas, 3333
+                            [Street Number] => 3333
+                            [Address Complements] => 
+                            [City] => São Paulo
+                            [State or Province] => SP
+                            [Zip code] => 03182-040
+                            [Country] => BR
+                            [Phone] => +55.33343434
+                            [Email] => flavio2.yanai@gmail.com
+                        )
+
+                )
+
+        )
+
+    [Certificate] => 
+    [CNPJ] => 1
+    [CPF] => 1
+    [FinanceDept] => 1
+    [Language] => English
+    [Passphrase] => 
+    [Password] => 
+    [TechC] => 
+    [TechDept] => 1
+    [TestMode] => on
+    [Username] => 237
+)
+﻿
+	 */
 
     # If nothing was changed, return
     if ($params["contactdetails"]==$params["original"]["contactdetails"]) {
@@ -553,6 +834,8 @@ function registrobr_SaveContactDetails($params) {
     
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPP->set('domain',$domain);
+	$objRegistroEPP->set('language',$params['Language']);
+	
 	    
 	try {
 		$objRegistroEPP->login($moduleparams);
@@ -584,6 +867,8 @@ function registrobr_SaveContactDetails($params) {
 	try {
 		#Get info about the brorg
 		$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+		$objRegistroEPPBrorg->set('language',$params['Language']);
+		
 		$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
 		$objRegistroEPPBrorg->set('domain',$domain);
 		$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
@@ -601,10 +886,10 @@ function registrobr_SaveContactDetails($params) {
 	
 	# Companies have both company name and contact name, individuals only have their own name
 	if (isCnpjValid($RegistrantTaxIDDigits)==TRUE) {
-		$values["Registrant"][_registrobr_lang("companynamefield")] = $Name;
+		$values["Registrant"][$objRegistroEPPBrorg->getMsgLang("companynamefield")] = $Name;
 	}
 	else {
-		$values["Registrant"][_registrobr_lang("fullnamefield")] = $Name;
+		$values["Registrant"][$objRegistroEPPBrorg->getMsgLang("fullnamefield")] = $Name;
 	}
 	
 	####################
@@ -648,6 +933,8 @@ function registrobr_SaveContactDetails($params) {
 		$email = !empty($cdetails["Email"]) ? $cdetails["Email"] : '';
 
 		$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+		$objRegistroEPPBrorg->set('language',$params['Language']);
+		
 		$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
 		$objRegistroEPPBrorg->set('domain',$domain);
 		$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
@@ -691,19 +978,19 @@ function registrobr_SaveContactDetails($params) {
 		try {
 			//obj Domain
 			$objRegistroEPP->updateInfo($Contacts,$NewContactsID);
-				
 		}
 		catch(Exception $e){
 			$values["error"] = $e->getMessage();
 			return $values;
-		}
-    	
+		}    	
     }
     
     if ($OrgUpdate == TRUE){ 
     	try {
     		#Get info about the brorg
     		$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+    		$objRegistroEPPBrorg->set('language',$params['Language']);
+    		 
     		$objRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
     		$objRegistroEPPBrorg->set('domain',$domain);
     		$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
@@ -721,23 +1008,22 @@ function registrobr_SaveContactDetails($params) {
     		$companyname = $objRegistroEPPBrorg->get('name');
     	}
     	else { 
-    		$companyname =( empty($params["contactdetails"]["Registrant"][_registrobr_lang("companynamefield")]) ? $params["contactdetails"]["Registrant"]["Company Name"] : $params["contactdetails"]["Registrant"][_registrobr_lang("companynamefield")]);
+    		$companyname =( empty($params["contactdetails"]["Registrant"][$objRegistroEPPBrorg->getMsgLang("companynamefield")]) ? $params["contactdetails"]["Registrant"]["Company Name"] : $params["contactdetails"]["Registrant"][$objRegistroEPPBrorg->getMsgLang("companynamefield")]);
     	}
     	
     	if (isCnpjValid($RegistrantTaxIDDigits)) {
     		$responsible = $objRegistroEPPBrorg->get('name');
     	}
     	
-    	
     	$objReg = $objNewContacts["Registrant"];
 
-    	$objNewRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg'); 
+    	$objNewRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+    	$objNewRegistroEPPBrorg->set('language',$params['Language']);
+    	 
     	$objNewRegistroEPPBrorg->set('netClient',$objRegistroEPP->get('netClient'));
     	$objNewRegistroEPPBrorg->set('domain',$domain);
     	$objNewRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
     	$objNewRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
-    	
-    	
     	$objNewRegistroEPPBrorg->set('name',$objReg->get('name'));
     	$objNewRegistroEPPBrorg->set('street1',$objReg->get('street1'));
     	$objNewRegistroEPPBrorg->set('street2',$objReg->get('street2'));
@@ -776,6 +1062,8 @@ function registrobr_RequestDelete($params) {
 	
 	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPPDomain->set('domain',$domain);
+	$objRegistroEPPDomain->set('language',$params['Language']);
+	
 	
 	try {
 		$objRegistroEPPDomain->login($moduleparams);
@@ -812,628 +1100,199 @@ function registrobr_RequestDelete($params) {
 }
 
 
-
-function registrobr_Sync($params) {
-    
-    # We need pear for the error handling
-    require_once "PEAR.php";
-    
-    # Get an EPP connection
-    $client = _registrobr_Client();
-    if (PEAR::isError($client)) {
-        return _registrobr_pear_error($client,'syncconnerror');
-    }
-    
-    #For every domain sync, also do a poll queue clean
-    _registrobr_Poll($client);
-    
-    #Request a sync for the specified domain
-    $values = _registrobr_SyncRequest($client,$params);
-    return $values;
-}
-    
-function _registrobr_SyncRequest($client,$params) {
-
-    # Grab variables
-    $domain = $params['domain'];
-    $domainid = $params['domainid'];
-    $moduleparams = getregistrarconfigoptions('registrobr');
-    $table = "mod_registrobr";
-    $fields = "clID,domainid,domain,ticket";
-    $where = array("clID"=>$moduleparams['Username'],"domainid"=>$domainid,"domain"=>$domain);
-    $result = select_query($table,$fields,$where);
-    $data = mysql_fetch_array($result);
-    $ticket = $data['ticket'];
-    
-    #Initialize return values
-    $values=array();
-    
-    if(empty($ticket)) {
-        $values["error"]=_registrobr_lang("syncdomainnevercreated");
-        return $values;
-    }
-
-    $request = '
-            <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
-            xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-                <command>
-                    <info>
-                        <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                            <domain:name hosts="all">'.$domain.'</domain:name>
-                        </domain:info>
-                    </info>
-                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                </command>
-            </epp>
-            ';
-    
-    $response = $client->request($request);
-    
-	# Parse XML result		
-        # Check results	
-	$answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-	$contact = $answer['contact'];
-	# Check results
-    
-    # Check if result is ok
-	if($coderes != '1000') {
-        	if ($coderes != '2303') {
-			return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
-        	}
-        
-    # See if domain not found is due to domain still being a ticket
-    $request = '
-            <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
-            xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-                <command>
-                    <info>
-                        <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
-                            <domain:name hosts="all">'.$domain.'</domain:name>
-                        </domain:info>
-                    </info>
-                    <extension>
-                        <brdomain:info xmlns:brdomain="urn:ietf:params:xml:ns:brdomain-1.0"
-                        xsi:schemaLocation="urn:ietf:params:xml:ns:brdomain-1.0
-                        brdomain-1.0.xsd">
-                            <brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
-                        </brdomain:info>
-                    </extension>
-                    <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                </command>
-            </epp>
-            ';
-        
-    $response = $client->request($request);
-        
-    # Check results	
-	$answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-	$contact = $answer['contact'];
+function registrobr_Sync($params){
+	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
-    # Check results
-    if($coderes == '1000') {
-            #Guess: no info equals pending
-            return $values;
-    }
-        
-    if ($coderes != '2303') {
-		return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
-    }
-    
-    $values["error"] = _registrobr_lang('Domain').$domain._registrobr_lang('syncdomainnotfound');
-    return $values;
-    }
-    
-    $doc=$answer['doc'];
-    $createdate = substr($doc->getElementsByTagName('crDate')->item(0)->nodeValue,0,10);
-    $values['registrationdate'] = $createdate;
-    $nextduedate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
-    $holdreasons = $doc->getElementsByTagName('onHoldReason');
-    
-    #if ticket number is different, this is actually a new domain with the same name
-    if ($doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue!=$ticket) {
-        $values['expired'] = true ;
-        $values['expirydate'] = $createdate;
-    } elseif (!empty($holdreasons)) {
-        if (array_search("billing",$holdreasons)!=FALSE) {
-            $values['expired'] = true;
-            $values['expirydate'] = $nextduedate;
-        }
-    } else {
-        $values['active'] = true;
-        $values['expirydate'] = $nextduedate;
-        
-    }
-    return $values;
+	#For every domain sync, also do a poll queue clean
+	_registrobr_Poll($client);
+	
+	#Request a sync for the specified domain
+	$values = _registrobr_SyncRequest($client,$params);
+	return $values;
+	
+	
 }
 
-function _registrobr_Poll($client) {
-          
-  
-    
-    # We need pear for the error handling
-    require_once "PEAR.php";
-    
-    # We need XML beautifier for showing understable XML code
-    require_once dirname(__FILE__) . '/BeautyXML.class.php';
-    
-    
-    # We need EPP stuff
-    
-    require_once dirname(__FILE__) . '/Net/EPP/Frame.php';
-    require_once dirname(__FILE__) . '/Net/EPP/Frame/Command.php';
-    require_once dirname(__FILE__) . '/Net/EPP/ObjectSpec.php';
-    
-    # Get module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
-    
-   
-    
-    # Loop with message queue
-    while (!$last) {
-          
-        # Request messages
-        $request = '
-                    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-                        <command>
-                            <poll op="req"/>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                        </command>
-                    </epp>
-                    ';
-        $response = $client->request($request);
-          
-        # Decode response
-        
-        $answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-        $contact = $answer['contact'];
-        $doc = $answer['doc'];
-        
-        # Check results
-        
-        # This is the last one
-        if ($coderes == 1300) {
-            $last = 1;
-        } else  {
-            $msgid = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
-            $content = _registrobr_lang("Date").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,0,10)." ";
-            $content .= _registrobr_lang("Time").substr($doc->getElementsByTagName('qDate')->item(0)->nodeValue,11,10)." UTC\n";
-            $code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
-            $content .= _registrobr_lang("Code").$code."\n";
-            $content .= _registrobr_lang("Text").$doc->getElementsByTagName('txt')->item(0)->nodeValue."\n";
-            $reason = $doc->getElementsByTagName('reason');
-            if (!empty($reason)) $content .= _registrobr_lang("Reason").$doc->getElementsByTagName('reason')->item(0)->nodeValue."\n";
-            $content .= _registrobr_lang("FullXMLBelow");
-            $bc = new BeautyXML();
-            
-            $content .= htmlentities($bc->format($response));
-            
-            $ticket='';
-            $domain='';
-            $taxpayerID='';
-            
-            switch($code) {
-                case '1': case '22': case '28': case '29':
-                    $ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
-                    
-                    #no break, poll messages with ticketNumber also have domain in objectId
-                    
-                case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18':
-                case '20':
-                case '107': case '108':
-                case '304': case '305':
-                    
-                    $domain = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
-                    break;
-                
-                case '100': case '101': case '102': case '103': case '106':
-                    
-                    $taxpayerID = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
-                    break;
-            }
-            
-            $taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
-            
-            if (in_array($code,array('300','302','303','305'))==TRUE) {
-                            $issue["priority"] = "High";
-                            $issue["deptid"] = $moduleparams["FinanceDept"];
-            } elseif (in_array($code,array('301','304'))==TRUE) {
-                            $issue["priority"] = "Low";
-                            $issue["deptid"] = $moduleparams["FinanceDept"];
-            }
-            else {
-                            $issue["priority"] = "Low" ;
-                            $issue["deptid"] = $moduleparams["TechDept"];
-                
-            }
-                    
-            
-            $issue["clientid"]=0;
-            
-            if (!empty($domain)) {
-               
-                $issue["domain"] =$domain;
-                
-                if (empty($ticket)) {
-                    $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
-                    $data = mysql_fetch_array($queryresult);
-                    
-                    # if there is only one domain with this name, we can match it to a domainid without a ticket
-                    if (count($data)==1) {
-                        $domainid = $data['domainid'];
-                    }
-                } else {
-                    $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
-                    $data = mysql_fetch_array($queryresult);
-                    $domainid = $data['domainid'];
-                }
-                if (!empty($domainid)) {
-                    $issue["domainid"] = $domainid;
-                    $queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
-                    $data = mysql_fetch_array($queryresult);
-                    $issue["clientid"]=$data['userid'];
-
-                }
-            }
-            
-            if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
-                $issue["clientid"] = "1";
-                
-            }
-        
-        
-        $issue["subject"] = _registrobr_lang("Pollmsg");
-        $issue["message"] = $content;
-        $user = $moduleparams['Sender'];
-        $queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
-        $data = mysql_fetch_array($queryresult);
-                                         
-        
-        $issue["name"] = $data["firstname"]." ".$data["lasttname"];
-        $issue["email"] = $data["email"];
-            
-            
-        $results = localAPI("openticket",$issue,$user);
-        if ($results['result']!="success") {
-                logModuleCall("registrobr",_registrobr_lang("epppollerror"),$issue,$results);
-                return;
-            }
-        
-
-            
-        # Ack poll message
-        $request='  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                        <command>
-                            <poll op="ack" msgID="'.$msgid.'"/>
-                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                        </command>
-                    </epp>
-                    ';
-        $response = $client->request($request);
-
-        # Decipher XML
-        # Check results	
-	$answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-	$contact = $answer['contact'];
-	# Check results
-        
-
-
-        # Check result
-        if($coderes != '1000') {
-		return _registrobr_server_error('pollackerrorcode',$coderes,$msg,$reason,$request,$response);
-        }
-    
-    #brace below close msg if
-    }
-
-    #brace below close while(!last) loop
-    }
-        
-    return;
-}
-
-
-
-# Function to create internal .br EPP request
-
-function _registrobr_Client() {
-
+function _registrobr_Poll() {
+	
+	$domain = $params["sld"].".".$params["tld"];
+	
+	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
+	$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
+	$objRegistroEPPPoll->set('language',$params['Language']);
+	$objRegistroEPPPoll->set('domain',$domain);
 	
-
-	
-
-	$requestXML = $objRegistroEPP->xml();    
-	$responseXML = $client->request($requestXML);
-	$objParser = New ParserResponse();
-	$objParser->parse($responseXML);
-		
-	$coderes = $objParser->get('coderes');
-
-	if ($coderes != '1000') {
-		return $objRegistroEPP->errorEPP('epplogin',$objParser,$requestXML,$responseXML,$language);
+	try {
+		$objRegistroEPPPoll->login($moduleparams);
+		$coderes = $objRegistroEPPPoll->get('coderes');
 	}
-    return $client;
-}
-
-    
-function _registrobr_normaliza($string) {
-        
-    $string = str_replace('&nbsp;',' ',$string);
-    $string = trim($string);
-    $string = html_entity_decode($string,ENT_QUOTES,'UTF-8');
-        
-    //Instead of The Normalizer class ... requires (PHP 5 >= 5.3.0, PECL intl >= 1.0.0)
-    $normalized_chars = array( 'Š'=>'S', 'š'=>'s', 'Ð'=>'Dj','Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E', 'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss','à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y', 'ƒ'=>'f', ' ' => '');
-    
-    $string = strtr($string,$normalized_chars);
-    $string = strtolower($string);
-    return $string;
-}
-    
-function _registrobr_StateProvince($sp) {
-        
-    if (strlen($sp)==2) return $sp;
-    $estado = _registrobr_normaliza($sp);
-    $map = array(
-                "acre" => "AC",
-                "alagoas" => "AL",
-                "amazonas" => "AM",
-                "amapa" => "AP",
-                "bahia" => "BA",
-                "baia" => "BA",
-                "ceara" => "CE",
-                "distritofederal" => "DF",
-                "espiritosanto" => "ES",
-                "espiritusanto" => "ES",
-                "goias" => "GO",
-                "goia" => "GO",
-                "maranhao" => "MA",
-                "matogrosso" => "MT",
-                "matogroso" => "MT",
-                "matogrossodosul" => "MS",
-                "matogrossosul" => "MS",
-                "matogrossodesul" => "MS",
-                "minasgerais" => "MG",
-                "minasgeral" => "MG",
-                "para" => "PA",
-                "paraiba" => "PB",
-                "parana" => "PR",
-                "pernambuco" => "PE",
-                "pernanbuco" => "PE",
-                "piaui" => "PI",
-                "riodejaneiro" => "RJ",
-                "rio" => "RJ",
-                "riograndedonorte" => "RN",
-                "riograndenorte" => "RN",
-                "rondonia" => "RO",
-                "riograndedosul" => "RS",
-                "riograndedesul" => "RS",
-                "riograndesul" => "RS",
-                "roraima" => "RR",
-                "santacatarina" => "SC",
-                "sergipe" => "SE",
-                "saopaulo" => "SP",
-                "tocantins" => "TO"
-                );
-			    if(!empty($map[$estado])){
-					return $map[$estado];
-			    }
-			    else {
-			    	return $sp;
-			    }
-    }
-                            
-
-function _registrobr_identify_env_encode() {
-	#Encoding default UTF-8
-
-
-	if(!empty($CONFIG['Charset'])){
-                
-		return $CONFIG['Charset'];
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
+	}
+	$objRegistroEPPPoll->getMessages($moduleparams);
+	
+	$coderes = $objRegistroEPPPoll->get('coderes');
+	
+	$last = 0;
+	
+	# This is the last one
+	if ($coderes == 1300) {
+		$last = 1;
 	}
 	else {
-    		$table = "tblconfiguration";
-    		$fields = "Charset";
-    		$where = array();
-    		$result = select_query($table,$fields,$where);
-    		$data = mysql_fetch_array($result);
-
-    		if($data['Charset']) {
-			return $data['Charset'];
+		$msgid = $objRegistroEPPPoll->get('msgQ');
+		$reason = $objRegistroEPPPoll->get('reason');
+		$code = $objRegistroEPPPoll->get('code');
+		$content = $objRegistroEPPPoll->get('content');
+		
+		switch($code) {
+			case '1': case '22': case '28': case '29':
+				$ticket = $objRegistroEPPPoll->get('ticket');
+				#no break, poll messages with ticketNumber also have domain in objectId
+			case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18': case '20': case '107': case '108': case '304': case '305':
+				$domain = $objRegistroEPPPoll->get('objectId');
+				break;
+			case '100': case '101': case '102': case '103': case '106':
+				$taxpayerID = $objRegistroEPPPoll->get('objectId');
+				break;
+		}
+		$taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
+		
+		if (in_array($code,array('300','302','303','305'))==TRUE) {	
+			$issue["priority"] = "High";
+			$issue["deptid"] = $moduleparams["FinanceDept"];
+		} 
+		elseif (in_array($code,array('301','304'))==TRUE) {
+			$issue["priority"] = "Low";
+			$issue["deptid"] = $moduleparams["FinanceDept"];
 		}
 		else {
-			return 'UTF-8';
-		}
-	}
-
-}
-
-#Aux functions
-
-#Pear error
-
-function _registrobr_pear_error($client,$strerror){
-	$client = _registrobr_set_encode($client);
-	$values["error"]=_registrobr_lang($strerror).$client;
-	logModuleCall("registrobr",$values["error"]);
-	return $values;
-}
-
-#Parse xml response from epp server
-function _registrobr_parse_response($response){
-
-	$doc= new DOMDocument();
-	$doc->loadXML($response);
-	$atts = array();
-	$atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-	$atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-	$atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
-	$atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
-	$atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
-	$atts['doc'] = $doc;
-
-	return $atts;
-}
-#registro.br response error
-
-function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$response){
-
-	$msg = _registrobr_set_encode($msg);
-	$errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
-	if (!empty($reason)) {
-		$reason = _registrobr_set_encode($reason);
-		$errormsg.= _registrobr_lang("reason").$reason."'";
-	};
-	logModuleCall("registrobr",$errormsg,$request,$response);
-	$values["error"] = $errormsg;
-	return $values;
-}
-
-
-function _registrobr_convert_to_punycode($string){
-
-	# Setup include dir
-	$include_path = ROOTDIR . '/modules/registrars/registrobr';
-	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-	
-	require_once('Idna/idna_convert.class.php');
+			$issue["priority"] = "Low" ;
+			$issue["deptid"] = $moduleparams["TechDept"];
 		
-	$IDN = new idna_convert(array('idn_version' => '2008'));
-	
-	$encoded = $IDN->encode($string);
-	
-	return $encoded;
+		}
+		
+		$issue["clientid"]=0;
+		
+		if (!empty($domain)) {
+		
+			$issue["domain"] =$domain;
+		
+			if (empty($ticket)) {
+				$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
+				$data = mysql_fetch_array($queryresult);
+		
+				# if there is only one domain with this name, we can match it to a domainid without a ticket
+				if (count($data)==1) {
+					$domainid = $data['domainid'];
+				}
+			}
+			else {
+				$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
+				$data = mysql_fetch_array($queryresult);
+				$domainid = $data['domainid'];
+			}
+			
+			if (!empty($domainid)) {
+				$issue["domainid"] = $domainid;
+				$queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
+				$data = mysql_fetch_array($queryresult);
+				$issue["clientid"]=$data['userid'];
+			}
+		}
+		
+		if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
+			$issue["clientid"] = "1";
+		}
+		
+		
+		$issue["subject"] = "Mensagem de Poll relativa a dominios .br";
+		$issue["message"] = $content;
+		$user = $moduleparams['Sender'];
+		$queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
+		$data = mysql_fetch_array($queryresult);
+		
+		
+		$issue["name"] = $data["firstname"]." ".$data["lasttname"];
+		$issue["email"] = $data["email"];
+		
+		
+		$results = localAPI("openticket",$issue,$user);
+		
+		if ($results['result']!="success") {
+			return $objRegistroEPPPoll->error('epppollerror',$issue,$results);
+		}
+		
+	}	
 	
 }
-function _registrobr_detect_encode($text){
-	$current_encoding = mb_detect_encoding($text, 'auto');
-	if(empty($current_encoding)){
-		return 'UTF-8';
+
+
+
+
+function _registrobr_SyncRequest($params) {
+
+	# Grab variables
+	$domain = $params['domain'];
+	$domainid = $params['domainid'];
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	$table = "mod_registrobr";
+	$fields = "clID,domainid,domain,ticket";
+	$where = array("clID"=>$moduleparams['Username'],"domainid"=>$domainid,"domain"=>$domain);
+	$result = select_query($table,$fields,$where);
+	$data = mysql_fetch_array($result);
+	$ticket = $data['ticket'];
+	
+	
+	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	$objRegistroEPPDomain->set('domain',$domain);
+	$objRegistroEPPDomain->set('language',$params['Language']);
+	
+	
+	if(empty($ticket)) {
+		$objRegistroEPPDomain->error('syncdomainnevercreated','','');
+		return $values;
 	}
-	else {
-		return $current_encoding;
+	
+	try {
+		$objRegistroEPPDomain->login($moduleparams);
+		$objRegistroEPPDomain->getInfo();
+	}
+	catch (Exception $e){
+		$values["error"] = $e->getMessage();
+		return $values;
 	}
 	
-}
-
-function _registrobr_set_encode($text,$encode) {
 	
-	$current_encoding = _registrobr_detect_encode($text);
-    if(empty($encode)){
-    	$to_encode = _registrobr_identify_env_encode();
-    }
-    else {
-    	$to_encode = $encode."//TRANSLIT";
-    }
-
-    $text = iconv($current_encoding, $to_encode, $text);
-    return $text;
+	$createdate = $objRegistroEPPDomain->get('crDate');
+	$values['registrationdate'] = $createdate;
+	$nextduedate = $objRegistroEPPDomain->get('exDate');
+	$holdreasons = $objRegistroEPPDomain->get('onHoldReason');
+	
+	#if ticket number is different, this is actually a new domain with the same name
+	if ($objRegistroEPPDomain->get('ticket') != $ticket) {
+		$values['expired'] = true ;
+		$values['expirydate'] = $createdate;
+	} 
+	elseif (!empty($holdreasons)) {
+		if (array_search("billing",$holdreasons)!=FALSE) {
+			$values['expired'] = true;
+			$values['expirydate'] = $nextduedate;
+			}
+	} else {
+		$values['active'] = true;
+		$values['expirydate'] = $nextduedate;
+	
+	}
+	return $values;
+	
 }
 
-function _registrobr_lang($msgid) {
+    
 
-    # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
-    $msgs = array (
-                    "epplogin" => array ("Erro no login EPP código ","EPP login error code "),
-                    "msg" => array (" mensagem '"," message '"),
-                    "reason" => array (" motivo '"," reason '"),
-                    "eppconnect" => array ("Erro de conexão EPP","EPP connect error"),
-                    "configerr" => array ("Erro nas opções de configuração","Config options errorr"),
-                    "specifypath" => array ("Favor informar o caminho para o arquivo de certificado","Please specifity path to certificate file"),
-                    "invalidpath" => array ("Caminho para o arquivo de certificado inválido", "Invalid certificate file path"),
-                    "specifypassphrase" => array ("Favor especificar a frase secreta do certificado", "Please specifity certificate passphrase"),
-                    "deleteerrorcode" => array ("Erro na remoção de domíenio código ","Domain delete: error code "),
-                    "deleteconnerror" => array ("Falha na conexão EPP ao tentar remover domínio erro ","Domain delete: EPP connection error "),
-                    "getnsconnerror" => array ("Falha na conexão EPP ao tentar obter servidores DNS erro ", "get nameservers: EPP connection error "),
-                    "setnsconnerror" => array ("Falha na conexão EPP ao tentar alterar servidores DNS erro ", "set nameservers: EPP connection error "),
-                    "setnsgeterrorcode" => array ("Falha ao tentar obter servidores DNS atuais para alterar servidores DNS código ", "set nameservers: error getting nameservers code "),
-                    "setnsupdateerrorcode" => array ("Falha ao alterar servidores DNS código ","set nameservers: update servers error code "),
-                    "cpfcnpjrequired" => array ("Registro de domínios .br requer CPF ou CNPJ","register domain: .br registrations require valid CPF or CNPJ"),
-                    "companynamerequired" => array ("Registros com CNPJ requerem nome da empresa preenchido",".br registrations with CNPJ require Company Name to be filled in"),
-                    "registerconnerror" => array ("Falha na conexão EPP ao tentar registrar domínio erro ", "register domain: EPP connection error "),
-                    "notallowed" => array ("Entidade só pode registrar domínios por provedor atualmente designado.", "entity can only register domains through designated registrar."),
-                    "registergetorgerrorcode" => array ("Falha ao obter status de entidade para registrar domínio erro ","register domain: get org status error code "),
-                    "registercreateorgcontacterrorcode" => array ("Falha ao criar contato para entidade erro ","register domain: create org contact error code "),
-                    "registercreateorgerrorcode" => array ("Falha ao criar entidade para registrar domínio erro ","register domain: create org error code "),
-                    "registererrorcode" => array ("Falha ao registrar domínio erro ","register domain error code "),
-                    "renewconnerror" => array ("Falha na conexão EPP ao renovar domínio erro ", "renew domain: EPP connection error "),
-                    "renewinfoerrorcode" => array ("Falha ao obter informações de domínio ao renovar domínio erro ", "renew: domain info error code "),
-                    "renewerrorcode" => array ("Falha ao renovar domínio erro ","domain renew: error code "),
-                    "getcontactconnerror" => array ("Falha na conexão EPP ao obter dados de contato erro ","get contact details: EPP connection error "), 
-                    "getcontacterrorcode" => array ("Falha ao obter dados de contato erro ", "get contact details: domain info error code "),
-                    "getcontactnotallowed" => array ("Somente provedor designado pode obter dados deste domínio.","get contact details: domain is not designated to this registrar."),
-                    "getcontactorginfoerrorcode" => array ("Falha ao obter informações de entidade detentora de domínio erro ","get contact details: organization info error code "),
-                    "getcontacttypeerrorcode" => array ("Falha ao obter dados de contato do tipo ","get contact details: "),
-                    "getcontacterrorcode" => array ("código de erro ","contact info error code "),
-                    "savecontactconnerror" => array ("Falha na conexão EPP ao gravar contatos erro ", "save contact details: EPP connection error "),
-                    "savecontactdomaininfoerrorcode" => array ("Falha ao obter dados de domínio para gravar contatos erro ","set contact details: domain info error code"),
-                    "savecontactnotalloweed" => array ("Somente provedor designado pode alterar dados deste domínio.", "Set contact details: domain is not designated to this registrar."),
-                    "savecontacttypeerrorcode" => array ("Falha ao criar novo contato do tipo ","save contact details: "),
-                    "savecontacterrorcode" => array ("código de erro ","contact create error code "),
-                    "savecontactdomainupdateerrorcode" => array ("Falha ao atualizar domínio ao modificar contatos erro ","set contact: domain update error code "),
-                    "savecontactorginfoeerrorcode" => array ("Falha de obtenção de informações de entidade ao modificar contatos erro ","set contact: org info error code "),
-                    "savecontactorgupdateerrorcode" => array ("Falha ao atualizar entidade ao modificar contatos erro ","set contact: org update error code "),
-                    "domainnotfound" => array ("Domínio ainda não registrado.","Domain not yet registered"),
-                    "getnserrorcode" => array ("Falha ao obter dados de domínio erro ","get nameserver error code "),
-                    "syncconnerror" => array ("Falha na conexão EPP ao sincronizar domínio erro ","domain sync: EPP connection error "),
-                    "syncerrorcode" => array ("Falha ao tentar obter informação de domínio código ", "domain sync: error getting domain info code "),
-                    "syncdomainnotfound" => array ("não mais registrado."," no longer registered"),
-                    "syncdomainunknownstatus" => array(" apresentou status desconhecido: ","domain sync: unknown status code "),
-                    "Domain" => array ("Domínio ","Domain "),
-                    "domain" => array ("domínio ","domain "),
-                    "syncreport" => array("Relatorio de Sincronismo de Dominios Registro.br\n","Registro.br Domain Sync Report\n"),
-                    "syncreportdashes" => array ("------------------------------------------------\n","------------------------------\n"),
-                    "ERROR" => array ("ERRO: ","ERROR: "),
-                    "domainstatusok" => array ("Ativo","Active"),
-                    "domainstatusserverhold" => array ("CONGELADO","PENDING"),
-                    "domainstatusexpired" => array ("Vencido","Expired"),
-                    "is" => array (" está "," is "),
-                    "registration" => array ("(Criação: ","(Registered: "),
-                    "epppollerror" => array ("Erro de ao fazer EPP Poll","EPP Polling error"),
-                    "Pollmsg" => array ("Mensagem de Poll relativa a dominios .br","Poll message about .br domains"),
-                    "pollackerrorcode" => array ("Falha ao dar recebimento de mensagem EPP Poll codigo ", "EPP Poll: error acknowledging a message error code "),
-                    "Date" => array ("Data ","Date "),
-                   "time" => array ("hora ","time "),
-                   "Code" => array ("Codigo ", "code "),
-                   "Text" => array ("Texto ","Text "),
-                   "FullXMLBelow" => array ("Mensagem XML completo abaixo:\n","Full XML message below:\n"),
-                       
-                    "companynamefield" => array ("Razao Social","Company Name"),
-                    "fullnamefield" => array ("Nome e Sobrenome","Full Name"),
-                    "streetnamefield" => array ("Logradouro","Street Name"),
-                    "streetnumberfield" => array ("Numero", "Street Number"),
-                    "addresscomplementsfield" => array ("Complemento", "Address Complements"),
-                    "citynamefield" => array ("Cidade","City"),
-                    "stateprovincefield" => array ("Estado","State or Province"),
-                    "zipcodefield" => array ("CEP","Zip code"),
-                    "countrycodefield" => array ("Pais","Country"),
-                    "phonenumberfield" => array ("Fone","Phone"),
-                    );                   
-         
-    $langmsg = ($moduleparams["Language"]=="Portuguese" ? $msgs["$msgid"][0] : $msgs["$msgid"][1] );
-    $langmsg = _registrobr_set_encode($langmsg);
-    return $langmsg;
-}
+
 
 ?>

@@ -20,6 +20,15 @@ class ParserResponse {
 	private $voice;
 	private $email;
 	private $exDate;
+	private $crDate;
+	private $onHoldReason;
+	
+	private $msgQ;
+	private $qDate;
+	private $code;
+	private $txt;
+	private $ticket;
+	private $objectId;
 		
 	#Parse xml response from epp server
 	public function parse($response){
@@ -27,6 +36,9 @@ class ParserResponse {
 		$doc= new DOMDocument();
 		$doc->loadXML($response);
 		
+		$createdate = substr($doc->getElementsByTagName('crDate')->item(0)->nodeValue,0,10);
+		$exDate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
+		$holdreasons = $doc->getElementsByTagName('onHoldReason');
 		
 		$this->set('coderes',$doc->getElementsByTagName('result')->item(0)->getAttribute('code'));
 		$this->set('msg',$doc->getElementsByTagName('msg')->item(0)->nodeValue);
@@ -35,11 +47,37 @@ class ParserResponse {
 		$this->set('contact',$doc->getElementsByTagName('contact')->item(0)->nodeValue);
 		$this->set('clID',$doc->getElementsByTagName('clID')->item(0)->nodeValue);
 		$this->set('name',$doc->getElementsByTagName('name')->item(0)->nodeValue);
-		$this->set('exDate',$doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
+		$this->set('exDate',$exDate);
+		$this->set('crDate',$createdate);
+		$this->set('onHoldReason',$holdreasons);
+		
 		
 		$this->set('doc',$doc);
 	}
+	public function parsePoll($response){
+		$doc= new DOMDocument();
+		$doc->loadXML($response);
 	
+		
+		$msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
+		$qDate = $doc->getElementsByTagName('qDate')->item(0)->nodeValue;
+		$code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
+		$txt = $doc->getElementsByTagName('txt')->item(0)->nodeValue;
+		$reason = $doc->getElementsByTagName('reason');
+		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+		$ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
+		$objectId = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
+
+		$this->set('coderes',$coderes);
+		$this->set('msgQ',$msgQ);
+		$this->set('qDate',$qDate);
+		$this->set('code',$code);
+		$this->set('txt',$txt);
+		$this->set('reason',$reason);
+		$this->set('ticket',$ticket);
+		$this->set('objectId',$objectId);
+		
+	}
 	public function parseBRorgInfo($response){
 		$doc= new DOMDocument();
 		$doc->loadXML($response);

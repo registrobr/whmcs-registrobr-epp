@@ -42,7 +42,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 			return;
 		}
 		elseif($coderes != '1000') {
-			$msg = $this->errorEPP('getcontactorginfoerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('getcontactorginfoerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 		
@@ -85,7 +85,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 		
 		
 		if($coderes != '1000') {
-			$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 	}
@@ -111,7 +111,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 		$this->set('coderes',$coderes);
 	
 		if($coderes != '1001') {
-			$msg = $this->errorEPP('registercreateorgcontacterrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('registercreateorgcontacterrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 	}
@@ -140,7 +140,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 		$this->set('coderes',$coderes);
 	
 		if($coderes != '1000') {
-			$msg = $this->errorEPP('savecontactorgupdateeerrorcode',$objParser,$requestXML,$responseXML,$language);
+			$msg = $this->errorEPP('savecontactorgupdateeerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
 	}
