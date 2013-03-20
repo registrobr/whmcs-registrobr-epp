@@ -11,8 +11,15 @@ class RegistroEPPDomain extends RegistroEPP {
 	protected $exDate;
 	protected $crDate;
 	protected $onHoldReason;
+	protected $name;
+	protected $coderes;
+	protected $ticket;
 		
+
 	public function getInfo(){
+		$include_path = ROOTDIR . '/modules/registrars/registrobr';
+		set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+		
 		require_once('ParserResponse/ParserResponse.class.php');
 
 		$client = $this->get('netClient');
@@ -27,6 +34,8 @@ class RegistroEPPDomain extends RegistroEPP {
 		$objParser->parse($responseXML);
 				
 		$coderes = $objParser->get('coderes',$coderes);
+		$this->set('coderes',$coderes);
+				
 		
 		if ($coderes == '2303') {
 			$msg = $this->errorEPP('domainnotfound',$objParser,$requestXML,$responseXML);
@@ -37,16 +46,14 @@ class RegistroEPPDomain extends RegistroEPP {
 			throw new Exception($msg);
 		}
 
-		
-        $this->set('coderes',$coderes);
         $this->set('nameservers',$objParser->getNameServers());
         $this->set('clID',$objParser->get('clID'));
         $this->set('contacts',$objParser->getContacts());
         $this->set('organization',$objParser->getOrganization());
         $this->set('exDate',$objParser->get('exDate'));
-        $this->set('exDate',$objParser->get('exDate'));
         $this->set('crDate',$objParser->get('crDate'));
         $this->set('onHoldReason',$objParser->get('onHoldReason'));
+        $this->set('ticket',$objParser->get('ticket'));
  		
 	}
 	
@@ -64,7 +71,14 @@ class RegistroEPPDomain extends RegistroEPP {
 		$objParser = New ParserResponse();
 		$objParser->parse($responseXML);
 		
+		$this->set('ticket',$objParser->get('ticket'));
+		$this->set('name',$objParser->get('name'));
+		$this->set('coderes',$objParser->get('coderes'));
+		
 		$coderes = $objParser->get('coderes',$coderes);
+		
+		$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML);
+		
 		
 		if ($coderes != '1001') {
 			$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML);				
@@ -88,7 +102,6 @@ class RegistroEPPDomain extends RegistroEPP {
 		$objParser->parse($responseXML);
 	
 		$coderes = $objParser->get('coderes',$coderes);
-		$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML);
 		
 		if ($coderes != '1000') {
 			$msg = $this->errorEPP('setnsupdateerrorcode',$objParser,$requestXML,$responseXML);
@@ -166,7 +179,12 @@ class RegistroEPPDomain extends RegistroEPP {
 	
 		$coderes = $objParser->get('coderes',$coderes);
 		$this->set('coderes',$coderes);
-	
+		$this->set('exDate',$objParser->get('exDate'));
+		$this->set('crDate',$objParser->get('crDate'));
+		$this->set('onHoldReason',$objParser->get('onHoldReason'));
+		$this->set('ticket',$objParser->get('ticket'));
+		
+		
 		if ($coderes != '1000') {
 			$msg = $this->errorEPP('renewerrorcode',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
@@ -289,7 +307,7 @@ class RegistroEPPDomain extends RegistroEPP {
                             <brdomain:ticketNumber>'.$ticket.'</brdomain:ticketNumber>
                         </brdomain:info>
                     </extension>';
-                    $this->set('ticket',false);
+                    $this->set('ticket','');
                 }    
                 $request.='    
                 <clTRID>'.mt_rand().mt_rand().'</clTRID>

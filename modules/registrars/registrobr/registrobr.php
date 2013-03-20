@@ -162,9 +162,11 @@ function registrobr_GetNameservers($params) {
 	 */
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-
+	
+	
 	$domain = $params["sld"].".".$params["tld"];
 
+	
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
@@ -179,33 +181,36 @@ function registrobr_GetNameservers($params) {
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
-
+	$ticket = '';
+	$i = 0;
 	do {
 		try {
 			//Request domain info
+				
+			if ($ticket != '') {
+				$objRegistroEPP->set('ticket',$ticket);
+				$ticket = '';	
+			}
 			$objRegistroEPP->getInfo();
+				
 		}
 		catch (Exception $e){
-			$values["error"] = $e->getMessage();
-			return $values;
+			$coderes = $objRegistroEPP->get('coderes');
+			if($coderes != '2303' and $coderes != '1000'){
+				$values["error"] = $e->getMessage();
+				return $values;
+			}
 		}
-		
-		$coderes = $objRegistroEPP->get('coderes');
-  
         # Check results	
-
-        if($coderes != '1000') {
-	        $table = "mod_registrobr";
-	        $fields = "clID,domainid,domain,ticket";
-	        # incluir domainid ?
-	        $where = array("clID"=>$moduleparams['Username'],"domain"=>$domain);
-	        $result = select_query($table,$fields,$where);
-	        $data = mysql_fetch_array($result);
-	        
-	        $ticket = $data['ticket'];
-	        $objRegistroEPP->set('ticket',$ticket);
-        }
-    } while ($ticket);
+		$coderes = $objRegistroEPP->get('coderes');
+		
+		if ($coderes != '1000') {
+			$ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));				
+		}
+		$i++;
+		
+		   
+    } while ($ticket != '' and $i <=2 );
     
     $nameservers = $objRegistroEPP->get('nameservers');
     
@@ -258,7 +263,9 @@ function registrobr_SaveNameservers($params) {
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
+	
 	$domain = $params["sld"].".".$params["tld"];
+	
 	
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
@@ -276,6 +283,39 @@ function registrobr_SaveNameservers($params) {
 		return $values;
 	}
 	
+	$ticket = '';
+	$i = 0;
+	do {
+		try {
+			//Request domain info
+			if ($ticket != '') {
+				$objRegistroEPP->set('ticket',$ticket);
+			}
+			$objRegistroEPP->getInfo();
+			$objRegistroEPP->set('ticket','');
+	
+		}
+		catch (Exception $e){
+			$coderes = $objRegistroEPP->get('coderes');
+			if($coderes != '2303' and $coderes != '1000'){
+				$values["error"] = $e->getMessage();
+				return $values;
+			}
+		}
+		# Check results
+		$coderes = $objRegistroEPP->get('coderes');
+		if ($coderes == '1000' and $ticket != '') {//Domain pending
+			$values["error"] = $objRegistroEPP->getMsgLang("domainpending");
+			return $values;
+		}
+		elseif ($coderes == '2303') {				
+			$ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
+		}
+		$i++;
+		
+	} while ($ticket != '' and $i <= 2);
+
+	
 	
 	$OldNameservers = registrobr_GetNameservers($params);
 	
@@ -285,9 +325,7 @@ function registrobr_SaveNameservers($params) {
 	$NewNameservers["ns4"] = $params["ns4"];
 	$NewNameservers["ns5"] = $params["ns5"];
 	
-	
 	$objRegistroEPP->updateNameServers($OldNameservers,$NewNameservers);
-	
 	
     return $values;
 }
@@ -299,8 +337,8 @@ function registrobr_RegisterDomain($params){
 	require_once ('isCnpjValid.php');
 	require_once ('isCpfValid.php');
 	
-	$domain = $params["sld"].".".$params["tld"];
-	
+	$domain = $params["original"]["sld"].".".$params["original"]["tld"];
+			
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
 
@@ -348,8 +386,8 @@ function registrobr_RegisterDomain($params){
 	# Domain information and check provider
 	
 	$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
-	$objRegistroEPP->set('language',$params['Language']);
-	
+	$objRegistroEPPBrorg->set('language',$params['Language']);
+	$objRegistroEPPBrorg->set('domain',$domain);
 	
 	$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
 	$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
@@ -450,14 +488,32 @@ function registrobr_RegisterDomain($params){
 	$objRegistroEPPNewDomain->set('contactIDDigits',$RegistrantTaxIDDigits);
 	$objRegistroEPPNewDomain->set('contactID',$RegistrantTaxID);
 	$objRegistroEPPNewDomain->set('tech',$moduleparams['TechC']);
+
 	
 	try {
 		$objRegistroEPPNewDomain->createDomain($Nameservers);
+	
+		$name = $objRegistroEPPNewDomain->get('name');
+		$ticket = $objRegistroEPPNewDomain->get('ticket');
+		
+		$table = "mod_registrobr";
+		
+		$values = array(
+				"clID" 		=> $moduleparams['Username'],
+				"domainid"	=> $params['domainid'],
+				"domain"	=> $name,
+				"ticket"	=> $ticket
+		);
+		
+		$newid = insert_query($table,$values);
+
+		
 	}
 	catch (Exception $e){
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
+	return $values;
 	
 	
 }
@@ -494,11 +550,14 @@ function registrobr_RenewDomain($params){
 		$objRegistroEPP->getInfo();
 		$objRegistroEPP->set('regperiod',$regperiod);
 		$objRegistroEPP->renewDomain();
+		$values['expirydate'] = $objRegistroEPP->get('exDate');	
+		
 	}
 	catch (Exception $e){
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
+
 	
 	return $values;
 	
@@ -541,25 +600,43 @@ function registrobr_GetContactDetails($params) {
     
     # Grab module parameters
     $moduleparams = getregistrarconfigoptions('registrobr');
-    
+        
     $domain = $params["sld"].".".$params["tld"];    
     
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
     $objRegistroEPP->set('language',$params['Language']);
     
+    $ticket = '';
+    $i++;
     
-    try {
-    	$objRegistroEPP->login($moduleparams);
-    	$objRegistroEPP->getInfo();
-    	$providerID = $objRegistroEPP->get('clID');
-    	
-       	$objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
- 	}
-    catch (Exception $e){
-    	$values["error"] = $e->getMessage();
-    	return $values;
-    }
+    do {
+	    $i++;
+    	try {
+
+	    	$objRegistroEPP->login($moduleparams);
+	    	
+	    	if ($ticket != '') {
+	    		$objRegistroEPP->set('ticket',$ticket);
+	    		$ticket = '';
+	    	}
+	    	
+	    	$objRegistroEPP->getInfo();
+	    	$providerID = $objRegistroEPP->get('clID');
+	       	$objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
+	 	}	 	
+	    catch (Exception $e){
+	    	$coderes = $objRegistroEPP->get('coderes');
+			if($coderes != '2303' and $coderes != '1000'){
+				$values["error"] = $e->getMessage();
+				return $values;
+			}
+	    }
+    	if ($coderes != '1000') {
+			$ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
+				
+		}	    
+    } while($ticket != '' and $i < 3);
     
     $contacts = $objRegistroEPP->get('contacts');
     
@@ -824,7 +901,6 @@ function registrobr_SaveContactDetails($params) {
     require_once 'isCpfValid.php';
     
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
-    require_once('ParserResponse/ParserResponse.class.php');
     
     $domain = $params["original"]["sld"].".".$params["original"]["tld"];
     //must be used the original info  
@@ -835,19 +911,52 @@ function registrobr_SaveContactDetails($params) {
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPP->set('domain',$domain);
 	$objRegistroEPP->set('language',$params['Language']);
-	
-	    
-	try {
-		$objRegistroEPP->login($moduleparams);
-		$objRegistroEPP->getInfo();
-		$providerID = $objRegistroEPP->get('clID');
-		$objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
 
+	####################
+	
+	$ticket = '';
+	$i = 0;
+	do { //do while to check pending domain
+		try {
+			
+			$objRegistroEPP->login($moduleparams);
+				
+			//Request domain info
+			if ($ticket != '') {
+				$objRegistroEPP->set('ticket',$ticket);
+			}
+
+			$objRegistroEPP->getInfo();
+			$objRegistroEPP->set('ticket','');
+			
+			$providerID = $objRegistroEPP->get('clID');
+			$objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
+	
+		}
+		catch (Exception $e){
+			$coderes = $objRegistroEPP->get('coderes');
+			if($coderes != '2303' and $coderes != '1000'){
+				$values["error"] = $e->getMessage();
+				return $values;
+			}
+		}
+		# Check results
+		$coderes = $objRegistroEPP->get('coderes');
+	
+		if ($coderes == '1000' and $ticket != '') {//Domain pending
+			$values["error"] = $objRegistroEPP->getMsgLang("domainpending");
+			return $values;
+		}
+		elseif ($coderes == '2303') {
+			$ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
+		}
+		$i++;
+	
+	} while ($ticket != '' and $i <= 2);
+	
+	
+	####################
+	
 	
 	$contacts = $objRegistroEPP->get('contacts');
 	
@@ -920,17 +1029,54 @@ function registrobr_SaveContactDetails($params) {
 		)
 		*/
 		$cdetails = $params["contactdetails"][$type];
+
+		//work around  when WHMCS uses the owner contact details the indexes are different ... 
 		
-		$name = !empty($cdetails["Full Name"]) ? $cdetails["Full Name"] : '';
-		$street1 = !empty($cdetails["Street Name"]) ? $cdetails["Street Name"] : '';
-		$street2 = !empty($cdetails["Street Number"]) ? $cdetails["Street Number"] : '';
-		$street3 = !empty($cdetails["Address Complements"]) ? $cdetails["Address Complements"] : '';
-		$city = !empty($cdetails["City"]) ? $cdetails["City"] : '';
-		$sp = !empty($cdetails["State or Province"]) ? $cdetails["State or Province"] : '';
-		$pc = !empty($cdetails["Zip code"]) ? $cdetails["Zip code"] : '';
-		$cc = !empty($cdetails["Country"]) ? $cdetails["Country"] : '';
-		$voice = !empty($cdetails["Phone"]) ? $cdetails["Phone"] : '';
+		if(count($cdetails) > 10){
+			
+			$index_fullname = "Full Name";
+			$index_company = "Company Name";
+			$index_street1 = "Street";
+			$index_street2 = "Address 1";
+			$index_street3 = "Address 2";
+			$index_city    = "City";
+			$index_sp = "Region";
+			$index_pc = "ZIP";
+			$index_cc = "Country";
+			$index_voice = "Phone";
+				
+		}
+		else {
+			$objRegistroEPPBrorg->set('language',$params['Language']);
+			
+			$index_fullname = $objRegistroEPPBrorg->getMsgLang("fullnamefield");
+			$index_company  = $objRegistroEPPBrorg->getMsgLang("companynamefield");
+			$index_street1  = $objRegistroEPPBrorg->getMsgLang("streetnamefield");
+			$index_street2  = $objRegistroEPPBrorg->getMsgLang("streetnumberfield");
+			$index_street3  = $objRegistroEPPBrorg->getMsgLang("addresscomplementsfield");
+			$index_city     = $objRegistroEPPBrorg->getMsgLang("citynamefield");
+			$index_sp       = $objRegistroEPPBrorg->getMsgLang("stateprovincefield");
+			$index_pc       = $objRegistroEPPBrorg->getMsgLang("zipcodefield");
+			$index_cc		= $objRegistroEPPBrorg->getMsgLang("countrycodefield");
+			$index_voice    = $objRegistroEPPBrorg->getMsgLang("phonenumberfield");
+		}
+		//work around
+
+
+		
+		$name = !empty($cdetails[$index_fullname]) ? $cdetails[$index_fullname] : '';
+		$street1 = !empty($cdetails[$index_street1]) ? $cdetails[$index_street1] : '';
+		$street2 = !empty($cdetails[$index_street2]) ? $cdetails[$index_street2] : '';
+		$street3 = !empty($cdetails[$index_street3]) ? $cdetails[$index_street3] : '';
+		$city = !empty($cdetails[$index_city]) ? $cdetails[$index_city] : '';
+		$sp = !empty($cdetails[$index_sp]) ? $cdetails[$index_sp] : '';
+		$pc = !empty($cdetails[$index_pc]) ? $cdetails[$index_pc] : '';
+		$cc = !empty($cdetails[$index_cc]) ? $cdetails[$index_cc] : '';
+		$voice = !empty($cdetails[$index_voice]) ? $cdetails[$index_voice] : '';
 		$email = !empty($cdetails["Email"]) ? $cdetails["Email"] : '';
+		
+		$sp	= $objRegistroEPPBrorg->StateProvince($sp);
+
 
 		$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
 		$objRegistroEPPBrorg->set('language',$params['Language']);
@@ -939,7 +1085,7 @@ function registrobr_SaveContactDetails($params) {
 		$objRegistroEPPBrorg->set('domain',$domain);
 		$objRegistroEPPBrorg->set('contactID',$RegistrantTaxID);
 		$objRegistroEPPBrorg->set('contactIDDigits',$RegistrantTaxIDDigits);
-		
+
 		$objRegistroEPPBrorg->set('name',$name);
 		$objRegistroEPPBrorg->set('street1',$street1);
 		$objRegistroEPPBrorg->set('street2',$street2);
@@ -1099,8 +1245,100 @@ function registrobr_RequestDelete($params) {
 
 }
 
+function registrobr_Sync($params) {
+	
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	
+	require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	
+	# Grab variables
+	$domain = $params['domain'];
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	$table = "mod_registrobr";
+	$fields = "clID,domainid,domain,ticket";
+	$where = array(
+			"clID"		=>	$moduleparams['Username'],
+			"domainid"	=>	$domainid,
+			"domain"	=>	$domain
+			);
+	
+	$result = select_query($table,$fields,$where);
+	$data = mysql_fetch_array($result);
+	$ticket = $data['ticket'];
+	
+	
+	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	
+	$objRegistroEPPDomain->set('domain',$domain);
+	$objRegistroEPPDomain->set('language',$params['Language']);
+	
+	try {
+		$objRegistroEPPDomain->login($moduleparams);
+		
+		if($ticket){
+			$objRegistroEPPDomain->set('ticket',$ticket);
+		}
+		$objRegistroEPPDomain->getInfo();
+		
+	}
+	catch (Exception $e){
+		
+		$values["error"] = $e->getMessage();
+		$error = $e->getMessage();
+		$objRegistroEPPDomain->error('syncdomainnevercreated',$error,'');
+		
+		return $values;
+	}
 
-function registrobr_Sync($params){
+	$createdate = $objRegistroEPPDomain->get('crDate');
+	$values['registrationdate'] = $createdate;
+	
+	
+	$nextduedate = $objRegistroEPPDomain->get('exDate');	
+	$holdreasons = $objRegistroEPPDomain->get('onHoldReason');
+	
+	#if ticket number is different, this is actually a new domain with the same name
+	if (!empty($ticket) and $objRegistroEPPDomain->get('ticket') != $ticket) {
+		$values['expired'] = true ;
+		$values['expirydate'] = $createdate;
+	}
+	elseif (count($holdreasons) > 0) {
+		foreach ($holdreasons as $hr){
+			if (array_search("billing",$hr)!=FALSE) {
+				$values['expired'] = true;
+				$values['expirydate'] = $nextduedate;
+			}
+		}
+	} 
+	else {
+		$values['active'] = true;
+		$values['expirydate'] = $nextduedate;
+	}
+	
+	return $values;
+
+}
+
+function _registrobr_getTickets($clID,$domainid,$domain){
+
+		$table = "mod_registrobr";
+		$fields = "clID,domainid,domain,ticket";
+		$where = array(
+				"clID"		=>	$clID,
+				"domainid"  =>  $domainid,
+				"domain"	=>	$domain
+		);
+			
+		$result = select_query($table,$fields,$where);
+		$data = mysql_fetch_array($result);
+		$ticket = $data['ticket'];
+		
+		return $ticket;
+}
+
+
+function registrobr_Sync_OLD($params){
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
 	#For every domain sync, also do a poll queue clean
@@ -1113,7 +1351,7 @@ function registrobr_Sync($params){
 	
 }
 
-function _registrobr_Poll() {
+function _registrobr_Poll_OLD() {
 	
 	$domain = $params["sld"].".".$params["tld"];
 	
@@ -1233,63 +1471,6 @@ function _registrobr_Poll() {
 
 
 
-function _registrobr_SyncRequest($params) {
-
-	# Grab variables
-	$domain = $params['domain'];
-	$domainid = $params['domainid'];
-	$moduleparams = getregistrarconfigoptions('registrobr');
-	$table = "mod_registrobr";
-	$fields = "clID,domainid,domain,ticket";
-	$where = array("clID"=>$moduleparams['Username'],"domainid"=>$domainid,"domain"=>$domain);
-	$result = select_query($table,$fields,$where);
-	$data = mysql_fetch_array($result);
-	$ticket = $data['ticket'];
-	
-	
-	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
-	$objRegistroEPPDomain->set('domain',$domain);
-	$objRegistroEPPDomain->set('language',$params['Language']);
-	
-	
-	if(empty($ticket)) {
-		$objRegistroEPPDomain->error('syncdomainnevercreated','','');
-		return $values;
-	}
-	
-	try {
-		$objRegistroEPPDomain->login($moduleparams);
-		$objRegistroEPPDomain->getInfo();
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
-	
-	
-	$createdate = $objRegistroEPPDomain->get('crDate');
-	$values['registrationdate'] = $createdate;
-	$nextduedate = $objRegistroEPPDomain->get('exDate');
-	$holdreasons = $objRegistroEPPDomain->get('onHoldReason');
-	
-	#if ticket number is different, this is actually a new domain with the same name
-	if ($objRegistroEPPDomain->get('ticket') != $ticket) {
-		$values['expired'] = true ;
-		$values['expirydate'] = $createdate;
-	} 
-	elseif (!empty($holdreasons)) {
-		if (array_search("billing",$holdreasons)!=FALSE) {
-			$values['expired'] = true;
-			$values['expirydate'] = $nextduedate;
-			}
-	} else {
-		$values['active'] = true;
-		$values['expirydate'] = $nextduedate;
-	
-	}
-	return $values;
-	
-}
 
     
 

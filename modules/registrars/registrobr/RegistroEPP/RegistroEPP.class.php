@@ -302,6 +302,7 @@ abstract class RegistroEPP {
 			"domainstatusok" => array ("Ativo","Active"),
 			"domainstatusserverhold" => array ("CONGELADO","PENDING"),
 			"domainstatusexpired" => array ("Vencido","Expired"),
+	    	"domainpending" => array("Modificação de dados de contato de domínios que ainda não completaram o ciclo de registro não é permitida em domínios .br", "'Modify Contact Details' of domains that not finalized the complete registrars' process are not allowed"),	 
 			"is" => array (" está "," is "),
 			"registration" => array ("(Criação: ","(Registered: "),
 			"epppollerror" => array ("Erro de ao fazer EPP Poll","EPP Polling error"),
@@ -322,7 +323,8 @@ abstract class RegistroEPP {
 			"stateprovincefield" => array ("Estado","State or Province"),
 			"zipcodefield" => array ("CEP","Zip code"),
 			"countrycodefield" => array ("Pais","Country"),
-			"phonenumberfield" => array ("Fone","Phone"),
+			"phonenumberfield" => array ("Fone","Phone")
+	    		 
 			);                   
 	
 	    $language = $this->get('language');

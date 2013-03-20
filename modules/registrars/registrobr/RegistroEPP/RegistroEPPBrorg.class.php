@@ -37,6 +37,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 		$coderes = $objParser->get('coderes');
 
 		$this->set('coderes',$coderes);
+		$msg = $this->errorEPP('getcontactorginfoerrorcode',$objParser,$requestXML,$responseXML);
 		
 		if($coderes == '2303' and $ignore){
 			return;
@@ -83,6 +84,7 @@ class RegistroEPPBrorg extends RegistroEPP {
 		$this->set('id',$id);
 		$this->set('coderes',$coderes);
 		
+		//$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
 		
 		if($coderes != '1000') {
 			$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);

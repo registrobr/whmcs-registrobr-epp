@@ -38,7 +38,16 @@ class ParserResponse {
 		
 		$createdate = substr($doc->getElementsByTagName('crDate')->item(0)->nodeValue,0,10);
 		$exDate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
-		$holdreasons = $doc->getElementsByTagName('onHoldReason');
+		
+		$holdreasons = array();
+		$i = 0;
+		
+		$hreasons = $doc->getElementsByTagName('onHoldReason');
+		foreach ($hreasons as $hr) {
+			$holdreasons[$i] = $hr->nodeValue;
+			$i++;
+		}
+		
 		
 		$this->set('coderes',$doc->getElementsByTagName('result')->item(0)->getAttribute('code'));
 		$this->set('msg',$doc->getElementsByTagName('msg')->item(0)->nodeValue);
@@ -50,6 +59,9 @@ class ParserResponse {
 		$this->set('exDate',$exDate);
 		$this->set('crDate',$createdate);
 		$this->set('onHoldReason',$holdreasons);
+		
+		$this->set('name',$doc->getElementsByTagName('name')->item(0)->nodeValue);
+		$this->set('ticket',$doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue);
 		
 		
 		$this->set('doc',$doc);
