@@ -37,27 +37,14 @@
 # http://allworldit.com
 
 
+
 # Configuration array
 
 $include_path = ROOTDIR . '/modules/registrars/registrobr';
 set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 
-#Dependencias => pear.php
-
-/*
-echo "inicio";
-
-#testmode
-define("ROOTDIR", '/opt/sites/workspace/whmcs-registrobr-epp-org/');
-
- 
-$params = array();
-
-registrobr_GetNameservers($params);
 
 
-echo "fim";
-*/
 
 function registrobr_getConfigArray() {
 
@@ -115,17 +102,339 @@ function registrobr_getConfigArray() {
         
 
 	);
+	
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	
+
+	$TESTMODE = 1;
+	
+	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
+		
+		//First uncomment the line below to register a domain, after 5 minutes (period to complete the registrarbr process) , comment the line and run the registrar config again
+		
+		#$type = 'RegisterDomain';
+		_registrobr_test($moduleparams,$type);
+		
+	}
+	
+	
+	
+	
     return $configarray;
 
 }
 
-function _registro_test(){
+function _registrobr_test($moduleparams,$type) {
 	
-	registrobr_GetNameservers($params);
+	$TESTUSER	    = $moduleparams['Username'];
+	$TESTPASSWORD   = $moduleparams['Password'];
+	
+
+	$TESTDOMAIN 	= 'toccos35.com.br';
+	$TESTTLD		= 'com.br';
+	$TESTSLD		= 'toccos35';
+	$TESTNS1 		= 'dns1.stabletransit.com';
+	$TESTNS2 		= 'dns2.stabletransit.com';
+
+	
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	
+	require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	
+	$TESTPARAMS = Array
+	(
+			'Certificate' => '',
+			'CNPJ' => 1,
+			'CPF' => 1,
+			'FinanceDept' => '1',
+			'Language' => 'Portuguese',
+			'Passphrase' => '',
+			'Password' => $TESTPASSWORD,
+			'Sender' => 'root',
+			'TechC' => '',
+			'TechDept' => '2',
+			'TestMode' => 'on',
+			'Username' => $TESTUSER,
+			'domainid' => '78',
+			'domain' => $TESTDOMAIN,
+			'sld' => $TESTSLD,
+			'tld' => $TESTTLD,
+			'registrar' => 'registrobr',
+			'status' => 'Active'
+	);
+	
+
+	
+	$TESTORIGINAL = Array(
+			'domainid' => '78',
+			'sld' => $TESTSLD,
+			'tld' => $TESTTLD,
+			'registrar' => 'registrobr',
+			'userid' => '22',
+			'id' => '22',
+			'firstname' => 'Joe',
+			'lastname' => 'Doe',
+			'companyname' => 'ACME',
+			'email' => 'test@ciclanomail.com',
+			'address1' => 'Rua Teste 1',
+			'address2' => 'apt 1',
+			'city' => 'Cidade 1',
+			'state' => 'SP',
+			'postcode' => '13148-133',
+			'countrycode' => 'BR',
+			'country' => 'BR',
+			'countryname' => 'Brazil',
+			'phonecc' => '55',
+			'phonenumber' => '3334-3434',
+			'notes' => '',
+			'password' => '9150351b52dbc22fec30b887d4661e1e:mtgPo',
+			'currency' => '1',
+			'defaultgateway' => '',
+			'cctype' => '',
+			'cclastfour' => '',
+			'securityqid' => '0',
+			'securityqans' => '',
+			'groupid' => '0',
+			'status' => 'Active',
+			'credit' => '444.00',
+			'taxexempt' => '',
+			'latefeeoveride' => '',
+			'overideduenotices' => '',
+			'separateinvoices' => '',
+			'disableautocc' => '',
+			'language' => 'Portuguese-br',
+			'lastlogin' => 'No Login Logged',
+			'customfields1' => '64264445701',
+			'customfields2' => 'Selecione',
+			'customfields3' => '',
+			'billingcid' => '0',
+			'fullstate' => 'SP',
+			'regperiod' => '1',
+			'dnsmanagement' => '',
+			'emailforwarding' => '',
+			'idprotection' => '',
+			'adminfirstname' => 'Joe',
+			'adminlastname' => 'Doe',
+			'admincompanyname' => 'ACME',
+			'adminemail' => 'fulano@ciclanomail.com',
+			'adminaddress1' => 'Rua Do Norte, 1',
+			'adminaddress2' => 'apt 1',
+			'admincity' => 'Cidade',
+			'adminfullstate' => 'SP',
+			'adminstate' => 'SP',
+			'adminpostcode' => '13148-133',
+			'admincountry' => 'BR',
+			'adminphonenumber' => '3334-3434',
+			'fullphonenumber' => '+55.33343434',
+			'adminfullphonenumber' => '+55.33343434',
+			'ns1' => $TESTNS1,
+			'ns2' => $TESTNS2,
+			'ns3' => '',
+			'ns4' => '',
+			'ns5' => '',
+	
+	);
+	$TESTREGISTRATION = Array
+	(
+			'domainid' => '78',
+			'sld' => $TESTSLD,
+			'tld' => $TESTTLD,
+			'registrar' => 'registrobr',
+			'userid' => '22',
+			'id' => '22',
+			'firstname' => 'Joe',
+			'lastname' => 'Doe',
+			'companyname' => 'ACME',
+			'email' => 'test@ciclanomail.com',
+			'address1' => 'Rua Teste 1',
+			'address2' => 'apt 1',
+			'city' => 'Cidade 1',
+			'state' => 'SP',
+			'postcode' => '13148-133',
+			'countrycode' => 'BR',
+			'country' => 'BR',
+			'countryname' => 'Brazil',
+			'phonecc' => '55',
+			'phonenumber' => '3334-3434',
+			'notes' => '',
+			'password' => '9150351b52dbc22fec30b887d4661e1e:mtgPo',
+			'currency' => '1',
+			'defaultgateway' => '',
+			'cctype' => '',
+			'cclastfour' => '',
+			'securityqid' => '0',
+			'securityqans' => '',
+			'groupid' => '0',
+			'status' => 'Active',
+			'credit' => '444.00',
+			'taxexempt' => '',
+			'latefeeoveride' => '',
+			'overideduenotices' => '',
+			'separateinvoices' => '',
+			'disableautocc' => '',
+			'language' => 'Portuguese-br',
+			'lastlogin' => 'No Login Logged',
+			'customfields1' => '64264445701',
+			'customfields2' => 'Selecione',
+			'customfields3' => '',
+			'billingcid' => '0',
+			'fullstate' => 'SP',
+			'regperiod' => '1',
+			'dnsmanagement' => '',
+			'emailforwarding' => '',
+			'idprotection' => '',
+			'adminfirstname' => 'Joe',
+			'adminlastname' => 'Doe',
+			'admincompanyname' => 'ACME',
+			'adminemail' => 'fulano@ciclanomail.com',
+			'adminaddress1' => 'Rua Do Norte, 1',
+			'adminaddress2' => 'apt 1',
+			'admincity' => 'Cidade',
+			'adminfullstate' => 'SP',
+			'adminstate' => 'SP',
+			'adminpostcode' => '13148-133',
+			'admincountry' => 'BR',
+			'adminphonenumber' => '3334-3434',
+			'fullphonenumber' => '+55.33343434',
+			'adminfullphonenumber' => '+55.33343434',
+			'ns1' => $TESTNS1,
+			'ns2' => $TESTNS2,
+			'ns3' => '',
+			'ns4' => '',
+			'ns5' => '',
+			'original' => $TESTORIGINAL,
+	
+			'Certificate' => '',
+			'CNPJ' => '1',
+			'CPF' => '1',
+			'FinanceDept' => '1',
+			'Language' => 'Portuguese',
+			'Passphrase' => '',
+			'Password' => $TESTPASSWORD,
+			'Sender' => 'root',
+			'TechC' => '',
+			'TechDept' => '2',
+			'TestMode' => 'on',
+			'Username' => $TESTUSER
+	);
+	
+	
+	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	
+	$msg = 'Initializing test...';
+	$objRegistroEPPDomain->error('testerror',$msg,$moduleparams);
+	$objRegistroEPPDomain->set('language',$TESTREGISTRATION['Language']);
+	
+	
+	## TESTING RegisterDomain
+
+	if($type == 'RegisterDomain'){
+		$return = registrobr_RegisterDomain($TESTREGISTRATION);
+		
+		#$return => ﻿Array ( [clID] => 237 [domainid] => 78 [domain] => toccos34.com.br [ticket] => 15946 )
+		
+		if(empty($return['clID'])){
+			$msg = "FAILED........$TESTDOMAIN - registrobr_RegisterDomain FAILED, check the TESTREGISTRATION params are OK";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTREGISTRATION);	
+		}
+		else {
+			$msg = "OK............$TESTDOMAIN - registrobr_RegisterDomain OK, domain $TESTDOMAIN created";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTREGISTRATION);	
+		}
+	
+		return;
+	}
+	
+	## TESTING GetNameserver and SaveNameServer
+	#For testing nameservers 2 servers are required.
+
+	$nameservers = registrobr_GetNameservers($TESTPARAMS);
+	
+	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+	
+	if(empty($nameservers['ns1'])){
+		$msg = "FAILED........$TESTDOMAIN - registrobr_GetNamservers FAILED, check nameservers for domain";
+		$objRegistroEPPDomain->error('testerror',$msg,$nameservers);
+	}
+	else {
+		$ns = $nameservers['ns1'];
+		$msg = "OK............$TESTDOMAIN - registrobr_GetNamservers it seems OK. $TESTDOMAIN - $ns";
+		$objRegistroEPPDomain->error('testerror',$msg,$nameservers);
+	}
 	
 	
 	//Utilize os nameservers antigo e inverta a ordem, depois consultar novamente.
-	registrobr_SaveNameservers($params);
+	
+	if(count($nameservers) < 2){
+		$msg = "FAILED........$TESTDOMAIN - registrobr_SaveNamservers FAILED, at least 2 nameservers are required.";
+		$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
+	}
+	//exchange the nameservers 
+	$TESTPARAMS['ns1'] = $nameservers['ns2'];
+	$TESTPARAMS['ns2'] = $nameservers['ns1'];
+	
+	try {
+		registrobr_SaveNameservers($TESTPARAMS);
+		$change_nameservers = registrobr_GetNameservers($TESTPARAMS);
+		
+		if($change_nameservers['ns1'] == $nameservers['ns2']){
+			// exchange again the nameservers
+			$TESTPARAMS['ns1'] = $nameservers['ns1'];
+			$TESTPARAMS['ns2'] = $nameservers['ns2'];
+			registrobr_SaveNameservers($TESTPARAMS); 
+			
+			$msg = "OK............$TESTDOMAIN - registrobr_saveNameservers it seems OK ";
+		}
+		else {
+			$msg = "FAILED........$TESTDOMAIN - registrobr_saveNameservers FAILED";
+			
+		}
+		$objRegistroEPPDomain->error('testerror',$msg,$change_nameservers);
+		
+	}
+	catch(Exception $e){
+		$msg = $e->getMessage();
+		$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);	
+	}
+	
+	## TESTING GetContactDetails and SaveContactDetails
+	
+	$contactdetails = registrobr_GetContactDetails($TESTPARAMS);
+	
+	$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+	$objRegistroEPPBrorg->set('language',$TESTPARAMS['Language']);
+	
+
+	$types = array('Registrant','Admin','Tech');
+	
+	foreach ($types as $key => $value) {
+		
+		$index_fullname = $objRegistroEPPBrorg->getMsgLang("fullnamefield");
+		$index_email    = $objRegistroEPPBrorg->getMsgLang("Email");
+		
+		if(empty($contactdetails[$value][$index_fullname])){
+			$msg = "FAILED........$TESTDOMAIN - registrobr_GetContactDetails FAILED, check contact details of $index_fullname $type in $domain";
+		}
+		else {
+			$msg = "OK............$TESTDOMAIN - registrobr_GetContactDetails it seems OK for $value in $TESTDOMAIN";
+		}
+		$objRegistroEPPDomain->error('testerror',$msg,$contactdetails);
+		
+	}
+	
+	## TESTING DeleteDomain
+	
+	$error = registrobr_RequestDelete($TESTPARAMS);	
+	
+	if(empty($return)){
+		$msg = "OK............$TESTDOMAIN - registrobr_RequestDelete it seems OK";	
+	}
+	else {
+		$msg = "FAILED........$TESTDOMAIN - registrobr_RequestDelete FAILED, $error";
+	}
+	$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
+	$objRegistroEPPDomain->error('testerror','Test Finalized !','');
 	
 }
 
@@ -162,14 +471,14 @@ function registrobr_GetNameservers($params) {
 	 */
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-	
+
 	
 	$domain = $params["sld"].".".$params["tld"];
 
 	
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
-	
+
 	$objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
 	$objRegistroEPP->set('domain',$domain);
 	$objRegistroEPP->set('language',$params['Language']);
@@ -264,6 +573,7 @@ function registrobr_SaveNameservers($params) {
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
 	
+
 	$domain = $params["sld"].".".$params["tld"];
 	
 	
@@ -332,6 +642,7 @@ function registrobr_SaveNameservers($params) {
 
 
 function registrobr_RegisterDomain($params){
+
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	require_once ('isCnpjValid.php');
@@ -348,7 +659,7 @@ function registrobr_RegisterDomain($params){
     	$RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
         
         if (!isCnpjValid($RegistrantTaxID)) {
-        	$values["error"] =_registrobr_lang("cpfcnpjrequired");
+        	$values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
             logModuleCall("registrobr",$values["error"],$params);
 			return $values;
 		}
@@ -374,7 +685,7 @@ function registrobr_RegisterDomain($params){
 	} else {
 		$RegistrantOrgName = substr($params["original"]["companyname"],0,50);
 		if (empty($RegistrantOrgName)) {
-			$values['error'] = _registrobr_lang("companynamerequired");
+			$values['error'] = $objRegistroEPPBrorg->getMsgLang("companynamerequired");
 			return $values;
 		}
 	}
@@ -1247,10 +1558,38 @@ function registrobr_RequestDelete($params) {
 
 function registrobr_Sync($params) {
 	
+	/*
+	 * 
+	 Array
+(
+    [Certificate] => 
+    [CNPJ] => 1
+    [CPF] => 1
+    [FinanceDept] => 1
+    [Language] => Portuguese
+    [Passphrase] => 
+    [Password] => 
+    [Sender] => root
+    [TechC] => 
+    [TechDept] => 2
+    [TestMode] => on
+    [Username] => 237
+    [domainid] => 78
+    [domain] => toccos28.com.br
+    [sld] => toccos28
+    [tld] => com.br
+    [registrar] => registrobr
+    [status] => Active
+)
+	 */
+	
+
+	
 	$include_path = ROOTDIR . '/modules/registrars/registrobr';
 	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	
 	
 	# Grab variables
 	$domain = $params['domain'];
@@ -1268,7 +1607,13 @@ function registrobr_Sync($params) {
 	$ticket = $data['ticket'];
 	
 	
+	#if($TESTMODE){
+	#_registrobr_test($domainid,$domain,$moduleparams);
+	#}
+	
+	
 	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
+
 	
 	$objRegistroEPPDomain->set('domain',$domain);
 	$objRegistroEPPDomain->set('language',$params['Language']);

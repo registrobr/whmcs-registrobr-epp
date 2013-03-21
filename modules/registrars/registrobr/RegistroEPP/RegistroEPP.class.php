@@ -288,7 +288,8 @@ abstract class RegistroEPP {
 			"savecontactdomainupdateerrorcode" => array ("Falha ao atualizar domínio ao modificar contatos erro ","set contact: domain update error code "),
 			"savecontactorginfoeerrorcode" => array ("Falha de obtenção de informações de entidade ao modificar contatos erro ","set contact: org info error code "),
 			"savecontactorgupdateerrorcode" => array ("Falha ao atualizar entidade ao modificar contatos erro ","set contact: org update error code "),
-			"domainnotfound" => array ("Domínio ainda não registrado.","Domain not yet registered"),
+			"testerror" => array("Testando ...","Testing..."),
+	    	"domainnotfound" => array ("Domínio ainda não registrado.","Domain not yet registered"),
 			"getnserrorcode" => array ("Falha ao obter dados de domínio erro ","get nameserver error code "),
 			"syncconnerror" => array ("Falha na conexão EPP ao sincronizar domínio erro ","domain sync: EPP connection error "),
 			"syncerrorcode" => array ("Falha ao tentar obter informação de domínio código ", "domain sync: error getting domain info code "),
@@ -323,7 +324,9 @@ abstract class RegistroEPP {
 			"stateprovincefield" => array ("Estado","State or Province"),
 			"zipcodefield" => array ("CEP","Zip code"),
 			"countrycodefield" => array ("Pais","Country"),
-			"phonenumberfield" => array ("Fone","Phone")
+			"phonenumberfield" => array ("Fone","Phone"),
+    		"email" => array ("Email","Email")
+	    		 
 	    		 
 			);                   
 	
