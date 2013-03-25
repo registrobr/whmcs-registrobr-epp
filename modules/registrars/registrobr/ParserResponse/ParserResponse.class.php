@@ -69,13 +69,37 @@ class ParserResponse {
 	public function parsePoll($response){
 		$doc= new DOMDocument();
 		$doc->loadXML($response);
-	
+
+		/*
+		 * 		
+		<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
+		<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"      xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0      epp-1.0.xsd">  
+		 <response>     
+		 <result code="1301">
+		 <msg lang="pt">Command completed successfully; ack to dequeue</msg>
+		 </result>     
+		 <msgQ count="110" id="12823">
+		 <qDate>2011-07-05T14:42:14.0Z</qDate>
+		 <msg lang='pt'>
+		 	<code>301</code>
+		 	<txt>Deposit notification.</txt>
+		 	<depositValue>1000.00</depositValue>
+		 	<creditBalance>1000.00</creditBalance>
+		 </msg>
+		 </msgQ>
+		 <trID>
+		 <clTRID>20997642941829377339</clTRID>
+		 <svTRID>20130325152922-3671AABF-237-0002</svTRID>
+		 </trID>
+		 </response>
+		 </epp>
+		 */
 		
 		$msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
 		$qDate = $doc->getElementsByTagName('qDate')->item(0)->nodeValue;
 		$code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
 		$txt = $doc->getElementsByTagName('txt')->item(0)->nodeValue;
-		$reason = $doc->getElementsByTagName('reason');
+		$reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
 		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
 		$ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
 		$objectId = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
@@ -88,6 +112,9 @@ class ParserResponse {
 		$this->set('reason',$reason);
 		$this->set('ticket',$ticket);
 		$this->set('objectId',$objectId);
+		$this->set('msg',$txt);
+		$this->set('language',$language);
+		
 		
 	}
 	public function parseBRorgInfo($response){

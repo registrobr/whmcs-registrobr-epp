@@ -263,6 +263,14 @@ class RegistroEPPTest extends RegistroEPP {
 	
 		$objRegistroEPPDomain->set('language',$TESTREGISTRATION['Language']);
 	
+		
+		## TESTING Poll
+		if($type == 'Poll'){
+			if(!$this->testPoll($TESTPARAMS)){
+				return;
+			}
+			exit;
+		}
 	
 		## TESTING RegisterDomain
 	
@@ -307,6 +315,21 @@ class RegistroEPPTest extends RegistroEPP {
 			return;
 		}
 
+	}
+	public function testPoll($TESTPARAMS){
+		
+		$include_path = ROOTDIR . '/modules/registrars/registrobr';
+		set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+		require_once('RegistroEPP/RegistroEPPFactory.class.php');
+		
+		$TESTDOMAIN = $TESTPARAMS['domain'];
+		$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
+		
+		$msg = "Testing Poll........$TESTDOMAIN";
+		$objRegistroEPPPoll->error('testerror',$msg,$TESTREGISTRATION);
+		
+
+		registrobr_Poll($TESTPARAMS);
 	}
 	
 	public function TestRegisterDomain($TESTREGISTRATION){

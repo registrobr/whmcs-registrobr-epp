@@ -14,11 +14,11 @@ class RegistroEPPPoll extends RegistroEPP {
 		
 		require_once('ParserResponse/ParserResponse.class.php');
 		# We need XML beautifier for showing understable XML code
-		require_once('/BeautyXML.class.php');		
+		require_once('BeautyXML.class.php');		
 		# We need EPP stuff
-		require_once('/Net/EPP/Frame.php');
-		require_once('/Net/EPP/Frame/Command.php');
-		require_once('/Net/EPP/ObjectSpec.php');
+		require_once('Net/EPP/Frame.php');
+		require_once('Net/EPP/Frame/Command.php');
+		require_once('Net/EPP/ObjectSpec.php');
 		
 		$client = $this->get('netClient');
 		if(empty($client)){
@@ -28,6 +28,8 @@ class RegistroEPPPoll extends RegistroEPP {
 		$requestXML = $this->_getXMLMessages();
 		$responseXML = $client->request($requestXML);
 		
+		
+
 		$objParser = New ParserResponse();		
 		$objParser->parsePoll($responseXML);
 		
@@ -40,7 +42,7 @@ class RegistroEPPPoll extends RegistroEPP {
 				
 		$coderes = $objParser->get('coderes',$coderes);
 		
-		if ($coderes == 'xxxxx') {
+		if ($coderes == 'xxxx') {
 			$msg = $this->errorEPP('domainnotfound',$objParser,$requestXML,$responseXML);
 			throw new Exception($msg);
 		}
@@ -61,7 +63,7 @@ class RegistroEPPPoll extends RegistroEPP {
 		}
 		
 		
-		$content .= _registrobr_lang("FullXMLBelow");
+		$content .= $this->_registrobr_lang("FullXMLBelow");
 		$bc = new BeautyXML();
 		
 		$content .= htmlentities($bc->format($response));
