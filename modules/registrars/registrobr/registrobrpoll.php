@@ -1,3 +1,128 @@
+<?
+# Copyright (c) 2012-2013, AllWorldIT and (c) 2013, NIC.br (R)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This module is a fork from whmcs-coza-epp (http://devlabs.linuxassist.net/projects/whmcs-coza-epp)
+# whmcs-coza-epp developed by Nigel Kukard (nkukard@lbsd.net)
+
+
+# Official Website for whmcs-registrobr-epp
+# https://github.com/registrobr/whmcs-registrobr-epp
+
+
+# More information on NIC.br(R) domain registration services, Registro.br(TM), can be found at http://registro.br
+# Information for registrars available at http://registro.br/provedor/epp
+
+# NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
+
+
+# WHMCS hosting, theming, module development, payment gateway
+# integration, customizations and consulting all available from
+# http://allworldit.com
+
+# This cron job should only be used with versions up to 5.0.x ; 5.1.x will work with this file although it's not necessary, and 5.2.x and up won't work with this file
+# For 5.1.x and later versions, use WHMCS crons/domainsync.php instead
+
+# Constants, functions and registrar functions we need
+require_once dirname(__FILE__) . '/../../../dbconnect.php';
+require_once dirname(__FILE__) . '/../../../includes/functions.php';
+require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
+
+# Include EPP stuff we need
+require_once dirname(__FILE__) . '/registrobr.php';
+
+# We need pear for the error handling
+require_once "PEAR.php";
+
+
+
+# Get an EPP connection
+$client = _registrobr_Client();
+if (PEAR::isError($client)) {
+    $values["error"] = _registrobr_lang("syncconnerror").$client;
+    logModuleCall("registrobr",$values["error"]);
+    return $values ;
+}
+
+#For every sync, also do a poll queue clean
+_registrobr_Poll($client);
+
+echo(_registrobr_lang("syncreport"));
+echo(_registrobr_lang("syncreportdashes"));
+
+# Pull list of domains which are registered using this module
+$queryresult = mysql_query("SELECT domain FROM tbldomains WHERE registrar = 'registrobr'");
+while($data = mysql_fetch_array($queryresult)) {
+	$domains['domain'] = trim(strtolower($data['domain']));
+    $domains['domainid'] = trim($data['domainid']);
+}
+
+# Loop with each one
+foreach($domains as $domain) {
+	sleep(1);
+    
+	# Query domain
+    $domainvalues=_registrobr_SyncRequest($domain);
+    if (!empty($domainvalues['error'])) {
+        echo $domainvalues['error']."\n";
+        continue;
+    }
+    
+    
+    # This is the template we are going to use below for our updates
+	$querytemplate = "UPDATE tbldomains SET status = '%s', registrationdate = '%s', expirydate = '%s', nextduedate = '%s' WHERE domain = '%s'";
+    
+	# Check status and update
+	if ($domainvalues['active'] == TRUE) {
+		mysql_query(sprintf($querytemplate,"Active",
+                            mysql_real_escape_string($domainvalues['registrationdate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domain['domain'])
+                            ));
+		echo "Updated $domain expiry to $nextduedate\n";
+        
+    } elseif ($domainvalues['expired'] == TRUE) {
+        mysql_query(sprintf($querytemplate,"Expired",
+                            mysql_real_escape_string($domainvalues['registrationdate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domain['domain'])
+                            ));
+        echo "Domain $domain is EXPIRED (Registration: $createdate, Expiry: $nextduedate)\n";
+    }
+    else {
+        mysql_query(sprintf($querytemplate,"Pending",
+                            mysql_real_escape_string($domainvalues['registrationdate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domainvalues['expirydate']),
+                            mysql_real_escape_string($domain['domain'])
+                            ));
+		echo _registrobr_lang("Domain").$domain._registrobr_lang("is")._registrobr_lang("domainstatusserverhold")._registrobr_lang("registration").$createdate._registrobr_lang("exp, Expiry: $nextduedate)\n");
+        
+	} 
+}
+
+
+
+
+?>
+
+
 <?php
 
 # Copyright (c) 2013 NIC.br (R)
@@ -38,9 +163,10 @@ $include_path = ROOTDIR . '/modules/registrars/registrobr';
 set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 
 
+
+
 function registrobr_getConfigArray() {
 
-	
     # Create version table if it doesn't exist
     $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr_version` (
     `version` int(10) unsigned NOT NULL,
@@ -98,6 +224,7 @@ function registrobr_getConfigArray() {
 	
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
+
 	$TESTMODE = 1;
 	
 	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
@@ -111,10 +238,7 @@ function registrobr_getConfigArray() {
 	
 	
 	
-	$TESTMODE = 0;
-	///whmcs/admin/configregistrars.php?testtype='RegisterDomain&debug=1&TESTMODE=1'
 	
-	$TESTMODE = $_GET['TESTMODE'];
     return $configarray;
 
 }
@@ -159,15 +283,7 @@ function _registrobr_test($moduleparams,$type) {
 			'status' => 'Active'
 	);
 	
-	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
-		//First uncomment the line 1 to register a domain or load the url below
-		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
-		//If the domain is ok, change testtype to 0 and load the url below again
 
-		//whmcs/admin/configregistrars.php?case=case1&domain=toccos35.com.br&debug=1&TESTMODE=1&ns1=dns1.stabletransit.com&ns2=dns2.stabletransit.com
-		//case1, case2 or case3
-		$case  			= $_GET['case'];  
-		$debug 			= $_GET['debug'];
 	
 	$TESTORIGINAL = Array(
 			'domainid' => '78',
@@ -335,17 +451,7 @@ function _registrobr_test($moduleparams,$type) {
 	if($type == 'RegisterDomain'){
 		$return = registrobr_RegisterDomain($TESTREGISTRATION);
 		
-		$info['domain'] = $_GET['domain'];
-		$info['ns1']	= $_GET['ns1'];
-		$info['ns2']	= $_GET['ns2'];
-		
-		require_once('RegistroEPP/RegistroEPPFactory.class.php');
-		
-		$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
-
-		//Register a new domain, with DNS OK
-		$objRegistroEPPTest->testCase($case,$moduleparams,$info,$debug);
-
+		#$return => ﻿Array ( [clID] => 237 [domainid] => 78 [domain] => toccos34.com.br [ticket] => 15946 )
 		
 		if(empty($return['clID'])){
 			$msg = "FAILED........$TESTDOMAIN - registrobr_RegisterDomain FAILED, check the TESTREGISTRATION params are OK";
@@ -438,9 +544,6 @@ function _registrobr_test($moduleparams,$type) {
 	
 	## TESTING DeleteDomain
 	
-
-    return $configarray;
-
 	$error = registrobr_RequestDelete($TESTPARAMS);	
 	
 	if(empty($return)){
@@ -1677,41 +1780,6 @@ function registrobr_Sync($params) {
 		$values['expirydate'] = $nextduedate;
 	}
 	
-	//registrobr_Poll($params);
-	
-	return $values;
-
-}
-
-function registrobr_Poll($params) {
-	
-	$domain = $params["sld"].".".$params["tld"];
-
-	# Grab module parameters
-	$moduleparams = getregistrarconfigoptions('registrobr');
-	
-	$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
-	$objRegistroEPPPoll->set('language',$params['Language']);
-	$objRegistroEPPPoll->set('domain',$domain);
-
-
-	try {
-		$objRegistroEPPPoll->login($moduleparams);
-		$objRegistroEPPPoll->getMessages($moduleparams);
-		
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
-	$coderes = $objRegistroEPPPoll->get('coderes');
-
-	$last = 0;
-	
-	# This is the last one
-	if ($coderes == 1300) {
-		$last = 1;
-	}
 	return $values;
 
 }
@@ -1795,123 +1863,6 @@ function _registrobr_Poll_OLD() {
 		}
 		$taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
 		
-		$ok = _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll);
-		
-		if($ok){
-			$objRegistroEPPPoll->set('msgQ',$msgid);
-			$objRegistroEPPPoll->sendAck();
-		}
-		else {
-			//avisa que está com problemas para gerar tickets
-		}
-	}	
-	
-}
-
-function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll){
-	
-	$moduleparams = getregistrarconfigoptions('registrobr');
-	
-	switch($code) {
-		case '1': case '22': case '28': case '29':
-			$ticket = $objRegistroEPPPoll->get('ticket');
-			#no break, poll messages with ticketNumber also have domain in objectId
-		case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18': case '20': case '107': case '108': case '304': case '305':
-			$domain = $objRegistroEPPPoll->get('objectId');
-			break;
-		case '100': case '101': case '102': case '103': case '106':
-			$taxpayerID = $objRegistroEPPPoll->get('objectId');
-			break;
-	}
-	$taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
-	
-	if (in_array($code,array('300','302','303','305'))==TRUE) {
-		$issue["priority"] = "High";
-		$issue["deptid"] = $moduleparams["FinanceDept"];
-	}
-	elseif (in_array($code,array('301','304'))==TRUE) {
-		$issue["priority"] = "Low";
-		$issue["deptid"] = $moduleparams["FinanceDept"];
-	}
-	else {
-		$issue["priority"] = "Low" ;
-		$issue["deptid"] = $moduleparams["TechDept"];
-	
-	}
-	
-	$issue["clientid"]=0;
-	
-	if (!empty($domain)) {
-	
-		$issue["domain"] =$domain;
-	
-		if (empty($ticket)) {
-			$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
-			$data = mysql_fetch_array($queryresult);
-	
-			# if there is only one domain with this name, we can match it to a domainid without a ticket
-				if (count($data)==1) {
-					$domainid = $data['domainid'];
-				}
-			}
-			else {
-					$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
-					$data = mysql_fetch_array($queryresult);
-					$domainid = $data['domainid'];
-			}
-				
-			if (!empty($domainid)) {
-				$issue["domainid"] = $domainid;
-				$queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
-						$data = mysql_fetch_array($queryresult);
-						$issue["clientid"]=$data['userid'];
-				}
-			}
-	
-			if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
-				$issue["clientid"] = "1";
-			}
-	
-	
-			$issue["subject"] = "Mensagem de Poll relativa a dominios .br";
-			$issue["message"] = $content;
-			$user = $moduleparams['Sender'];
-			$queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
-			$data = mysql_fetch_array($queryresult);
-
-
-			$issue["name"] = $data["firstname"]." ".$data["lastname"];
-			$issue["email"] = $data["email"];
-
-			$results = localAPI("openticket",$issue,$user);
-	
-			if ($results['result']!="success") {
-				$msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
-				return false;
-			}
-			else {
-				return true;
-			}
-	
-}
-function _registrobr_getTickets($clID,$domainid,$domain){
-
-	$table = "mod_registrobr";
-	$fields = "clID,domainid,domain,ticket";
-	$where = array(
-			"clID"		=>	$clID,
-			"domainid"  =>  $domainid,
-			"domain"	=>	$domain
-	);
-		
-	$result = select_query($table,$fields,$where);
-	$data = mysql_fetch_array($result);
-	$ticket = $data['ticket'];
-
-	return $ticket;
-}
-
-
 		if (in_array($code,array('300','302','303','305'))==TRUE) {	
 			$issue["priority"] = "High";
 			$issue["deptid"] = $moduleparams["FinanceDept"];
