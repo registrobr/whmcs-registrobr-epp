@@ -116,21 +116,24 @@ function registrobr_getConfigArray() {
 		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
 		//If the domain is ok, change testtype to 0 and load the url below again
 
-		///whmcs/admin/configregistrars.php?testtype='RegisterDomain&debug=1&TESTMODE=1&domain='toccos35.com.br'&ns1=dns1.stabletransit.com&ns2=dns2.stabletransit.com;'
+		//whmcs/admin/configregistrars.php?case=case1&domain=toccos35.com.br&debug=1&TESTMODE=1&ns1=dns1.stabletransit.com&ns2=dns2.stabletransit.com
+		//case1, case2 or case3
+		$case  			= $_GET['case'];  
+		$debug 			= $_GET['debug'];
 		
-		$type  = $_GET['testtype'];
-		$debug = $_GET['debug'];
-		
-		///whmcs/admin/configregistrars.php?testtype=Poll&domain=toccos28.com.br&debug=1&TESTMODE=1&ns1=1&ns2=2
-		$domaininfo['domain'] = $_GET['domain'];
-		$domaininfo['ns1']	  = $_GET['ns1'];
-		$domaininfo['ns2']	  = $_GET['ns2'];
+		$info['domain'] = $_GET['domain'];
+		$info['ns1']	= $_GET['ns1'];
+		$info['ns2']	= $_GET['ns2'];
 		
 		require_once('RegistroEPP/RegistroEPPFactory.class.php');
 		
 		$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
 
-		$objRegistroEPPTest->test($moduleparams,$type,$domaininfo,$debug);
+		//Register a new domain, with DNS OK
+		$objRegistroEPPTest->testCase($case,$moduleparams,$info,$debug);
+
+		
+		
 	}
 	
 
@@ -1417,6 +1420,8 @@ function registrobr_Poll($params) {
 
 function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll){
 	
+	$moduleparams = getregistrarconfigoptions('registrobr');
+	
 	switch($code) {
 		case '1': case '22': case '28': case '29':
 			$ticket = $objRegistroEPPPoll->get('ticket');
@@ -1491,7 +1496,7 @@ function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegi
 			$results = localAPI("openticket",$issue,$user);
 	
 			if ($results['result']!="success") {
-				$msg = $objRegistroEPPPoll->error('epppollerror',$issue,$results);
+				$msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
 				return false;
 			}
 			else {
