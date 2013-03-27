@@ -269,6 +269,8 @@ class RegistroEPPTest extends RegistroEPP {
 				'ns5' => '',
 				'nswhois1' => $info['nswhois1'],
 				'nswhois2' => $info['nswhois2'],
+				'domain' => $TESTDOMAIN,
+				
 				
 	
 		);
@@ -354,10 +356,132 @@ class RegistroEPPTest extends RegistroEPP {
 				'TechC' => '',
 				'TechDept' => '2',
 				'TestMode' => 'on',
-				'Username' => $TESTUSER
+				'Username' => $TESTUSER,
+				'domain' => $TESTDOMAIN,
+				
 		);
 
 		
+		$email1 = $this->generateRandomString()."@nic.br";
+		$email2 = $this->generateRandomString()."@nic.br";
+		$email3 = $this->generateRandomString()."@nic.br";
+		
+		$name1 = "Registrant Joe Doe".$this->generateRandomString(2);
+		$name2 = "Admin Joe Doe".$this->generateRandomString(2);
+		$name3 = "Tech Joe Doe".$this->generateRandomString(2);
+		
+		$TESTSETCONTACT = Array(
+				'domain' => $TESTDOMAIN,
+				'domainid' => '78',
+				'sld' => $TESTSLD,
+				'tld' => $TESTTLD,
+				'registrar' => 'registrobr',
+				'contactdetails' => Array
+				(
+						'Registrant' => Array
+						(
+								'Full Name' => $name1,
+								'Street Name' => 'Rua A',
+								'Street Number' => '1',
+								'Address Complements' => '2',
+								'City' => 'Sao Paulo',
+								'State or Province' => 'SP',
+								'Zip code' => '03182-040',
+								'Country' => 'BR',
+								'Phone' => '+55.33343434',
+								'Email' => $email1
+						),
+						'Admin' => Array
+						(
+								'Full Name' => $name2,
+								'Street Name' => 'Rua A',
+								'Street Number' => '1',
+								'Address Complements' => '2',
+								'City' => 'Sao Paulo',
+								'State or Province' => 'SP',
+								'Zip code' => '03182-040',
+								'Country' => 'BR',
+								'Phone' => '+55.33343434',
+								'Email' => $email2
+						),
+						'Tech' => Array
+						(
+								'Full Name' => $name3,
+								'Street Name' => 'Rua A',
+								'Street Number' => '1',
+								'Address Complements' => '2',
+								'City' => 'Sao Paulo',
+								'State or Province' => 'SP',
+								'Zip code' => '03182-040',
+								'Country' => 'BR',
+								'Phone' => '+55.33343434',
+								'Email' => $email3
+						)
+				),
+
+				'original' => Array(
+						'domainid' => '78',
+						'sld' => $TESTSLD,
+						'tld' => $TESTTLD,
+						'registrar' => 'registrobr',
+						'contactdetails' => Array
+						(
+								'Registrant' => Array
+								(
+										'Full Name' => 'Joe Doe Smith',
+										'Street Name' => 'Rua A',
+										'Street Number' => '1',
+										'Address Complements' => '2',
+										'City' => 'Sao Paulo',
+										'State or Province' => 'SP',
+										'Zip code' => '03182-040',
+										'Country' => 'BR',
+										'Phone' => '+55.33343434',
+										'Email' => $email1
+								),
+								'Admin' => Array
+								(
+										'Full Name' => 'Joe Doe Smith',
+										'Street Name' => 'Rua A',
+										'Street Number' => '1',
+										'Address Complements' => '2',
+										'City' => 'Sao Paulo',
+										'State or Province' => 'SP',
+										'Zip code' => '03182-040',
+										'Country' => 'BR',
+										'Phone' => '+55.33343434',
+										'Email' => $email2
+								),
+								'Tech' => Array
+								(
+										'Full Name' => 'Joe Doe Smith',
+										'Street Name' => 'Rua A',
+										'Street Number' => '1',
+										'Address Complements' => '2',
+										'City' => 'Sao Paulo',
+										'State or Province' => 'SP',
+										'Zip code' => '03182-040',
+										'Country' => 'BR',
+										'Phone' => '+55.33343434',
+										'Email' => $email3
+								)
+						)
+					),
+				
+					'Certificate' => '',
+					'CNPJ' => '1',
+					'CPF' => '1',
+					'FinanceDept' => '1',
+					'Language' => 'English',
+					'Passphrase' => '',
+					'Password' => $TESTPASSWORD,
+					'TechC' => '',
+					'TechDept' => '1',
+					'TestMode' => 'on',
+					'Username' => $TESTUSER,
+				
+		);
+
 
 		//TESTE
 	
@@ -417,7 +541,7 @@ class RegistroEPPTest extends RegistroEPP {
 		
 		elseif($type == 'SetContactDetails'){
 			## TESTING SetContactDetails 
-			if (!$this->TestSetContactDetails($TESTPARAMS)) {
+			if (!$this->TestSetContactDetails($TESTSETCONTACT)) {
 				return false;
 			}
 			else {
@@ -563,7 +687,7 @@ class RegistroEPPTest extends RegistroEPP {
 		$TESTDOMAIN = $TESTPARAMS['domain'];
 		$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
 		
-		$msg = "Testing ContactDetails........$TESTDOMAIN";
+		$msg = "Testing GetContactDetails........$TESTDOMAIN";
 		$objRegistroEPPDomain->error('testerror',$msg,$TESTREGISTRATION);
 		
 		
@@ -600,7 +724,7 @@ class RegistroEPPTest extends RegistroEPP {
 		return true;
 	}
 	
-	public function TestSetContactDetails($TESTPARAMS){
+	public function TestSetContactDetails($TESTSETCONTACT){
 
 		
 		$include_path = ROOTDIR . '/modules/registrars/registrobr';
@@ -609,37 +733,92 @@ class RegistroEPPTest extends RegistroEPP {
 		
 		$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
 		
-		$msg = "Testing GetSetNameservers........$TESTDOMAIN";
-		$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
+		$TESTDOMAIN = $TESTSETCONTACT['domain'];
 		
-		$TESTDOMAIN = $TESTPARAMS['domain'];
-		$NSWHOIS1 = $TESTPARAMS['nswhois1'];
-		$NSWHOIS2 = $TESTPARAMS['nswhois2'];
-		
+		$msg = "Testing SetContactDetails........$TESTDOMAIN";
+		$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
 		
 		try {
-			$nameservers = registrobr_GetNameservers($TESTPARAMS);
+			registrobr_SaveContactDetails($TESTSETCONTACT);
 		}
 		catch (Exception $e){
 			$msg = $e->getMessage();
 			$msg = "FAILED........$TESTDOMAIN => $msg";
-			$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
 			if($debug) echo "$msg , check the modules logs for more details";
 			return false;
 		}
 		
-		if(empty($nameservers['ns1']) || $nameservers['ns1'] != $NSWHOIS1 || $nameservers['ns2'] != $NSWHOIS2){
-			$msg = "FAILED........$TESTDOMAIN - registrobr_GetNamservers FAILED, check nameservers for domain";
+		
+		$paramTech = $TESTSETCONTACT['contactdetails']['Tech']["Full Name"];
+		$paramAdmin = $TESTSETCONTACT['contactdetails']['Admin']["Full Name"];
+		$paramBilling = $TESTSETCONTACT['contactdetails']['Admin']["Full Name"];
+		$paramOwner = $TESTSETCONTACT['contactdetails']['Registrant']["Full Name"];
+		
+		$results = $this->whois($TESTDOMAIN);
+		
+		$nameTech = $results['regrinfo']['tech']['name'];
+		$nameAdmin = $results['regrinfo']['admin']['name'];
+		$nameBilling = $results['regrinfo']['billing']['name'];
+		$nameOwner = $results['regrinfo']['owner']['name'];
+	
+		$ok = 1;
+		
+		if ($nameTech == $paramTech){
+			$msg = "OK...........$TESTDOMAIN,Set Tech contact is OK";
+			if($debug) echo "$msg , check the modules logs for more details";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
 		}
 		else {
-			$ns = $nameservers['ns1'];
-			$msg = "OK............$TESTDOMAIN - registrobr_GetNamservers it seems OK. $TESTDOMAIN - $ns";
+			$msg = "FAILED...........$TESTDOMAIN, Set Tech contact failed";
+			if($debug) echo "$msg , check the modules logs for more details";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+			$ok = 0;
 		}
-		if($debug) echo "$msg , check the modules logs for more details";
+		if($nameAdmin == $paramAdmin){
+			$msg = "OK...........$TESTDOMAIN,Set Admin contact is OK";
+			if($debug) echo "$msg , check the modules logs for more details";
+		}
+		else {
+			$msg = "FAILED...........$TESTDOMAIN, Set Admin contact failed";
+			if($debug) echo "$msg , check the modules logs for more details";
+
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+			$ok = 0;
+		}
+
 		
-		$objRegistroEPPDomain->error('testerror',$msg,$nameservers);
+		if($nameBilling == $paramBilling){
+			$msg = "OK...........$TESTDOMAIN,Set Billing contact is OK";
+			if($debug) echo "$msg , check the modules logs for more details";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+			
+		}
+		else {
+			$msg = "FAILED...........$TESTDOMAIN, Set Billing contact failed";
+			if($debug) echo "$msg , check the modules logs for more details";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+			$ok = 0;
+		}
 		
-		return true;
+		if($nameOwner == $paramOwner){
+			$msg = "OK...........$TESTDOMAIN,Set Owner contact is OK";
+			if($debug) echo "$msg , check the modules logs for more details";
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+		}
+		else {
+			$msg = "FAILED...........$TESTDOMAIN, Set Owner failed";
+			if($debug) echo "$msg , check the modules logs for more details";				
+			$objRegistroEPPDomain->error('testerror',$msg,$TESTSETCONTACT);
+			$ok = 0;
+		}
+		
+		if ($ok) {
+			return true;
+		}
+		else {
+			return false;
+		}
 			
 	}
 	
@@ -913,7 +1092,14 @@ class RegistroEPPTest extends RegistroEPP {
 		}
 		return $retorno;
 	}
-	
+	function generateRandomString($length = 4) {
+		$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		$randomString = '';
+		for ($i = 0; $i < $length; $i++) {
+			$randomString .= $characters[rand(0, strlen($characters) - 1)];
+		}
+		return $randomString;
+	}
 }
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2013 NIC.br (R)
+# Copyright (c) 2012-2013, AllWorldIT and (c) 2013, NIC.br (R)
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This module was rewritten from scratch, but its original version was a fork from whmcs-coza-epp (http://devlabs.linuxassist.net/projects/whmcs-coza-epp)
+# This module is a fork from whmcs-coza-epp (http://devlabs.linuxassist.net/projects/whmcs-coza-epp)
 # whmcs-coza-epp developed by Nigel Kukard (nkukard@lbsd.net)
 
 
@@ -30,6 +30,12 @@
 # Information for registrars available at http://registro.br/provedor/epp
 
 # NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
+
+
+# WHMCS hosting, theming, module development, payment gateway 
+# integration, customizations and consulting all available from 
+# http://allworldit.com
+
 
 
 # Configuration array
@@ -98,68 +104,14 @@ function registrobr_getConfigArray() {
 	
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
-	$TESTMODE = 1;
-	
-	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
-		
-		//First uncomment the line below to register a domain, after 5 minutes (period to complete the registrarbr process) , comment the line and run the registrar config again
-		
-		#$type = 'RegisterDomain';
-		_registrobr_test($moduleparams,$type);
-		
-	}
-	
-	
 	
 	$TESTMODE = 0;
 	///whmcs/admin/configregistrars.php?testtype='RegisterDomain&debug=1&TESTMODE=1'
 	
 	$TESTMODE = $_GET['TESTMODE'];
-    return $configarray;
-
-}
-
-function _registrobr_test($moduleparams,$type) {
-	
-	$TESTUSER	    = $moduleparams['Username'];
-	$TESTPASSWORD   = $moduleparams['Password'];
-	
-
-	$TESTDOMAIN 	= 'toccos35.com.br';
-	$TESTTLD		= 'com.br';
-	$TESTSLD		= 'toccos35';
-	$TESTNS1 		= 'dns1.stabletransit.com';
-	$TESTNS2 		= 'dns2.stabletransit.com';
-
-	
-	$include_path = ROOTDIR . '/modules/registrars/registrobr';
-	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-	
-	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-	
-	$TESTPARAMS = Array
-	(
-			'Certificate' => '',
-			'CNPJ' => 1,
-			'CPF' => 1,
-			'FinanceDept' => '1',
-			'Language' => 'Portuguese',
-			'Passphrase' => '',
-			'Password' => $TESTPASSWORD,
-			'Sender' => 'root',
-			'TechC' => '',
-			'TechDept' => '2',
-			'TestMode' => 'on',
-			'Username' => $TESTUSER,
-			'domainid' => '78',
-			'domain' => $TESTDOMAIN,
-			'sld' => $TESTSLD,
-			'tld' => $TESTTLD,
-			'registrar' => 'registrobr',
-			'status' => 'Active'
-	);
 	
 	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
+
 		//First uncomment the line 1 to register a domain or load the url below
 		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
 		//If the domain is ok, change testtype to 0 and load the url below again
@@ -168,172 +120,6 @@ function _registrobr_test($moduleparams,$type) {
 		//case1, case2 or case3
 		$case  			= $_GET['case'];  
 		$debug 			= $_GET['debug'];
-	
-	$TESTORIGINAL = Array(
-			'domainid' => '78',
-			'sld' => $TESTSLD,
-			'tld' => $TESTTLD,
-			'registrar' => 'registrobr',
-			'userid' => '22',
-			'id' => '22',
-			'firstname' => 'Joe',
-			'lastname' => 'Doe',
-			'companyname' => 'ACME',
-			'email' => 'test@ciclanomail.com',
-			'address1' => 'Rua Teste 1',
-			'address2' => 'apt 1',
-			'city' => 'Cidade 1',
-			'state' => 'SP',
-			'postcode' => '13148-133',
-			'countrycode' => 'BR',
-			'country' => 'BR',
-			'countryname' => 'Brazil',
-			'phonecc' => '55',
-			'phonenumber' => '3334-3434',
-			'notes' => '',
-			'password' => '9150351b52dbc22fec30b887d4661e1e:mtgPo',
-			'currency' => '1',
-			'defaultgateway' => '',
-			'cctype' => '',
-			'cclastfour' => '',
-			'securityqid' => '0',
-			'securityqans' => '',
-			'groupid' => '0',
-			'status' => 'Active',
-			'credit' => '444.00',
-			'taxexempt' => '',
-			'latefeeoveride' => '',
-			'overideduenotices' => '',
-			'separateinvoices' => '',
-			'disableautocc' => '',
-			'language' => 'Portuguese-br',
-			'lastlogin' => 'No Login Logged',
-			'customfields1' => '64264445701',
-			'customfields2' => 'Selecione',
-			'customfields3' => '',
-			'billingcid' => '0',
-			'fullstate' => 'SP',
-			'regperiod' => '1',
-			'dnsmanagement' => '',
-			'emailforwarding' => '',
-			'idprotection' => '',
-			'adminfirstname' => 'Joe',
-			'adminlastname' => 'Doe',
-			'admincompanyname' => 'ACME',
-			'adminemail' => 'fulano@ciclanomail.com',
-			'adminaddress1' => 'Rua Do Norte, 1',
-			'adminaddress2' => 'apt 1',
-			'admincity' => 'Cidade',
-			'adminfullstate' => 'SP',
-			'adminstate' => 'SP',
-			'adminpostcode' => '13148-133',
-			'admincountry' => 'BR',
-			'adminphonenumber' => '3334-3434',
-			'fullphonenumber' => '+55.33343434',
-			'adminfullphonenumber' => '+55.33343434',
-			'ns1' => $TESTNS1,
-			'ns2' => $TESTNS2,
-			'ns3' => '',
-			'ns4' => '',
-			'ns5' => '',
-	
-	);
-	$TESTREGISTRATION = Array
-	(
-			'domainid' => '78',
-			'sld' => $TESTSLD,
-			'tld' => $TESTTLD,
-			'registrar' => 'registrobr',
-			'userid' => '22',
-			'id' => '22',
-			'firstname' => 'Joe',
-			'lastname' => 'Doe',
-			'companyname' => 'ACME',
-			'email' => 'test@ciclanomail.com',
-			'address1' => 'Rua Teste 1',
-			'address2' => 'apt 1',
-			'city' => 'Cidade 1',
-			'state' => 'SP',
-			'postcode' => '13148-133',
-			'countrycode' => 'BR',
-			'country' => 'BR',
-			'countryname' => 'Brazil',
-			'phonecc' => '55',
-			'phonenumber' => '3334-3434',
-			'notes' => '',
-			'password' => '9150351b52dbc22fec30b887d4661e1e:mtgPo',
-			'currency' => '1',
-			'defaultgateway' => '',
-			'cctype' => '',
-			'cclastfour' => '',
-			'securityqid' => '0',
-			'securityqans' => '',
-			'groupid' => '0',
-			'status' => 'Active',
-			'credit' => '444.00',
-			'taxexempt' => '',
-			'latefeeoveride' => '',
-			'overideduenotices' => '',
-			'separateinvoices' => '',
-			'disableautocc' => '',
-			'language' => 'Portuguese-br',
-			'lastlogin' => 'No Login Logged',
-			'customfields1' => '64264445701',
-			'customfields2' => 'Selecione',
-			'customfields3' => '',
-			'billingcid' => '0',
-			'fullstate' => 'SP',
-			'regperiod' => '1',
-			'dnsmanagement' => '',
-			'emailforwarding' => '',
-			'idprotection' => '',
-			'adminfirstname' => 'Joe',
-			'adminlastname' => 'Doe',
-			'admincompanyname' => 'ACME',
-			'adminemail' => 'fulano@ciclanomail.com',
-			'adminaddress1' => 'Rua Do Norte, 1',
-			'adminaddress2' => 'apt 1',
-			'admincity' => 'Cidade',
-			'adminfullstate' => 'SP',
-			'adminstate' => 'SP',
-			'adminpostcode' => '13148-133',
-			'admincountry' => 'BR',
-			'adminphonenumber' => '3334-3434',
-			'fullphonenumber' => '+55.33343434',
-			'adminfullphonenumber' => '+55.33343434',
-			'ns1' => $TESTNS1,
-			'ns2' => $TESTNS2,
-			'ns3' => '',
-			'ns4' => '',
-			'ns5' => '',
-			'original' => $TESTORIGINAL,
-	
-			'Certificate' => '',
-			'CNPJ' => '1',
-			'CPF' => '1',
-			'FinanceDept' => '1',
-			'Language' => 'Portuguese',
-			'Passphrase' => '',
-			'Password' => $TESTPASSWORD,
-			'Sender' => 'root',
-			'TechC' => '',
-			'TechDept' => '2',
-			'TestMode' => 'on',
-			'Username' => $TESTUSER
-	);
-	
-	
-	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
-	
-	$msg = 'Initializing test...';
-	$objRegistroEPPDomain->error('testerror',$msg,$moduleparams);
-	$objRegistroEPPDomain->set('language',$TESTREGISTRATION['Language']);
-	
-	
-	## TESTING RegisterDomain
-
-	if($type == 'RegisterDomain'){
-		$return = registrobr_RegisterDomain($TESTREGISTRATION);
 		
 		$info['domain'] = $_GET['domain'];
 		$info['ns1']	= $_GET['ns1'];
@@ -347,111 +133,12 @@ function _registrobr_test($moduleparams,$type) {
 		$objRegistroEPPTest->testCase($case,$moduleparams,$info,$debug);
 
 		
-		if(empty($return['clID'])){
-			$msg = "FAILED........$TESTDOMAIN - registrobr_RegisterDomain FAILED, check the TESTREGISTRATION params are OK";
-			$objRegistroEPPDomain->error('testerror',$msg,$TESTREGISTRATION);	
-		}
-		else {
-			$msg = "OK............$TESTDOMAIN - registrobr_RegisterDomain OK, domain $TESTDOMAIN created";
-			$objRegistroEPPDomain->error('testerror',$msg,$TESTREGISTRATION);	
-		}
-	
-		return;
-	}
-	
-	## TESTING GetNameserver and SaveNameServer
-	#For testing nameservers 2 servers are required.
-
-	$nameservers = registrobr_GetNameservers($TESTPARAMS);
-	
-	$objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
-	
-	if(empty($nameservers['ns1'])){
-		$msg = "FAILED........$TESTDOMAIN - registrobr_GetNamservers FAILED, check nameservers for domain";
-		$objRegistroEPPDomain->error('testerror',$msg,$nameservers);
-	}
-	else {
-		$ns = $nameservers['ns1'];
-		$msg = "OK............$TESTDOMAIN - registrobr_GetNamservers it seems OK. $TESTDOMAIN - $ns";
-		$objRegistroEPPDomain->error('testerror',$msg,$nameservers);
-	}
-	
-	
-	//Utilize os nameservers antigo e inverta a ordem, depois consultar novamente.
-	
-	if(count($nameservers) < 2){
-		$msg = "FAILED........$TESTDOMAIN - registrobr_SaveNamservers FAILED, at least 2 nameservers are required.";
-		$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
-	}
-	//exchange the nameservers 
-	$TESTPARAMS['ns1'] = $nameservers['ns2'];
-	$TESTPARAMS['ns2'] = $nameservers['ns1'];
-	
-	try {
-		registrobr_SaveNameservers($TESTPARAMS);
-		$change_nameservers = registrobr_GetNameservers($TESTPARAMS);
-		
-		if($change_nameservers['ns1'] == $nameservers['ns2']){
-			// exchange again the nameservers
-			$TESTPARAMS['ns1'] = $nameservers['ns1'];
-			$TESTPARAMS['ns2'] = $nameservers['ns2'];
-			registrobr_SaveNameservers($TESTPARAMS); 
-			
-			$msg = "OK............$TESTDOMAIN - registrobr_saveNameservers it seems OK ";
-		}
-		else {
-			$msg = "FAILED........$TESTDOMAIN - registrobr_saveNameservers FAILED";
-			
-		}
-		$objRegistroEPPDomain->error('testerror',$msg,$change_nameservers);
 		
 	}
-	catch(Exception $e){
-		$msg = $e->getMessage();
-		$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);	
-	}
-	
-	## TESTING GetContactDetails and SaveContactDetails
-	
-	$contactdetails = registrobr_GetContactDetails($TESTPARAMS);
-	
-	$objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
-	$objRegistroEPPBrorg->set('language',$TESTPARAMS['Language']);
-	
-
-	$types = array('Registrant','Admin','Tech');
-	
-	foreach ($types as $key => $value) {
-		
-		$index_fullname = $objRegistroEPPBrorg->getMsgLang("fullnamefield");
-		$index_email    = $objRegistroEPPBrorg->getMsgLang("Email");
-		
-		if(empty($contactdetails[$value][$index_fullname])){
-			$msg = "FAILED........$TESTDOMAIN - registrobr_GetContactDetails FAILED, check contact details of $index_fullname $type in $domain";
-		}
-		else {
-			$msg = "OK............$TESTDOMAIN - registrobr_GetContactDetails it seems OK for $value in $TESTDOMAIN";
-		}
-		$objRegistroEPPDomain->error('testerror',$msg,$contactdetails);
-		
-	}
-	
-	## TESTING DeleteDomain
 	
 
     return $configarray;
 
-	$error = registrobr_RequestDelete($TESTPARAMS);	
-	
-	if(empty($return)){
-		$msg = "OK............$TESTDOMAIN - registrobr_RequestDelete it seems OK";	
-	}
-	else {
-		$msg = "FAILED........$TESTDOMAIN - registrobr_RequestDelete FAILED, $error";
-	}
-	$objRegistroEPPDomain->error('testerror',$msg,$TESTPARAMS);
-	$objRegistroEPPDomain->error('testerror','Test Finalized !','');
-	
 }
 
 
@@ -1685,126 +1372,69 @@ function registrobr_Sync($params) {
 
 function registrobr_Poll($params) {
 	
-	$domain = $params["sld"].".".$params["tld"];
-
-	# Grab module parameters
-	$moduleparams = getregistrarconfigoptions('registrobr');
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 	
-	$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
-	$objRegistroEPPPoll->set('language',$params['Language']);
-	$objRegistroEPPPoll->set('domain',$domain);
-
-
-	try {
-		$objRegistroEPPPoll->login($moduleparams);
-		$objRegistroEPPPoll->getMessages($moduleparams);
-		
-	}
-	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
-	}
-	$coderes = $objRegistroEPPPoll->get('coderes');
-
-	$last = 0;
-	
-	# This is the last one
-	if ($coderes == 1300) {
-		$last = 1;
-	}
-	return $values;
-
-}
-
-function _registrobr_getTickets($clID,$domainid,$domain){
-
-		$table = "mod_registrobr";
-		$fields = "clID,domainid,domain,ticket";
-		$where = array(
-				"clID"		=>	$clID,
-				"domainid"  =>  $domainid,
-				"domain"	=>	$domain
-		);
-			
-		$result = select_query($table,$fields,$where);
-		$data = mysql_fetch_array($result);
-		$ticket = $data['ticket'];
-		
-		return $ticket;
-}
-
-
-function registrobr_Sync_OLD($params){
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
-	#For every domain sync, also do a poll queue clean
-	_registrobr_Poll($client);
-	
-	#Request a sync for the specified domain
-	$values = _registrobr_SyncRequest($client,$params);
-	return $values;
-	
-	
-}
-
-function _registrobr_Poll_OLD() {
-	
 	$domain = $params["sld"].".".$params["tld"];
-	
+
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
 	$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
+	
+	
 	$objRegistroEPPPoll->set('language',$params['Language']);
 	$objRegistroEPPPoll->set('domain',$domain);
-	
+
 	try {
 		$objRegistroEPPPoll->login($moduleparams);
-		$coderes = $objRegistroEPPPoll->get('coderes');
+	
 	}
 	catch (Exception $e){
 		$values["error"] = $e->getMessage();
 		return $values;
 	}
-	$objRegistroEPPPoll->getMessages($moduleparams);
+	$i = 0;
 	
-	$coderes = $objRegistroEPPPoll->get('coderes');
-	
-	$last = 0;
-	
-	# This is the last one
-	if ($coderes == 1300) {
-		$last = 1;
-	}
-	else {
-		$msgid = $objRegistroEPPPoll->get('msgQ');
-		$reason = $objRegistroEPPPoll->get('reason');
-		$code = $objRegistroEPPPoll->get('code');
-		$content = $objRegistroEPPPoll->get('content');
+	do {
 		
-		switch($code) {
-			case '1': case '22': case '28': case '29':
-				$ticket = $objRegistroEPPPoll->get('ticket');
-				#no break, poll messages with ticketNumber also have domain in objectId
-			case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18': case '20': case '107': case '108': case '304': case '305':
-				$domain = $objRegistroEPPPoll->get('objectId');
-				break;
-			case '100': case '101': case '102': case '103': case '106':
-				$taxpayerID = $objRegistroEPPPoll->get('objectId');
-				break;
-		}
-		$taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
+			try {
+				$objRegistroEPPPoll->login($moduleparams);
+				$objRegistroEPPPoll->getMessages($moduleparams);
+				
+			}
+			catch (Exception $e){
+				$values["error"] = $e->getMessage();
+				return $values;
+			}
+			$coderes = $objRegistroEPPPoll->get('coderes');
 		
-		$ok = _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll);
+			$last = 0;
+			
+			# This is the last one
+			if ($coderes == 1300) {
+				$last = 1;
+				
+			}
+			else {
+				$msgid = $objRegistroEPPPoll->get('msgQ');
+				$reason = $objRegistroEPPPoll->get('reason');
+				$code = $objRegistroEPPPoll->get('code');
+				$content = $objRegistroEPPPoll->get('content');
+				
+				$ok = _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll);
+				
+				if($ok){
+					$objRegistroEPPPoll->sendAck();
+				}
 		
-		if($ok){
-			$objRegistroEPPPoll->set('msgQ',$msgid);
-			$objRegistroEPPPoll->sendAck();
-		}
-		else {
-			//avisa que está com problemas para gerar tickets
-		}
-	}	
+			}	
+			
+			$i++;
+			
+	} while($last != 1 and $i < 10);
 	
 }
 
@@ -1889,7 +1519,7 @@ function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegi
 				$msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
 				return false;
 			}
-			else {
+			else {				
 				return true;
 			}
 	
@@ -1910,83 +1540,6 @@ function _registrobr_getTickets($clID,$domainid,$domain){
 
 	return $ticket;
 }
-
-
-		if (in_array($code,array('300','302','303','305'))==TRUE) {	
-			$issue["priority"] = "High";
-			$issue["deptid"] = $moduleparams["FinanceDept"];
-		} 
-		elseif (in_array($code,array('301','304'))==TRUE) {
-			$issue["priority"] = "Low";
-			$issue["deptid"] = $moduleparams["FinanceDept"];
-		}
-		else {
-			$issue["priority"] = "Low" ;
-			$issue["deptid"] = $moduleparams["TechDept"];
-		
-		}
-		
-		$issue["clientid"]=0;
-		
-		if (!empty($domain)) {
-		
-			$issue["domain"] =$domain;
-		
-			if (empty($ticket)) {
-				$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
-				$data = mysql_fetch_array($queryresult);
-		
-				# if there is only one domain with this name, we can match it to a domainid without a ticket
-				if (count($data)==1) {
-					$domainid = $data['domainid'];
-				}
-			}
-			else {
-				$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
-				$data = mysql_fetch_array($queryresult);
-				$domainid = $data['domainid'];
-			}
-			
-			if (!empty($domainid)) {
-				$issue["domainid"] = $domainid;
-				$queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
-				$data = mysql_fetch_array($queryresult);
-				$issue["clientid"]=$data['userid'];
-			}
-		}
-		
-		if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
-			$issue["clientid"] = "1";
-		}
-		
-		
-		$issue["subject"] = "Mensagem de Poll relativa a dominios .br";
-		$issue["message"] = $content;
-		$user = $moduleparams['Sender'];
-		$queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
-		$data = mysql_fetch_array($queryresult);
-		
-		
-		$issue["name"] = $data["firstname"]." ".$data["lasttname"];
-		$issue["email"] = $data["email"];
-		
-		
-		$results = localAPI("openticket",$issue,$user);
-		
-		if ($results['result']!="success") {
-			return $objRegistroEPPPoll->error('epppollerror',$issue,$results);
-		}
-		
-	}	
-	
-}
-
-
-
-
-
-    
-
 
 
 ?>

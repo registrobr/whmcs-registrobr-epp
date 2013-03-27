@@ -117,6 +117,29 @@ class ParserResponse {
 		
 		
 	}
+	public function parseAck($response){
+		/*<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
+		  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0      epp-1.0.xsd">
+		     <response>     
+		     <result code="1000">
+		     <msg lang="pt">Command completed successfully</msg>
+		     </result>     
+		     <msgQ count="101" id="24525"/>
+               <trID>
+               	<clTRID>14295320031113985087</clTRID>
+               	<svTRID>20130327184845-2D7B794A-237-0003</svTRID>
+               </trID>
+		    </response> 
+		  </epp>		*/
+		$doc= new DOMDocument();
+		$doc->loadXML($response);
+		
+		$msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
+		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+				
+		$this->set('coderes',$coderes);
+		$this->set('msgQ',$msgQ);
+	}
 	public function parseBRorgInfo($response){
 		$doc= new DOMDocument();
 		$doc->loadXML($response);

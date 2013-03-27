@@ -5,7 +5,11 @@ require_once("RegistroEPP.class.php");
 class RegistroEPPPoll extends RegistroEPP {
 
 	protected $tech;
-
+	protected $msgQ;
+	protected $qDate;
+	protected $txt;
+	protected $content;
+	
 	public function getInfo(){
 		
 		
@@ -37,6 +41,7 @@ class RegistroEPPPoll extends RegistroEPP {
 		$this->set('qDate',$objParser->get('qDate'));
 		$this->set('code',$objParser->get('code'));
 		$this->set('txt',$objParser->get('txt'));
+		
 		$this->set('reason',$objParser->get('reason'));
 		$this->set('coderes',$objParser->get('coderes'));
 				
@@ -64,12 +69,13 @@ class RegistroEPPPoll extends RegistroEPP {
 		
 		
 		$content .= $this->_registrobr_lang("FullXMLBelow");
+		
 		$bc = new BeautyXML();
 		
-		$content .= htmlentities($bc->format($response));
+		$content .= htmlentities($bc->format($responseXML));
+		
 		
 		$this->set('content',$content);
-		
 		$this->set('ticket',$objParser->get('ticket'));
 		$this->set('objectId',$objParser->get('objectId'));
 		
@@ -80,30 +86,34 @@ class RegistroEPPPoll extends RegistroEPP {
 	public function sendAck(){
 
 		require_once('ParserResponse/ParserResponse.class.php');
-
+			
+		
 		$client = $this->get('netClient');
+		
 		if(empty($client)){
 			throw new Exception('net Client is not setted, check login before');
 		}
-
-		$requestXML = $this->_getXMLMessages();
+		
+		$requestXML = $this->_getXMLAck();
 		$responseXML = $client->request($requestXML);
-
+		
 		$objParser = New ParserResponse();
 		$objParser->parseAck($responseXML);
 
 		$coderes = $objParser->get('coderes');
 		
 		if ($coderes != '1000') {
-			$msg = $this->errorEPP('pollackerrorcode',$objParser,$requestXML,$responseXML);
+			$msg = $this->errorEPP('pollackerrorcode',$objParser,$coderes,$responseXML);
 			throw new Exception($msg);
 		}
-		
 	}
 	private function _getXMLAck(){
 		
 		$msgid = $this->get('msgQ');
 		
+		if(empty($msgid)){
+			throw new Exception('no msgQ sent');
+		}
 		# Ack poll message
 		$request='  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
 		<command>
