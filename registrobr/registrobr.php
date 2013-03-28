@@ -112,11 +112,15 @@ function registrobr_getConfigArray() {
 	
 	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
 
-		//First uncomment the line 1 to register a domain or load the url below
+
+		//case1 => register a domain
+		//case2 => check nameservers,contacts and delete the domain
+		//case3 => check nameservers,contacts and renew the domain
+		
 		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
 		//If the domain is ok, change testtype to 0 and load the url below again
 
-		//whmcs/admin/configregistrars.php?case=case1&domain=toccos35.com.br&debug=1&TESTMODE=1&ns1=dns1.stabletransit.com&ns2=dns2.stabletransit.com
+		//whmcs/admin/configregistrars.php?case=case1&domain=domain.com.br&debug=1&TESTMODE=1&ns1=dns1.dns.com&ns2=dns2.dns.com
 		//case1, case2 or case3
 		$case  			= $_GET['case'];  
 		$debug 			= $_GET['debug'];
@@ -1377,8 +1381,12 @@ function registrobr_Poll($params) {
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 	
-	$domain = $params["sld"].".".$params["tld"];
-
+	if(!empty($params['domain'])){
+		$domain = $params['domain'];
+	}
+	else {
+		$domain = $params["sld"].".".$params["tld"];
+	}
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
