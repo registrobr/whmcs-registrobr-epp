@@ -1,0 +1,6 @@
+1 - registrobr_GetNameservers($params);
+
+	a) in => dominio inexistente , out => error 2303
+	b) in => dominio com tickets , out =>
+
+
