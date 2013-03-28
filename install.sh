@@ -28,12 +28,10 @@ rm tmplist.php
 rm newlist.php
 
 cp Avail.php  brdomaincheck.php $whmcsdir/
-cp -r ../../* $whmcsdir/modules/registrars/
-rm $whmcsdir/modules/registrars/registrobr/INSTALL/*
-rmdir $whmcsdir/modules/registrars/registrobr/INSTALL
+cp -r registrobr  $whmcsdir/modules/registrars/
 
 #colocar poll na crontab
-sync="$whmcsdir/modules/registrars/registrobr/registrobrsync.php"
+sync="$whmcsdir/modules/registrars/registrobr/registrobrpoll.php"
 path="PATH"
 sed -e "s,$path,$sync,g" crontab.txt > crontabnew.txt
 
