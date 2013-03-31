@@ -2,7 +2,7 @@
 
 
 # ${copyright}$
-# $Id: brdomaincheck.php 70 2013-01-13 21:44:00Z rubens $
+# $Id: brdomaincheck.php 70 2013-01-30 19:00:00Z rubens $
 
 
 require "Avail.php";
@@ -11,15 +11,18 @@ require "Avail.php";
 function check_domain_availability($fqdn, $parameters) { $client = new AvailClient(); $client->setParam($parameters); $response = $client->send_query($fqdn); return $response; }
 
 
-$atrib = array(
+$attrib = array(
 "lang" => 1, # PT (EN = 0)
-"server" => "registro.br",
 "port" => 43,
 "cookie_file" => "/tmp/isavail-cookie.txt", "ip" => "", "suggest" => 0, # No domain suggestions );
+          
+$moduleparams = getregistrarconfigoptions('registrobr');
+
+$attrib["server"] = (isset($moduleparams['TestMode'] ? "beta.registro.br" : "registro.br" );
 
 
 $fqdn = $_GET["domain"];;
-$domain_info = check_domain_availability($fqdn, $atrib);
+$domain_info = check_domain_availability($fqdn, $attrib);
 
 
 echo "Status do dom&iacute;nio '{$fqdn}': <br /><br />"; echo nl2br($domain_info);

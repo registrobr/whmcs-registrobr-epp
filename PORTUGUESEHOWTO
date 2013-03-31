@@ -14,7 +14,7 @@ REQUISITOS
 - PHP versão 5.1 ou superior
 - Suporte a SSL 
 - Suporte a sockets (em função deste requisito e de segurança do certificado SSL ambiente não compartilhado é recomendado)
-- Permissão de firewall para portas UDP 43 e TCP 700 nos servidores beta.registro.br e epp.registro.br
+- Permissão de firewall para portas UDP 43 e TCP 700 nos servidores beta.registro.br, registro.br e epp.registro.br
 - Data correta no servidor (NTP recomendado mas não obrigatório)
 - Permissão de super-usuário (root)
 
@@ -22,14 +22,14 @@ INSTALAÇÃO
 
 1 - Fazer login como root ou utilizar su ou sudo
 2 - Execute o arquivo install.sh com os seguintes parâmetros:
-	install.sh whmcsdir crontabfile whmcswebdomain
+	install.sh <whmcsdir> <crontabfile> <whmcswebdomain>
 
 Se não especificados, o valor default default de whmcsdir é "/var/www/whmcs", o de crontabfile "/var/spool/cron/crontabs/root" e o hostname da máquina para whmcswebdomain.
 
 2 - Após o término do script, deverá ocorrer o seguinte:
 
 	a) Os arquivos Avail.php e brdomaincheck.php deverão estar no diretorio raiz do servidor
-	b) O arquivo whoisserver.php do whmcs deverá ter as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para o seu dominio.
+	b) O arquivo whoisserver.php do whmcs deverá ter as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para seu dominio.
 	c) ...whmcs/modules/registrars/registrobr/  deverá ser criado e conter os arquivos da distribuição
 	d) Na crontab do root deverá constar a seguinte entrada:
 	
@@ -127,8 +127,7 @@ TESTES
 ATIVAÇÃO EM PRODUÇÃO
 
 - Copie o arquivo .pem recebido para uma área fora do diretório de documentos do Apache 
-- Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars -> Registro.br, desabilitar a opção TESTMODE, mudar usuário e senha para as informação de produção
-  e informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
+- Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars -> Registro.br, desabilitar a opção TESTMODE, mudar usuário e senha para as informação de produção  e informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
 - Faça um registro teste sem cadastro de DNS para verificar que um ticket consegue ser gerado; não configure DNS para esse domínio para evitar cobrança dessa transação. 
 
  
