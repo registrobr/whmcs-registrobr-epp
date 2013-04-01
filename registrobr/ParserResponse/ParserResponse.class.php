@@ -94,28 +94,31 @@ class ParserResponse {
 		 </response>
 		 </epp>
 		 */
-		
-		$msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
-		$qDate = $doc->getElementsByTagName('qDate')->item(0)->nodeValue;
-		$code = $doc->getElementsByTagName('code')->item(0)->nodeValue;
-		$txt = $doc->getElementsByTagName('txt')->item(0)->nodeValue;
-		$reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
 		$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-		$ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
-		$objectId = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
-
 		$this->set('coderes',$coderes);
-		$this->set('msgQ',$msgQ);
-		$this->set('qDate',$qDate);
-		$this->set('code',$code);
-		$this->set('txt',$txt);
-		$this->set('reason',$reason);
-		$this->set('ticket',$ticket);
-		$this->set('objectId',$objectId);
-		$this->set('msg',$txt);
-		$this->set('language',$language);
-		
-		
+				
+		if($coderes != 1300){
+
+			$msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
+			$qDate = $doc->getElementsByTagName('qDate')->item(0)->nodeValue;
+			$txt = $doc->getElementsByTagName('txt')->item(0)->nodeValue;
+			$reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+			$coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+			$ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
+			$objectId = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
+			
+	
+			$this->set('coderes',$coderes);
+			$this->set('msgQ',$msgQ);
+			$this->set('qDate',$qDate);
+			$this->set('code',$code);
+			$this->set('txt',$txt);
+			$this->set('reason',$reason);
+			$this->set('ticket',$ticket);
+			$this->set('objectId',$objectId);
+			$this->set('msg',$txt);
+			$this->set('language',$language);
+		}
 	}
 	public function parseAck($response){
 		/*<?xml version="1.0" encoding="UTF-8" standalone="no"?> 

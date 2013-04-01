@@ -9,6 +9,7 @@ class RegistroEPPPoll extends RegistroEPP {
 	protected $qDate;
 	protected $txt;
 	protected $content;
+	protected $objectId;
 	
 	public function getInfo(){
 		
@@ -44,6 +45,7 @@ class RegistroEPPPoll extends RegistroEPP {
 		
 		$this->set('reason',$objParser->get('reason'));
 		$this->set('coderes',$objParser->get('coderes'));
+		$this->set('objectId',$objParser->get('objectId'));
 				
 		$coderes = $objParser->get('coderes',$coderes);
 		

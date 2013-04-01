@@ -28,87 +28,86 @@
 
 
 # Include Registro.br stuff we need
-#require_once dirname(__FILE__) . '/registrobr.php';
+require_once dirname(__FILE__) . '/registrobr.php';
+require_once dirname(__FILE__) . '/../../../dbconnect.php';
+require_once dirname(__FILE__) . '/../../../includes/functions.php';
+require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
 
 
 
 echo "Registro.br Poll" ;
 
-	
+registrobr_Poll();
+
+echo "Fim do Poll";
+
+
+
+function registrobr_Poll(){
+
 	$include_path = ROOTDIR . '/modules/registrars/registrobr';
 	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 	
 	require_once('RegistroEPP/RegistroEPPFactory.class.php');
-	
-	if(!empty($params['domain'])){
-		$domain = $params['domain'];
-	}
-	else {
-		$domain = $params["sld"].".".$params["tld"];
-	}
+
 	# Grab module parameters
 	$moduleparams = getregistrarconfigoptions('registrobr');
-	
+
 	$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
-	
-	
-	$objRegistroEPPPoll->set('language',$params['Language']);
-	$objRegistroEPPPoll->set('domain',$domain);
-    
+
 	try {
 		$objRegistroEPPPoll->login($moduleparams);
-        
+
 	}
 	catch (Exception $e){
-		$values["error"] = $e->getMessage();
-		return $values;
+		echo $e->getMessage();
 	}
 	$i = 0;
-	
+
 	do {
-		
-        try {
-            $objRegistroEPPPoll->login($moduleparams);
-            $objRegistroEPPPoll->getMessages($moduleparams);
-            
-        }
-        catch (Exception $e){
-            $values["error"] = $e->getMessage();
-            return $values;
-        }
-        $coderes = $objRegistroEPPPoll->get('coderes');
-		
-        $last = 0;
-        
-        # This is the last one
-        if ($coderes == 1300) {
-            $last = 1;
-            
-        }
-        else {
-            $msgid = $objRegistroEPPPoll->get('msgQ');
-            $reason = $objRegistroEPPPoll->get('reason');
-            $code = $objRegistroEPPPoll->get('code');
-            $content = $objRegistroEPPPoll->get('content');
-            
-            $ok = _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll);
-            
-            if($ok){
-                $objRegistroEPPPoll->sendAck();
-            }
-            
-        }
-        
-        $i++;
-        
-	} while($last != 1 and $i < 100);
-	
 
+		try {
+			$objRegistroEPPPoll->getMessages($moduleparams);
 
-function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegistroEPPPoll){
-	
+		}
+		catch (Exception $e){
+			echo $e->getMessage();
+		}
+		$coderes = $objRegistroEPPPoll->get('coderes');
+
+		
+		$last = 0;
+
+		# This is the last one
+		if ($coderes == 1300) {
+			$last = 1;
+		}
+		else {
+			
+
+			$msgid = $objRegistroEPPPoll->get('msgQ');
+			$reason = $objRegistroEPPPoll->get('reason');
+			$code = $objRegistroEPPPoll->get('code');
+			$content = $objRegistroEPPPoll->get('content');
+			$objectId = $objRegistroEPPPoll->get('objectId');
+
+			$ok = _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll);
+
+			if($ok){
+				$objRegistroEPPPoll->sendAck();
+			}
+		}
+
+		$i++;
+
+	} while($last != 1 and $i < 100); //prevent inbox flooding 
+
+}
+
+function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll){
+
 	$moduleparams = getregistrarconfigoptions('registrobr');
-	
+
 	switch($code) {
 		case '1': case '22': case '28': case '29':
 			$ticket = $objRegistroEPPPoll->get('ticket');
@@ -121,7 +120,7 @@ function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegi
 			break;
 	}
 	$taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
-	
+
 	if (in_array($code,array('300','302','303','305'))==TRUE) {
 		$issue["priority"] = "High";
 		$issue["deptid"] = $moduleparams["FinanceDept"];
@@ -133,80 +132,60 @@ function _registrobr_whmcsTickets($domain,$code,$msgid,$reason,$content,$objRegi
 	else {
 		$issue["priority"] = "Low" ;
 		$issue["deptid"] = $moduleparams["TechDept"];
-        
 	}
-	
+
 	$issue["clientid"]=0;
-	
+
 	if (!empty($domain)) {
-        
 		$issue["domain"] =$domain;
-        
+
 		if (empty($ticket)) {
 			$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
 			$data = mysql_fetch_array($queryresult);
-            
-			# if there is only one domain with this name, we can match it to a domainid without a ticket
-            if (count($data)==1) {
-                $domainid = $data['domainid'];
-            }
-        }
-        else {
-            $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
-            $data = mysql_fetch_array($queryresult);
-            $domainid = $data['domainid'];
-        }
-        
-        if (!empty($domainid)) {
-            $issue["domainid"] = $domainid;
-            $queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
-            $data = mysql_fetch_array($queryresult);
-            $issue["clientid"]=$data['userid'];
-        }
-    }
-	
-    if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
-        $issue["clientid"] = "1";
-    }
-	
-	
-    $issue["subject"] = "Mensagem de Poll relativa a dominios .br";
-    $issue["message"] = $content;
-    $user = $moduleparams['Sender'];
-    $queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
-    $data = mysql_fetch_array($queryresult);
-    
-    
-    $issue["name"] = $data["firstname"]." ".$data["lastname"];
-    $issue["email"] = $data["email"];
-    
-    $results = localAPI("openticket",$issue,$user);
-	
-    if ($results['result']!="success") {
-        $msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
-        return false;
-    }
-    else {				
-        return true;
-    }
-	
-}
-function _registrobr_getTickets($clID,$domainid,$domain){
-    
-	$table = "mod_registrobr";
-	$fields = "clID,domainid,domain,ticket";
-	$where = array(
-                   "clID"		=>	$clID,
-                   "domainid"  =>  $domainid,
-                   "domain"	=>	$domain
-                   );
-    
-	$result = select_query($table,$fields,$where);
-	$data = mysql_fetch_array($result);
-	$ticket = $data['ticket'];
-    
-	return $ticket;
-}
 
+			# if there is only one domain with this name, we can match it to a domainid without a ticket
+			if (count($data)==1) {
+				$domainid = $data['domainid'];
+			}
+		}
+		else {
+			$queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
+			$data = mysql_fetch_array($queryresult);
+			$domainid = $data['domainid'];
+		}
+
+		if (!empty($domainid)) {
+			$issue["domainid"] = $domainid;
+			$queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
+			$data = mysql_fetch_array($queryresult);
+			$issue["clientid"]=$data['userid'];
+		}
+	}
+	
+	if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
+		$issue["clientid"] = "1";
+	}
+
+	$issue["subject"] = "Mensagem de Poll relativa a dominios .br";
+	$issue["message"] = $content;
+	$user = $moduleparams['Sender'];
+	$queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
+	$data = mysql_fetch_array($queryresult);
+
+
+	$issue["name"] = $data["firstname"]." ".$data["lastname"];
+	$issue["email"] = $data["email"];
+
+	$results = localAPI("openticket",$issue,$user);
+
+	if ($results['result']!="success") {
+		$msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
+		return false;
+	}
+	else {
+		return true;
+	}
+
+}
 
 ?>

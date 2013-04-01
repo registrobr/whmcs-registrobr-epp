@@ -1375,4 +1375,22 @@ function registrobr_Sync($params) {
 
 
 
+function _registrobr_getTickets($clID,$domainid,$domain){
+
+	$table = "mod_registrobr";
+	$fields = "clID,domainid,domain,ticket";
+	$where = array(
+			"clID"		=>	$clID,
+			"domainid"  =>  $domainid,
+			"domain"	=>	$domain
+	);
+
+	$result = select_query($table,$fields,$where);
+	$data = mysql_fetch_array($result);
+	$ticket = $data['ticket'];
+
+	return $ticket;
+}
+
+
 ?>
