@@ -598,6 +598,7 @@ class RegistroEPPTest extends RegistroEPP {
 		$include_path = ROOTDIR . '/modules/registrars/registrobr';
 		set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 		require_once('RegistroEPP/RegistroEPPFactory.class.php');
+		require_once('registrobrpoll.php');
 		
 		$TESTDOMAIN = $TESTPARAMS['domain'];
 		$objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
@@ -605,7 +606,7 @@ class RegistroEPPTest extends RegistroEPP {
 		$msg = "Testing Poll........$TESTDOMAIN";
 		$objRegistroEPPPoll->error('testerror',$msg,$TESTREGISTRATION);
 		
-		registrobr_Poll($TESTPARAMS);
+		registrobr_Poll();
 	}
 	
 	public function TestRegisterDomain($TESTREGISTRATION){
