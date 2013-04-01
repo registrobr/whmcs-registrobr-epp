@@ -8,134 +8,124 @@ Portuguese language support from the community might be obtained at one of these
 - http://www.webhostingtalk.com.br/
 - http://portaldohost.com.br/forum/
 
-REQUISITOS
 
+DETAILS
 
+- WHMCS version 4.x or higher (sync requires version 5.1 or higher)
+- All WHMCS's dependencies WHMCS such as Apache, MySQL etc..
+- POSIX Enviroment (Linux, FreeBSD and other meet this requirement)
+- PHP version 5.1 or higher
+- SSL Support
+- Support for sockets (according to this requirement and the security environment not shared SSL certificate is recommended)
+- Permission to firewall UDP ports 43 and 700 on TCP servers beta.registro.br, and registro.br epp.registro.br
+- Correct time on server (NTP recommended but not required)
+- Superuser access (root)
 
-INSTALL
+INSTALLATION
 
-1 - A instalação deve ser executada como root
+1 - Login as root or use sudo or su
+2 - Run the install.sh with the following parameters:
+install.sh <whmcsdir> <crontabfile> <whmcswebdomain>
 
-2 - Mude para o diretório registrars/registrobr/INSTALL 
+If not specified, the default value of whmcsdir default is "/var/www/whmcs" to crontabfile "/var/spool/cron /crontabs/root" and the hostname of the machine to whmcswebdomain.
 
-3 - Abra o arquivo install.sh e modifique as seguintes variáveis:
+2 - After the script, the following should occur:
 
-	a) whmcsdir="/diretorio_de_instalacao_do_whmcs",  algo como ("/var/www/whmcs")
-	b) crontabfile="/var/spool/cron/crontabs/root", o arquivo onde fica a crontab do root
-	c) whmcswebdomain="seudominio.com.br" ,  o dominio do qual você acessa o whmcs
+a) The files Avail.php brdomaincheck.php and should be in the server's root directory 
+b) The file must have whmcs whoisserver.php of entries. br modified with the content of listservers.txt, pointing to your domain.
+c) ... whmcs/modules/registrars/registrobr/  should be created and contain the distribution files
+d) At the root crontab should contain the following entry:
 
-	
-2 - Execute o install.sh
+17 * * * * /dir_whmcs/modules/registrars/registrobr/registrobrpoll.php > /dev/null 2> & 1
 
-3 - Após o término do script, deverá ocorrer o seguinte:
+This entry will be responsible for obtaining any return messages on transactions and registrations.
 
-	a) Os arquivos Avail.php e brdomaincheck.php deverão estar no diretorio raiz do whmcs
-	b) O arquivo whoisserver.php do whmcs deverá ter as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para o seu dominio.
-	c) ...whmcs/modules/registrars/registrobr/  deverá ser criado e conter os arquivos da distribuição (exceto o diretório INSTALL)
-	d) Na crontab do root deverá ser a seguinte entrada:
-	
-			10 23 * * * /diretorio_whmcs/modules/registrars/registrobr/registrobrsync.php  > /dev/null 2>&1
+SETTING
 
-	Esta entrada será responsável pela sincronização dos seus domínios com o registro.br
+1) In WHMCS's control panel, click on "Setup" => "General Settings".
 
-CONFIG
+2) In the left column, click on "Products / Services" => "Domain Registrars"
 
-1) No painel de controle do WHMCS, clique em "Setup" => "General Settings".
+3) Enable Registro.br module and then configure it.
 
-2) Na coluna da esquerda, clique em "Products/Services" => "Domain Registrars"
+4) Fill the blanks with your data authentication. Username is the number of EPP provider (ex: 001) and not the ID provider (eg ANF).
+   For now, leaves the TestMode option enabled. The certificate for use of beta.registro.br comes as part of the distribution module.
 
-3) Ative o módulo do Registro.br e depois em Configure.
+5) CPF and CNPJ are the indications of which fields from the database of clients are being used to store this information. They may be the same field or different fields.
 
-4) Preencha os seus dados.
-   Por enquanto deixa a opção TestMode ativada.
-   Na opção "Sender Username", utilize um Username que esteja em sua lista de administradores ('../whmcs/admin/configadmins.php'), ele será responsável pelo envio por email de algumas comunicações provenientes do Registro.br.
- 
+6) Filling TechC is optional; without him domains are created with equal technical contact the registrant.
 
+7) For the correct processing of the messages return ("Poll"), you need support departments in WHMCS and assign users to them. In the "Sender Username", use a Username that is on your list of administrators ('../Whmcs/admin/configadmins.php') as root, or sign one.
+ 
+8) Suggest, though not required, keep enable the module log in Utilities -> Log -> Log Module, even for production use, to facilitate the diagnosis of
+problems reported by customers. Thus, it isn't necessary to ask the customer to redo a transaction to be diagnosed with a problem.
 
-TESTING
+TESTS
 
-1) Habilite o módulo de Logs em http://seudominio/whmcs/admin/systemmodulelog.php
+1) Enable the module in Utilities Logs -> Log -> Log Module
+2) Confirm that the option is enabled in TestMode "Domain Registrars"
+3) On your DNS server, create an entry for a domain that does not yet exist.
+4) Set up your test replacing "yourdomain" with the domain where you had installed the WHMCS
 
-2) Verifique se a opção TestMode está ativada em "Domain Registrars"
+   
 
-3) No seu servidor de DNS, crie uma entrada para um dominio que ainda não exista.
+   The parameters:
+   a) case: options => 'case1', 'case2', 'case3', 'case4'
+   b) domain: the domain to be registered, eg example.com.br
+   c) debug: will present test results on the screen for more detailed results you should see "Log Module" debug.
+   d) TESTMODE: 0 or 1
+   e) ns1: name NAMESERVER1 (input your domain must already exist)
+   f) ns2: name NAMESERVER2 (input your domain must already exist)
+   
+ 5) Start the test by 'case1' option, the domain will be register  (remember that DNS entries must exist)
+    
+    Wait a few minutes (no less than 15 minutes) and verify if the  domain was registered correctly on the server beta.registor.br (test) using:
+    
+    whois-h beta.registro.br example.com.br
 
+    Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test. If it was properly registered, go to case2.
+    
+    
+ 6) Case 2:
+ 
+ After completing the Case 1 and have the domain registered without the occurrence of tickets, test Case2:
+ 
+ 
+This test will verify that these functions are working:
 
-4) Configure o seu teste: 
+a) Request and Assignment of Domain's Nameservers
+b) Request and Assignment of Domain's contacts.
+c) Role of Synchronization with the information registro.br
+d) Role of exchanging messages with registro.br
 
-   http://seudominio/whmcs/admin/configregistrars.php?case=case&domain=domain.com.br&debug=1&TESTMODE=1&ns1=dns1.dns.com&ns2=dns2.dns.com
+Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+    
+    
+7) Case 3:
 
-   Os parametros:
-   
-   a) case: opções => 'case1', 'case2', 'case3','case4'
-   
-   b) domain: o dominio a ser registrado, ex:  teste.com.br
-   
-   c) debug: irá apresentar os resultados do teste na tela, para resultados mais detalhados você deve consultar o "Module Log" debug.
-   
-   d) TESTMODE: 1 ou 0
+After completing the second case, test case 3:
 
-   e) ns1: nome do nameserver1  (a entrada do seu dominio já deve existir)
-   
-   f) ns2: nome do nameserver2  (a entrada do seu dominio já deve existir)
-   
-   
- 5) Inicie o teste com o case1, ele irá registrar o domínio (lembre que as entradas do DNS devem existir)
- 
-    
-    Aguarde alguns minutos e verifique se o seu dominio foi corretamente cadastrado no servidor beta.registor.br (teste), utilize 
-    
-    whois -hbeta.registro.br seudominio
-    
-    Caso ele tenha sido corretamente cadastrado, teste o caso 2
-    
-	Acesse http://seudominio/whmcs/admin/systemmodulelog.php e verifique  as saídas do teste.
-    
+The test will perform the removal of the servers in the domain of test registro.br
 
- 6) Caso 2:
- 
- 	Após completar o Caso 1 e ter o dominio registrado sem a ocorrências de tickets, teste o Caso2:
- 	
-	http://seudominio/whmcs/admin/configregistrars.php?case=case2&domain=domain.com.br&debug=1&TESTMODE=1&ns1=dns1.dns.com&ns2=dns2.dns.com
- 	
-	Este teste irá verificar se as funções estão funcionando:
-	
-	
-	a) Requisição e Atribuição de Nameservers do dominio
-	b) Requisição e Atribuição de novos contatos do dominio
-	c) Função de Sincronização com as informações do registro.br
-	d) Função de troca de mensagens com o registro.br
-	
-	Acesse http://seudominio/whmcs/admin/systemmodulelog.php e verifique  as saídas do teste.
-    
-    
-7) Caso 3:
+ Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+ 
+ Check with "whois-hbeta.registro.br yourdomain" and make sure the domain was removed.
+ 
+ 
+ 8) Case 4:
+ 
+ Perform again the case 1 (re-registering the domain) and make sure the data is correct through "whois-hbeta.registro.br yourdomain".
+ 
+ The test will perform the renovation of the field into the test servers registro.br
+ 
+ Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+ 
+ Perform "whois-h beta.registro.br yourdomain" and make sure the domain was actually new (check the field "Expires").
+  
+ 
+ACTIVATION IN PRODUCTION
 
-	Após completar o caso 2, teste o caso 3:
-	
-	O teste irá realizar a remoção do domínio no servidores de teste do registro.br
-	
- 	Acesse http://seudominio/whmcs/admin/systemmodulelog.php e verifique  as saídas do teste.
- 	
- 	Execute:  "whois -hbeta.registro.br seudominio"  e verifique se o dominio foi removido.
- 	
- 	
- 8) Caso 4:
- 
- 	Realize novamente os casos 1 e 2, verifique se os dados estão corretos através do "whois -hbeta.registro.br seudominio".
- 	
- 	O teste irá realizar a renovação do domínio nos servidores de teste do registro.br
- 	
- 	Acesse http://seudominio/whmcs/admin/systemmodulelog.php e verifique  as saídas do teste.
- 	
-  	Execute:  "whois -hbeta.registro.br seudominio"  e verifique se o dominio foi realmente renovado (verifique o campo expires).
-  	
- 9) Caso os testes tenham sido executados com sucesso, desligue o TESTMODE nas configurações do registrobr (verifique acima em CONFIG onde modificar)
- 
- 
- 
- 
- 	
+- Copy the  receveid file .pem  for an area outside of Apache's documents directory
+- In the administration of WHMCS -> Setup -> General Settings -> Domain Registrars -> Registro.br, disable the option TESTMODE, change user and password information for the production and enter the directory where the certificate was copied and the pass-phrase certified
+- Make a test recording without DNS records to verify that a ticket can be generated. Don't configure DNS for domain TO AVOID THE TRANSACTION !
 
- 	
- 	
