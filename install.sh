@@ -29,12 +29,21 @@ fi
 #location of whoisservers.php
 oldlist=$whmcsdir/includes/whoisservers.php
 
-if [ -w $oldlist]
-else
+if [ ! -w $oldlist ]; then
 echo "Couldn't config WHMCS domain availabity, please check $whmcsdir"
 exit 1
 fi
 
+#location of PHP binary
+php=`whereis -b php | cut -f2 -d " "`
+
+
+if [ ! -x $php ]; then
+echo "Couldn't locate PHP binary, please edit install.sh"
+exit 1
+fi
+
+cd ./INSTALL
 
 #replace .br domains with contents of listservers.txt
 list="listservers.txt"
@@ -44,33 +53,31 @@ sed -e "s,$domain,$whmcswebdomain,g" listservers.txt > listserversnew.txt
 mv listserversnew.txt listservers.txt
 
 #remove old .br entries
-awk '!/.br|/' $oldlist > tmplist.php
+awk '!/.br\|/' $oldlist > tmplist.php
 
 #add new .br entries into whoissservers.php
 cat tmplist.php $list > $oldlist
 
 cp Avail.php  brdomaincheck.php $whmcsdir/
-cp -r registrobr  $whmcsdir/modules/registrars/
-mv $whmcsdir/modules/registrars/registrobrpoll.php $whmcscrons
+cp -r ../registrobr  $whmcsdir/modules/registrars/
+mv $whmcsdir/modules/registrars/registrobr/registrobrpoll.php $whmcscrons
 
 #add poll process to crontab
-poll="$whmcscrons/registrobrpoll.php"
+poll="$whmcscrons""registrobrpoll.php"
 crontab -l 2>/dev/null > crontabtmp.txt
 
-grep -q -c "registrobrpoll" crontabtmp.txt
-if [ $? eq 0 ]
-then
-$minute= $(RANDOM%60)
-printf "$minute * * * * $poll" >> crontabtmp.txt
+grep -q "registrobrpoll" crontabtmp.txt
+if [ ! $? -eq 0 ]; then
+	minute=$((RANDOM % 60))
+	printf "$minute * * * * $php -q $poll\n" >> crontabtmp.txt
 fi
 
 #if domain sync is available, add it to crontab as well
-if [ -e "$whmcscrons/domainsync.php"]
-    grep -q -c "domainsync" crontabtmp.txt
-    if [ $? eq 0 ]
-    then
-    $minute= $(RANDOM%60)
-    printf "$minute */4 * * * $whmcscrons/domainsync.php" >> crontabtmp.txt
+if [ -e "$whmcscrons/domainsync.php" ]; then
+    grep -q "domainsync" crontabtmp.txt
+    if [ ! $? -eq 0 ];  then
+    	minute=$((RANDOM % 60))
+    printf "$minute */4 * * * $php -q $whmcscrons""domainsync.php\n" >> crontabtmp.txt
     fi
 fi
 
