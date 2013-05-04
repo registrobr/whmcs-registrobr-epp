@@ -25,26 +25,28 @@ INSTALLATION
 
 1 - Login as root or use sudo or su
 2 - Run the install.sh with the following parameters:
-install.sh <whmcsdir> <crontabfile> <whmcswebdomain>
+install.sh <servername> <docroot> <whmcsdir> <whmcscrons>
 
-If not specified, the default value of whmcsdir default is "/var/www/whmcs" to crontabfile "/var/spool/cron /crontabs/root" and the hostname of the machine to whmcswebdomain.
+If not specified, the default value of <servername> is the hostname of the server, the default <docroot> is "/var/www", default <whmcsdir> is "/var/www/whmcs" 
+and default WHMCS croons directory is "/var/www/whmcs/crons". Note that WHMCS security recommendations are to move crons away from HTTP-accessible directories. 
 
-2 - After the script, the following should occur:
+2 - After running the script, the following should have occured:
 
 a) The files Avail.php brdomaincheck.php and should be in the server's root directory 
 b) The file must have whmcs whoisserver.php of entries. br modified with the content of listservers.txt, pointing to your domain.
 c) ... whmcs/modules/registrars/registrobr/  should be created and contain the distribution files
-d) At the root crontab should contain the following entry:
+d) The root crontab should contain entries similar to:
 
-17 * * * * /dir_whmcs/modules/registrars/registrobr/registrobrpoll.php > /dev/null 2> & 1
+6 * * * * /usr/bin/php -q /home/parcelaf/public_html/whmcs/crons/registrobrpoll.php
+50 */4 * * * /usr/bin/php -q /home/parcelaf/public_html/whmcs/crons/domainsync.php
 
 This entry will be responsible for obtaining any return messages on transactions and registrations.
 
 SETTING
 
-1) In WHMCS's control panel, click on "Setup" => "General Settings".
+1) In WHMCS's control panel top lime, click on "Setup".
 
-2) In the left column, click on "Products / Services" => "Domain Registrars"
+2) Click then on "Products / Services" => "Domain Registrars"
 
 3) Enable Registro.br module and then configure it.
 
@@ -57,8 +59,8 @@ SETTING
 
 7) For the correct processing of the messages return ("Poll"), you need support departments in WHMCS and assign users to them. In the "Sender Username", use a Username that is on your list of administrators ('../Whmcs/admin/configadmins.php') as root, or sign one.
  
-8) Suggest, though not required, keep enable the module log in Utilities -> Log -> Log Module, even for production use, to facilitate the diagnosis of
-problems reported by customers. Thus, it isn't necessary to ask the customer to redo a transaction to be diagnosed with a problem.
+8) It's suggested, although not required, to keep the module log enabled in Utilities -> Log -> Log Module, even for production use, to facilitate the diagnosis of
+problems reported by customers. By doing so, it won't be necessary to ask the customer to redo a transaction for an issue to be diagnosed.
 
 TESTS
 

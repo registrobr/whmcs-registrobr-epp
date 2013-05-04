@@ -1,17 +1,26 @@
 #!/bin/bash
 
-whmcsdir=$1
-whmcscrons=$2
-whmcswebdomain=$3
+fqdn=$1
+docroot=$2
+whmcsdir=$3
+whmcscrons=$4
 
-: ${whmcsdir:="/var/www/whmcs"}
-: ${whmcscrons="/var/www/whmcs/crons"}
-: ${whmcswebdomain:=$(hostname --long)}
+: ${fqdn:=$(hostname --long)}
+: ${docroot:="/var/www"}
+: ${whmcsdir:="$docroot/whmcs"}
+: ${whmcscrons:="$docroot/whmcs/crons"}
+
+
 
 
 
 if [[ $EUID -ne 0 ]]; then
 echo "This script must be run as root" 1>&2
+exit 1
+fi
+
+if [ ! -d "$docroot" ]; then
+echo "Document root directory $docroot doesn't exist"
 exit 1
 fi
 
@@ -24,6 +33,16 @@ if [ ! -d "$whmcscrons" ]; then
 echo "WHMCS crons directory $whmcscrons doesn't exist"
 exit 1
 fi
+
+httpuser=$(ps axho user,comm|grep -E "httpd|apache"|uniq|grep -v "root"|awk 'END {if ($1) print $1}')
+
+if [ ! id -u $httpuser >/dev/null 2>&1]; then
+echo "Couldn't locate HTTP server user id, please edit install.sh"
+exit 1
+fi
+
+
+httpgroup=$(id -Gn $httpuser | cut -f1)
 
 
 #location of whoisservers.php
@@ -48,7 +67,7 @@ cd ./INSTALL
 #replace .br domains with contents of listservers.txt
 list="listservers.txt"
 domain="localhost"
-sed -e "s,$domain,$whmcswebdomain,g" listservers.txt > listserversnew.txt
+sed -e "s,$domain,$fqdn,g" listservers.txt > listserversnew.txt
 
 mv listserversnew.txt listservers.txt
 
@@ -58,9 +77,12 @@ awk '!/.br\|/' $oldlist > tmplist.php
 #add new .br entries into whoissservers.php
 cat tmplist.php $list > $oldlist
 
-cp Avail.php  brdomaincheck.php $whmcsdir/
-cp -r ../registrobr  $whmcsdir/modules/registrars/
-mv $whmcsdir/modules/registrars/registrobr/registrobrpoll.php $whmcscrons
+install -m 640 -o $httpuser -g $httpgroup Avail.php $docroot/
+install -m 640 -o $httpuser -g $httpgroup brdomaincheck.php $docroot/
+install -m 640 -o $httpuser -g $httpgroup ../registrobr -t $whmcsdir/modules/registrars/
+install -m 644 -o root -g root registrobrpoll.php $whmcscrons
+
+
 
 #add poll process to crontab
 poll="$whmcscrons""registrobrpoll.php"

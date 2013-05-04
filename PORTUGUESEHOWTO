@@ -22,16 +22,16 @@ INSTALAÇÃO
 
 1 - Fazer login como root ou utilizar su ou sudo
 2 - Execute o arquivo install.sh com os seguintes parâmetros:
-	install.sh <whmcsdir> <crontabfile> <whmcswebdomain>
+	install.sh <servername> <docroot> <whmcsdir> <whmcscrons>
 
-Se não especificados, o valor default default de whmcsdir é "/var/www/whmcs", o de crontabfile "/var/spool/cron/crontabs/root" e o hostname da máquina para whmcswebdomain.
+Se não especificados, os valores  default são: para <servername>,  o hostname do servidor; para <docroot>, "/var/www" ; para WHMCSdir o subdiretório WHMCS abaixo de <docroot> e para WHMCS crons o subdiretório crons abaixo de <docroot>. Há recomendações de segurança de WHMCS para que o diretório crons seja movido para uma área não acessível via HTTP.  
 
-2 - Após o término do script, deverá ocorrer o seguinte:
+2 - Após o término da execução do script, deverá ter ocorrido o seguinte:
 
 	a) Os arquivos Avail.php e brdomaincheck.php deverão estar no diretorio raiz do servidor
-	b) O arquivo whoisserver.php do whmcs deverá ter as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para seu dominio.
-	c) ...whmcs/modules/registrars/registrobr/  deverá ser criado e conter os arquivos da distribuição
-	d) Na crontab do root deverá constar a seguinte entrada:
+	b) O arquivo whoisserver.php do whmcs deverá ter tido as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para seu dominio.
+	c) ...whmcs/modules/registrars/registrobr/  deverá ter sido criado e conter os arquivos da distribuição
+	d) Na crontab do root deverão constar duas entradas similares a:
 	
 			17 * * * * /diretorio_whmcs/modules/registrars/registrobr/registrobrpoll.php  > /dev/null 2>&1
 
@@ -39,9 +39,9 @@ Se não especificados, o valor default default de whmcsdir é "/var/www/whmcs", 
 
 CONFIGURAÇÃO
 
-1) No painel de controle do WHMCS, clique em "Setup" => "General Settings".
+1) No painel de controle do WHMCS, linha do topo, clique em "Setup" 
 
-2) Na coluna da esquerda, clique em "Products/Services" => "Domain Registrars"
+2) Clique então em "Products/Services" => "Domain Registrars"
 
 3) Ative o módulo do Registro.br e depois em Configure.
 
