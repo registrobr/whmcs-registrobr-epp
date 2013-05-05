@@ -11,7 +11,7 @@ class RegistroEPPTest extends RegistroEPP {
 		
 	}
 	
-	public function testCase($case,$moduleparams, $info, $debug) {
+	public function testCase($moduleparams) {
 		
 		//$cnpj = $this->cnpj();
 		
@@ -45,12 +45,12 @@ class RegistroEPPTest extends RegistroEPP {
 		
 		
 		
-		if($case == 'case1'){
+		if($moduleparams['UnityTesting'] == 'Case1'){
 			//Registra um dominio
 					
 			$this->test($moduleparams,'RegisterDomain', $info, $debug);
 		}
-		elseif($case == 'case2'){
+		elseif($moduleparams['UnityTesting'] == 'Case2'){
 			// Testa tudo e remoção de dominio
 			//Em um dominio existente e com o DNS cadastrado e sem tickets:
 			
@@ -76,7 +76,7 @@ class RegistroEPPTest extends RegistroEPP {
 				
 			$this->test($moduleparams,'DeleteDomain', $info, $debug);
 		}
-		elseif($case == 'case3'){
+		elseif($moduleparams['UnityTesting'] == 'Case3'){
 			//Testa renovação de dominio
 			
 			$res = $this->whois($info['domain']);

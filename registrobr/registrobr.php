@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2012-2013, AllWorldIT and (c) 2013, NIC.br (R)
+# Copyright (c) 2013, NIC.br (R)
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This module is a fork from whmcs-coza-epp (http://devlabs.linuxassist.net/projects/whmcs-coza-epp)
-# whmcs-coza-epp developed by Nigel Kukard (nkukard@lbsd.net)
-
 
 
 # Official Website for whmcs-registrobr-epp
@@ -30,12 +27,6 @@
 # Information for registrars available at http://registro.br/provedor/epp
 
 # NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
-
-
-# WHMCS hosting, theming, module development, payment gateway 
-# integration, customizations and consulting all available from 
-# http://allworldit.com
-
 
 
 # Configuration array
@@ -86,7 +77,7 @@ function registrobr_getConfigArray() {
 	$configarray = array(
 		"Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
 		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
-		"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
+		"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),                         
 		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
 		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
 		"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
@@ -96,6 +87,11 @@ function registrobr_getConfigArray() {
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
         "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),                  
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
+        "UnityTesting" => array ( "Type" => "radio", "Options" => "Normal,Case1,Case2,Case3","Description" => "Use only for code quality testing", "Default" => "Normal"),
+        "UT-Domain" => array( "Type" => "text", "Description" => "Domain name for unity testing"),
+        "UT-NameServer1" => array( "Type" => "text", "Description" => "Domain name server #1 for unity testing"),
+        "UT-NameServer2" => array( "Type" => "text", "Description" => "Domain name server #2 for unity testing"),
+                         
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
         
@@ -105,12 +101,7 @@ function registrobr_getConfigArray() {
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
 	
-	$TESTMODE = 0;
-	///whmcs/admin/configregistrars.php?testtype='RegisterDomain&debug=1&TESTMODE=1'
-	
-	$TESTMODE = $_GET['TESTMODE'];
-	
-	if($moduleparams['TestMode'] == 'on' and $TESTMODE == 1){
+	if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
 
 		//case1 => register a domain
@@ -119,22 +110,13 @@ function registrobr_getConfigArray() {
 		
 		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
 		//If the domain is ok, change testtype to 0 and load the url below again
-
-		//whmcs/admin/configregistrars.php?case=case1&domain=domain.com.br&debug=1&TESTMODE=1&ns1=dns1.dns.com&ns2=dns2.dns.com
-		//case1, case2 or case3
-		$case  			= $_GET['case'];  
-		$debug 			= $_GET['debug'];
-		
-		$info['domain'] = $_GET['domain'];
-		$info['ns1']	= $_GET['ns1'];
-		$info['ns2']	= $_GET['ns2'];
-		
+	
 		require_once('RegistroEPP/RegistroEPPFactory.class.php');
 		
 		$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
 
 		//Register a new domain, with DNS OK
-		$objRegistroEPPTest->testCase($case,$moduleparams,$info,$debug);
+		$objRegistroEPPTest->testCase($moduleparams);
 
 		
 		

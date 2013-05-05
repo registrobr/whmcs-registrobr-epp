@@ -36,7 +36,8 @@ fi
 
 httpuser=$(ps axho user,comm|grep -E "httpd|apache"|uniq|grep -v "root"|awk 'END {if ($1) print $1}')
 
-if [ ! id -u $httpuser >/dev/null 2>&1]; then
+
+if ! id -u $httpuser > "/dev/null"; then
 echo "Couldn't locate HTTP server user id, please edit install.sh"
 exit 1
 fi
