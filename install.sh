@@ -86,7 +86,7 @@ install -m 644 -o root -g root registrobrpoll.php $whmcscrons
 
 
 #add poll process to crontab
-poll="$whmcscrons""registrobrpoll.php"
+poll="$whmcscrons""/registrobrpoll.php"
 crontab -l 2>/dev/null > crontabtmp.txt
 
 grep -q "registrobrpoll" crontabtmp.txt
@@ -100,7 +100,7 @@ if [ -e "$whmcscrons/domainsync.php" ]; then
     grep -q "domainsync" crontabtmp.txt
     if [ ! $? -eq 0 ];  then
     	minute=$((RANDOM % 60))
-    printf "$minute */4 * * * $php -q $whmcscrons""domainsync.php\n" >> crontabtmp.txt
+    printf "$minute */4 * * * $php -q $whmcscrons""/domainsync.php\n" >> crontabtmp.txt
     fi
 fi
 
