@@ -80,7 +80,7 @@ cat tmplist.php $list > $oldlist
 
 install -m 640 -o $httpuser -g $httpgroup Avail.php $docroot/
 install -m 640 -o $httpuser -g $httpgroup brdomaincheck.php $docroot/
-install -m 640 -o $httpuser -g $httpgroup ../registrobr -t $whmcsdir/modules/registrars/
+find ../registrobr -depth -print | cpio -pdu $whmcsdir/modules/registrars/registrobr 2> /dev/null
 install -m 644 -o root -g root registrobrpoll.php $whmcscrons
 
 
