@@ -103,7 +103,6 @@ function registrobr_getConfigArray() {
 	
 	if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
-
 		//case1 => register a domain
 		//case2 => check nameservers,contacts and delete the domain
 		//case3 => check nameservers,contacts and renew the domain
@@ -118,8 +117,6 @@ function registrobr_getConfigArray() {
 		//Register a new domain, with DNS OK
 		$objRegistroEPPTest->testCase($moduleparams);
 
-		
-		
 	}
 	
 

@@ -77,7 +77,7 @@ class RegistroEPPDomain extends RegistroEPP {
 		
 		$coderes = $objParser->get('coderes',$coderes);
 		
-		$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML);
+		#$msg = $this->errorEPP('registererrorcode',$objParser,$requestXML,$responseXML);
 		
 		
 		if ($coderes != '1001') {

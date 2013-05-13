@@ -42,7 +42,9 @@ class RegistroEPPTest extends RegistroEPP {
 		$info['adminphonenumber'] = '3343-3434';
 		$info['fullphonenumber'] = '+55.33433434'; 
 		$info['adminfullphonenumber'] = '+55.33433434';
-		
+		$info['domain'] = $moduleparams['UT-Domain'];
+		$info['ns1'] = $moduleparams['UT-NameServer1'];
+		$info['ns2'] = $moduleparams['UT-NameServer2'];
 		
 		
 		if($moduleparams['UnityTesting'] == 'Case1'){
@@ -72,7 +74,7 @@ class RegistroEPPTest extends RegistroEPP {
 
 			$this->test($moduleparams, 'Sync', $info, $debug);
 			
-			$this->test($moduleparams, 'Poll', $info, $debug);
+			#$this->test($moduleparams, 'Poll', $info, $debug);
 				
 			$this->test($moduleparams,'DeleteDomain', $info, $debug);
 		}
@@ -95,7 +97,7 @@ class RegistroEPPTest extends RegistroEPP {
 			
 			$this->test($moduleparams, 'Sync', $info, $debug);
 				
-			$this->test($moduleparams, 'Poll', $info, $debug);
+			#$this->test($moduleparams, 'Poll', $info, $debug);
 						
 			$this->test($moduleparams, 'RenewDomain', $info, $debug);
 		}
