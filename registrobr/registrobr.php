@@ -343,6 +343,21 @@ function registrobr_RegisterDomain($params){
 
     if (!isCpfValid($RegistrantTaxID)) {
     	$RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
+
+        ##############
+
+        $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
+        $objRegistroEPP->set('domain',$domain);
+        $objRegistroEPP->set('language',$params['Language']);
+
+        try {
+                $objRegistroEPP->login($moduleparams);
+        }
+        catch (Exception $e){
+                $values["error"] = $e->getMessage();
+                return $values;
+        }
+        #############
         
         if (!isCnpjValid($RegistrantTaxID)) {
         	$values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");

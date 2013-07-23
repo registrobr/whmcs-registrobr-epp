@@ -115,6 +115,8 @@ class RegistroEPPTest extends RegistroEPP {
 	
 		$TESTUSER	    = $moduleparams['Username'];
 		$TESTPASSWORD   = $moduleparams['Password'];
+		$CNPJ = $moduleparams['CNPJ'];
+		$CPF = $moduleparams['CPF'];
 	
 		
 		##Checking parameters
@@ -179,8 +181,8 @@ class RegistroEPPTest extends RegistroEPP {
 		$TESTPARAMS = Array
 		(
 				'Certificate' => '',
-				'CNPJ' => 1,
-				'CPF' => 1,
+				'CNPJ' => $CNPJ,
+				'CPF' => $CPF,
 				'FinanceDept' => '1',
 				'Language' => 'Portuguese',
 				'Passphrase' => '',
@@ -348,8 +350,8 @@ class RegistroEPPTest extends RegistroEPP {
 				'nswhois2' => $info['nswhois2'],
 				'original' => $TESTORIGINAL,
 				'Certificate' => '',
-				'CNPJ' => '1',
-				'CPF' => '1',
+				'CNPJ' => $CNPJ,
+				'CPF' => $CPF,
 				'FinanceDept' => '1',
 				'Language' => 'Portuguese',
 				'Passphrase' => '',
@@ -471,8 +473,8 @@ class RegistroEPPTest extends RegistroEPP {
 					),
 				
 					'Certificate' => '',
-					'CNPJ' => '1',
-					'CPF' => '1',
+					'CNPJ' => $CNPJ,
+					'CPF' => $CPF,
 					'FinanceDept' => '1',
 					'Language' => 'English',
 					'Passphrase' => '',
