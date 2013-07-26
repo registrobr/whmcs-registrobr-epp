@@ -14,7 +14,8 @@ function check_domain_availability($fqdn, $parameters) { $client = new AvailClie
 $attrib = array(
 "lang" => 1, # PT (EN = 0)
 "port" => 43,
-"cookie_file" => "/tmp/isavail-cookie.txt", "ip" => "", "suggest" => 0, # No domain suggestions );
+"cookie_file" => "/tmp/isavail-cookie.txt", "ip" => "", "suggest" => 0, # No domain suggestions
+);
           
 $moduleparams = getregistrarconfigoptions('registrobr');
 
