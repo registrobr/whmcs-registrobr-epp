@@ -14,13 +14,10 @@ function check_domain_availability($fqdn, $parameters) { $client = new AvailClie
 $attrib = array(
 "lang" => 1, # PT (EN = 0)
 "port" => 43,
-"cookie_file" => "/tmp/isavail-cookie.txt", "ip" => "", "suggest" => 0, # No domain suggestions
+"cookie_file" => "/tmp/isavail-cookie.txt", "ip" => "", "suggest" => 0, 
+"server" => "registro.br"
 );
-          
-$moduleparams = getregistrarconfigoptions('registrobr');
-
-$attrib["server"] = (isset($moduleparams['TestMode'] ? "beta.registro.br" : "registro.br" );
-
+# replace registro.br with beta.registro.br for beta testing     
 
 $fqdn = $_GET["domain"];;
 $domain_info = check_domain_availability($fqdn, $attrib);
