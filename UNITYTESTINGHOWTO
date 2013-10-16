@@ -1,0 +1,66 @@
+TESTS
+
+Testing code still have known issues; we advise caution. In order to use Unity Testing, please remove comment marks from lines 90 to 93 and 104 to 120 of file
+registrobr/registrobr.php and follow the steps below:
+
+1) Enable the module in Utilities Logs -> Log -> Log Module
+2) Confirm that the option is enabled in TestMode "Domain Registrars"
+3) On your DNS server, create an entry for a domain that does not yet exist.
+4) Set up your test replacing "yourdomain" with the domain where you had installed the WHMCS
+
+   
+
+   The parameters:
+   a) case: options => 'case1', 'case2', 'case3', 'case4'
+   b) domain: the domain to be registered, eg example.com.br
+   c) debug: will present test results on the screen for more detailed results you should see "Log Module" debug.
+   d) TESTMODE: 0 or 1
+   e) ns1: name NAMESERVER1 (input your domain must already exist)
+   f) ns2: name NAMESERVER2 (input your domain must already exist)
+   
+ 5) Start the test by 'case1' option, the domain will be register  (remember that DNS entries must exist)
+    
+    Wait a few minutes (no less than 15 minutes) and verify if the  domain was registered correctly on the server beta.registor.br (test) using:
+    
+    whois-h beta.registro.br example.com.br
+
+    Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test. If it was properly registered, go to case2.
+    
+    
+ 6) Case 2:
+ 
+ After completing the Case 1 and have the domain registered without the occurrence of tickets, test Case2:
+ 
+ 
+This test will verify that these functions are working:
+
+a) Request and Assignment of Domain's Nameservers
+b) Request and Assignment of Domain's contacts.
+c) Role of Synchronization with the information registro.br
+d) Role of exchanging messages with registro.br
+
+Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+    
+    
+7) Case 3:
+
+After completing the second case, test case 3:
+
+The test will perform the removal of the servers in the domain of test registro.br
+
+ Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+ 
+ Check with "whois-hbeta.registro.br yourdomain" and make sure the domain was removed.
+ 
+ 
+ 8) Case 4:
+ 
+ Perform again the case 1 (re-registering the domain) and make sure the data is correct through "whois-hbeta.registro.br yourdomain".
+ 
+ The test will perform the renovation of the field into the test servers registro.br
+ 
+ Log http://yourdomain/whmcs/admin/systemmodulelog.php and check the outputs of the test.
+ 
+ Perform "whois-h beta.registro.br yourdomain" and make sure the domain was actually new (check the field "Expires").
+  
+ 

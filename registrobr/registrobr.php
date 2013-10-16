@@ -87,10 +87,10 @@ function registrobr_getConfigArray() {
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
         "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),                  
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
-        "UnityTesting" => array ( "Type" => "radio", "Options" => "Normal,Case1,Case2,Case3","Description" => "Use only for code quality testing", "Default" => "Normal"),
-        "UT-Domain" => array( "Type" => "text", "Description" => "Domain name for unity testing"),
-        "UT-NameServer1" => array( "Type" => "text", "Description" => "Domain name server #1 for unity testing"),
-        "UT-NameServer2" => array( "Type" => "text", "Description" => "Domain name server #2 for unity testing"),
+                         #"UnityTesting" => array ( "Type" => "radio", "Options" => "Normal,Case1,Case2,Case3","Description" => "Use only for code quality testing", "Default" => "Normal"),
+                         #"UT-Domain" => array( "Type" => "text", "Description" => "Domain name for unity testing"),
+                         #"UT-NameServer1" => array( "Type" => "text", "Description" => "Domain name server #1 for unity testing"),
+                         #"UT-NameServer2" => array( "Type" => "text", "Description" => "Domain name server #2 for unity testing"),
                          
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
@@ -101,7 +101,7 @@ function registrobr_getConfigArray() {
 	$moduleparams = getregistrarconfigoptions('registrobr');
 	
 	
-	if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
+	#if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
 		//case1 => register a domain
 		//case2 => check nameservers,contacts and delete the domain
@@ -110,14 +110,14 @@ function registrobr_getConfigArray() {
 		//Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
 		//If the domain is ok, change testtype to 0 and load the url below again
 	
-		require_once('RegistroEPP/RegistroEPPFactory.class.php');
+	#	require_once('RegistroEPP/RegistroEPPFactory.class.php');
 		
-		$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
+	#	$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
 
-		//Register a new domain, with DNS OK
-		$objRegistroEPPTest->testCase($moduleparams);
+	#	//Register a new domain, with DNS OK
+	#	$objRegistroEPPTest->testCase($moduleparams);
 
-	}
+	#}
 	
 
     return $configarray;
