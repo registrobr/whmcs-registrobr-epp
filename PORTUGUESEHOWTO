@@ -1,0 +1,77 @@
+
+Para informações não contidas neste texto por favor verifique https://github.com/registrobr/whmcs-registrobr-epp/.
+
+Suporte comunitário em língua portuguesa pode ser obtido em um destes fóruns:
+- https://eng.registro.br/mailman/listinfo/eppnicbr
+- http://www.webhostingtalk.com.br/
+- http://portaldohost.com.br/forum/
+
+REQUISITOS
+
+- WHMCS versão 4.x ou superior (sincronismo requer versão 5.1 ou superior)
+- Todos as dependências do WHMCS tais como Apache, MySQL etc.
+- Ambiente POSIX (Linux, FreeBSD e demais atendem este requisito)
+- PHP versão 5.1 ou superior
+- Suporte a SSL 
+- Suporte a sockets (em função deste requisito e de segurança do certificado SSL ambiente não compartilhado é recomendado)
+- Permissão de firewall para portas UDP 43 e TCP 700 nos servidores beta.registro.br, registro.br e epp.registro.br
+- Data correta no servidor (NTP recomendado mas não obrigatório)
+- Permissão de super-usuário (root)
+
+INSTALAÇÃO
+
+1 - Fazer login como root ou utilizar su ou sudo
+2 - Execute o arquivo install.sh com os seguintes parâmetros:
+	install.sh <servername> <docroot> <whmcsdir> <whmcscrons>
+
+Se não especificados, os valores  default são: para <servername>,  o hostname do servidor; para <docroot>, "/var/www" ; para WHMCSdir o subdiretório WHMCS abaixo de <docroot> e para WHMCS crons o subdiretório crons abaixo de <docroot>. Há recomendações de segurança de WHMCS para que o diretório crons seja movido para uma área não acessível via HTTP.  
+
+2 - Após o término da execução do script, deverá ter ocorrido o seguinte:
+
+	a) Os arquivos Avail.php e brdomaincheck.php deverão estar no diretorio raiz do servidor
+	b) O arquivo whoisserver.php do whmcs deverá ter tido as entradas .br modificadas com a que estão no arquivo listservers.txt, apontando para seu dominio.
+	c) ...whmcs/modules/registrars/registrobr/  deverá ter sido criado e conter os arquivos da distribuição
+	d) Na crontab do root deverão constar duas entradas similares a:
+	
+			17 * * * * /diretorio_whmcs/modules/registrars/registrobr/registrobrpoll.php  > /dev/null 2>&1
+
+	Esta entrada será responsável pela obtenção das mensagens de retorno sobre as transações e domínios registrados.
+
+CONFIGURAÇÃO
+
+1) No painel de controle do WHMCS, linha do topo, clique em "Setup" 
+
+2) Clique então em "Products/Services" => "Domain Registrars"
+
+3) Ative o módulo do Registro.br e depois em Configure.
+
+4) Preencha os seus dados de autenticação. Notar que Username se trata do número do provedor EPP (ex: 001) e não do ID do provedor (ex: FAN). 
+   Por enquanto deixa a opção TestMode ativada. O certificado para utilização da beta.registro.br já vem como parte da distribuição do módulo. 
+
+5) CPF e CNPJ são as indicações de quais campos do banco de dados de clientes estão sendo usados para armazenar essas informações. Eles podem ser o mesmo campo ou campos diferentes. 
+
+6) O preenchimento de TechC é opcional; sem ele os domínios são criados com contato técnico igual ao registrante. 
+
+7)  Para o correto processamento das mensagens de retorno("Poll") é necessário configurar departamentos de suporte no WHMCS e atribuir usuários a eles. Na opção "Sender Username", utilize um Username que esteja em sua lista de administradores ('../whmcs/admin/configadmins.php'), tal como root, ou cadastre um. 
+ 
+8) Sugerimos, apesar de não obrigatório, que seja habilitado o módulo de log em Utilities -> Log -> Module Log mesmo para uso em produção, para facilitar o diagnóstico de
+problemas reportados por clientes. Assim, não será necessário solicitar ao cliente que refaça uma transação para que seja diagnosticado um problema.
+
+Para testes de software verificar mais detalhes no arquivo TESTES
+
+ 
+ATIVAÇÃO EM PRODUÇÃO
+
+- Copie o arquivo .pem recebido para uma área fora do diretório de documentos do Apache 
+- Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars -> Registro.br, desabilitar a opção TESTMODE, mudar usuário e senha para as informação de produção  e informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
+- Faça um registro teste sem cadastro de DNS para verificar que um ticket consegue ser gerado; não configure DNS para esse domínio para evitar cobrança dessa transação. 
+
+ 
+
+ 
+ 
+ 
+ 	
+
+ 	
+ 	

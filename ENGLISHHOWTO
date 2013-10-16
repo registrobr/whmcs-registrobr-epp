@@ -1,0 +1,74 @@
+Copy the modules tree from the distribution files to the WHMCS folder. 
+See CONFIG for configuration instructions.
+
+Please see https://github.com/registrobr/whmcs-registrobr-epp/ for further information.
+
+Portuguese language support from the community might be obtained at one of these forums:
+- https://eng.registro.br/mailman/listinfo/eppnicbr
+- http://www.webhostingtalk.com.br/
+- http://portaldohost.com.br/forum/
+
+
+DETAILS
+
+- WHMCS version 4.x or higher (sync requires version 5.1 or higher)
+- All WHMCS's dependencies WHMCS such as Apache, MySQL etc..
+- POSIX Enviroment (Linux, FreeBSD and other meet this requirement)
+- PHP version 5.1 or higher
+- SSL Support
+- Support for sockets (according to this requirement and the security environment not shared SSL certificate is recommended)
+- Permission to firewall UDP ports 43 and 700 on TCP servers beta.registro.br, and registro.br epp.registro.br
+- Correct time on server (NTP recommended but not required)
+- Superuser access (root)
+
+INSTALLATION
+
+1 - Login as root or use sudo or su
+2 - Run the install.sh with the following parameters:
+install.sh <servername> <docroot> <whmcsdir> <whmcscrons>
+
+If not specified, the default value of <servername> is the hostname of the server, the default <docroot> is "/var/www", default <whmcsdir> is "/var/www/whmcs" 
+and default WHMCS croons directory is "/var/www/whmcs/crons". Note that WHMCS security recommendations are to move crons away from HTTP-accessible directories. 
+
+2 - After running the script, the following should have occured:
+
+a) The files Avail.php brdomaincheck.php and should be in the server's root directory 
+b) The file must have whmcs whoisserver.php of entries. br modified with the content of listservers.txt, pointing to your domain.
+c) ... whmcs/modules/registrars/registrobr/  should be created and contain the distribution files
+d) The root crontab should contain entries similar to:
+
+6 * * * * /usr/bin/php -q /home/parcelaf/public_html/whmcs/crons/registrobrpoll.php
+50 */4 * * * /usr/bin/php -q /home/parcelaf/public_html/whmcs/crons/domainsync.php
+
+This entry will be responsible for obtaining any return messages on transactions and registrations.
+
+SETTING
+
+1) In WHMCS's control panel top lime, click on "Setup".
+
+2) Click then on "Products / Services" => "Domain Registrars"
+
+3) Enable Registro.br module and then configure it.
+
+4) Fill the blanks with your data authentication. Username is the number of EPP provider (ex: 001) and not the ID provider (eg ANF).
+   For now, leaves the TestMode option enabled. The certificate for use of beta.registro.br comes as part of the distribution module.
+
+5) CPF and CNPJ are the indications of which fields from the database of clients are being used to store this information. They may be the same field or different fields.
+
+6) Filling TechC is optional; without it domains are created with registrant being the technical contact.
+
+7) For the correct processing of the messages return ("Poll"), you need support departments in WHMCS and assign users to them. In the "Sender Username", use a Username that is on your list of administrators ('../Whmcs/admin/configadmins.php') as root, or sign one.
+ 
+8) It's suggested, although not required, to keep the module log enabled in Utilities -> Log -> Log Module, even for production use, to facilitate the diagnosis of
+problems reported by customers. By doing so, it won't be necessary to ask the customer to redo a transaction for an issue to be diagnosed.
+
+For code quality tests, please see file UNITYTESTINGHOWTO.
+
+ 
+ 
+ACTIVATION IN PRODUCTION
+
+- Copy the  receveid file .pem  for an area outside of Apache's documents directory
+- In the administration of WHMCS -> Setup -> General Settings -> Domain Registrars -> Registro.br, disable the option TESTMODE, change user and password information for the production and enter the directory where the certificate was copied and the pass-phrase certified
+- Make a test recording without DNS records to verify that a ticket can be generated. Don't configure DNS for domain TO AVOID THE TRANSACTION !
+
