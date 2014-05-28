@@ -358,14 +358,17 @@ function registrobr_RegisterDomain($params){
                 return $values;
         }
         #############
-        
+    
+        $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
+ 
         if (!isCnpjValid($RegistrantTaxID)) {
         	$values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
             logModuleCall("registrobr",$values["error"],$params);
 			return $values;
 		}
     }
-  
+ 
+
     $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
     if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
 		$RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2);
