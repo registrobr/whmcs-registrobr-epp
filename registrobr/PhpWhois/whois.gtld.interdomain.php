@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__INTERDOMAIN_HANDLER__'))
-	define('__INTERDOMAIN_HANDLER__', 1);
+    define('__INTERDOMAIN_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class interdomain_handler
-	{
-	function parse($data_str, $query)
-		{
-		$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                     'Domain Name................' => 'domain.name',
                     'Creation Date............' => 'domain.created',
                     'Expiry Date..............' => 'domain.expires',
@@ -72,9 +72,9 @@ class interdomain_handler
                     'Technical Phone..........' => 'tech.phone',
                     'Technical e-mail.........' => 'tech.email',
                     'Technical Fax............' => 'tech.fax'
-		              );
+                      );
 
-		return generic_parser_b($data_str, $items, 'dmy');
-		}
-	}
+        return generic_parser_b($data_str, $items, 'dmy');
+        }
+    }
 ?>

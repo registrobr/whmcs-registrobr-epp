@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__DREAMHOST_HANDLER__'))
-	define('__DREAMHOST_HANDLER__', 1);
+    define('__DREAMHOST_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class dreamhost_handler
-	{
-	function parse($data_str, $query)
-		{
-		$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                   'owner' => 'Registrant Contact:',
                   'admin' => 'Administrative Contact:',
                   'tech' => 'Technical Contact:',
@@ -43,12 +43,12 @@ class dreamhost_handler
                   'domain.nserver' => 'Domain servers in listed order:',
                   'domain.created' => 'Record created on',
                   'domain.expires' => 'Record expires on'
-		              );
+                      );
 
-		$r = easy_parser($data_str, $items, 'dmy', false, false, true);
-		if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
-		$r['domain']['sponsor'] = $r['domain']['sponsor'][0];
-		return $r;
-		}
-	}
+        $r = easy_parser($data_str, $items, 'dmy', false, false, true);
+        if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
+        $r['domain']['sponsor'] = $r['domain']['sponsor'][0];
+        return $r;
+        }
+    }
 ?>
