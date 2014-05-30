@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__SU_HANDLER__'))
-	define('__SU_HANDLER__', 1);
+####define('__SU_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class su_handler
-	{
-	function parse($data_str, $query)
-		{
-		$items = array(
+####{
+####function parse($data_str, $query)
+########{
+########$items = array(
                   'domain:' => 'domain.name',
                   'state:' => 'domain.status',
                   'person:' => 'owner.name',
@@ -49,15 +49,15 @@ class su_handler
                   'org:' => 'owner.organization',
                   'fax-no:' => 'owner.fax',
 */
-		              );
+########              );
 
-		$r['regrinfo'] = generic_parser_b($data_str['rawdata'], $items, 'dmy');
+########$r['regrinfo'] = generic_parser_b($data_str['rawdata'], $items, 'dmy');
 
-		$r['regyinfo'] = array(
+########$r['regyinfo'] = array(
                             'referrer' => 'http://www.ripn.net',
                             'registrar' => 'RUCENTER-REG-RIPN'
                           );
-		return $r;
-		}
-	}
+########return $r;
+########}
+####}
 ?>

@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__SC_HANDLER__'))
-	define('__SC_HANDLER__', 1);
+####define('__SC_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class sc_handler
-	{
-	function parse($data_str, $query)
-		{
-		$r['regrinfo'] = generic_parser_b($data_str['rawdata'], false, 'dmy');
-		$r['regyinfo'] = array(
+####{
+####function parse($data_str, $query)
+########{
+########$r['regrinfo'] = generic_parser_b($data_str['rawdata'], false, 'dmy');
+########$r['regyinfo'] = array(
                   'referrer' => 'http://www.nic.sc',
                   'registrar' => 'VCS (Pty) Limited'
                   );
-		return $r;
-		}
-	}
+########return $r;
+########}
+####}
 ?>

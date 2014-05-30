@@ -26,38 +26,38 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__AU_HANDLER__'))
-	define('__AU_HANDLER__', 1);
+####define('__AU_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class au_handler
-	{
-	function parse($data_str, $query)
-		{
+####{
+####function parse($data_str, $query)
+########{
 
-		$items = array(
-                    'Domain Name:'		=> 'domain.name',
-                    'Last Modified:'	=> 'domain.changed',
-                    'Registrar Name:'	=> 'domain.sponsor',
-                    'Status:'			=> 'domain.status',
-                    'Domain ROID:'		=> 'domain.handle',
-                    'Registrant:'		=> 'owner.organization',
-                    'Registrant Contact ID:'	=> 'owner.handle',
+########$items = array(
+                    'Domain Name:'########=> 'domain.name',
+                    'Last Modified:'####=> 'domain.changed',
+                    'Registrar Name:'####=> 'domain.sponsor',
+                    'Status:'############=> 'domain.status',
+                    'Domain ROID:'########=> 'domain.handle',
+                    'Registrant:'########=> 'owner.organization',
+                    'Registrant Contact ID:'####=> 'owner.handle',
                     'Registrant Contact Email:' => 'owner.email',
                     'Registrant Contact Name:' => 'owner.name',
-                    'Tech Contact Name:'		=> 'tech.name',
-                    'Tech Contact Email:'		=> 'tech.email',
-                    'Tech Contact ID:'			=> 'tech.handle',
-                    'Name Server:'		=> 'domain.nserver.'
-		              );
+                    'Tech Contact Name:'########=> 'tech.name',
+                    'Tech Contact Email:'########=> 'tech.email',
+                    'Tech Contact ID:'############=> 'tech.handle',
+                    'Name Server:'########=> 'domain.nserver.'
+########              );
 
-		$r['regrinfo'] = generic_parser_b($data_str['rawdata'], $items);
-		$r['regyinfo'] = array(
+########$r['regrinfo'] = generic_parser_b($data_str['rawdata'], $items);
+########$r['regyinfo'] = array(
                     'referrer' => 'http://www.aunic.net',
                     'registrar' => 'AU-NIC'
                     );
-		return $r;
-		}
-	}
+########return $r;
+########}
+####}
 
 ?>

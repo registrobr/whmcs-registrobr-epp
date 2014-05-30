@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__ASCIO_HANDLER__'))
-	define('__ASCIO_HANDLER__', 1);
+####define('__ASCIO_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class ascio_handler
-	{
-	function parse($data_str, $query)
-		{
-		$items = array(
+####{
+####function parse($data_str, $query)
+########{
+########$items = array(
                 'owner' => 'Registrant:',
                 'admin' => 'Administrative ',
                 'tech' => 'Technical ',
@@ -43,9 +43,9 @@ class ascio_handler
                 'domain.created' => 'Record created:',
                 'domain.expires' => 'Record expires:',
                 'domain.changed' => 'Record last updated:'
-		            );
+########            );
 
-		return easy_parser($data_str, $items, 'ymd',false,false,true);
-		}
-	}
+########return easy_parser($data_str, $items, 'ymd',false,false,true);
+########}
+####}
 ?>

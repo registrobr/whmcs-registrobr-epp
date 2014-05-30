@@ -26,22 +26,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__ORG_HANDLER__'))
-	define('__ORG_HANDLER__', 1);
+####define('__ORG_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class org_handler
-	{
-	function parse($data_str, $query)
-		{
-		$r['regrinfo'] = generic_parser_b($data_str['rawdata']);
+####{
+####function parse($data_str, $query)
+########{
+########$r['regrinfo'] = generic_parser_b($data_str['rawdata']);
 
-		if (!strncmp($data_str['rawdata'][0], 'WHOIS LIMIT EXCEEDED', 20))
-			$r['regrinfo']['registered'] = 'unknown';
+########if (!strncmp($data_str['rawdata'][0], 'WHOIS LIMIT EXCEEDED', 20))
+############$r['regrinfo']['registered'] = 'unknown';
 
-		$r['regyinfo']['referrer'] = 'http://www.pir.org/';
-		$r['regyinfo']['registrar'] = 'Public Interest Registry';
-		return $r;
-		}
-	}
+########$r['regyinfo']['referrer'] = 'http://www.pir.org/';
+########$r['regyinfo']['registrar'] = 'Public Interest Registry';
+########return $r;
+########}
+####}
 ?>
