@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__DOTSTER_HANDLER__'))
-    define('__DOTSTER_HANDLER__', 1);
+	define('__DOTSTER_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class dotster_handler
-    {
-    function parse($data_str, $query)
-        {
-        $items = array(
+	{
+	function parse($data_str, $query)
+		{
+		$items = array(
                   'owner' => 'Registrant:',
                   'admin' => 'Administrative',
                   'tech' => 'Technical',
@@ -45,9 +45,9 @@ class dotster_handler
                   'domain.expires' => 'Expires on:',
                   'domain.changed' => 'Last Updated on:',
                   'domain.sponsor' => 'Registrar:'
-                      );
+		              );
 
-        return easy_parser($data_str, $items, 'dmy');
-        }
-    }
+		return easy_parser($data_str, $items, 'dmy');
+		}
+	}
 ?>

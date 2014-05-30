@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__IANA_HANDLER__'))
-    define('__IANA_HANDLER__', 1);
+	define('__IANA_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class iana_handler
-    {
-    function parse($data_str, $query)
-        {
-        $items = array(
+	{
+	function parse($data_str, $query)
+		{
+		$items = array(
                   'admin' => 'contact:      administrative',
                   'tech' => 'contact:      technical',
                   'domain.nserver.' => 'nserver:',
@@ -43,9 +43,9 @@ class iana_handler
                   'domain.source' => 'source:',
                   'domain.name' => 'domain:',
                   'disclaimer.' => '% '
-                      );
+		              );
 
-        return easy_parser($data_str,$items,'Ymd',false,false,false,'owner');
-        }
-    }
+		return easy_parser($data_str,$items,'Ymd',false,false,false,'owner');
+		}
+	}
 ?>

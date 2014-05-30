@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__INFO_HANDLER__'))
-    define('__INFO_HANDLER__', 1);
+	define('__INFO_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class info_handler
-    {
-    function parse($data_str, $query)
-        {
-        $r['regrinfo'] = generic_parser_b($data_str['rawdata']);
-        $r['regyinfo'] = array(
+	{
+	function parse($data_str, $query)
+		{
+		$r['regrinfo'] = generic_parser_b($data_str['rawdata']);
+		$r['regyinfo'] = array(
                           'referrer' => 'http://whois.afilias.info',
                           'registrar' => 'Afilias Global Registry Services'
                           );
-        return $r;
-        }
-    }
+		return $r;
+		}
+	}
 ?>

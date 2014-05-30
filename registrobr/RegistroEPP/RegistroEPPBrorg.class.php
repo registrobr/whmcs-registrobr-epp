@@ -3,50 +3,50 @@
 require_once("RegistroEPP.class.php");
 
 class RegistroEPPBrorg extends RegistroEPP {
-    
-    protected $name;
-    protected $contactID;
-    protected $contactIDDigits;
-    protected $street1;
-    protected $street2;
-    protected $street3;
-    protected $city;
-    protected $sp;
-    protected $pc;
-    protected $cc;
-    protected $voice;
-    protected $email;
-    protected $idt;
-    protected $coderes;
-    
+	
+	protected $name;
+	protected $contactID;
+	protected $contactIDDigits;
+	protected $street1;
+	protected $street2;
+	protected $street3;
+	protected $city;
+	protected $sp;
+	protected $pc;
+	protected $cc;
+	protected $voice;
+	protected $email;
+	protected $idt;
+	protected $coderes;
+	
 
 
-    public function getInfo($ignore = false){
-        require_once('ParserResponse/ParserResponse.class.php');
+	public function getInfo($ignore = false){
+		require_once('ParserResponse/ParserResponse.class.php');
 
-        $client = $this->get('netClient');
-        if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
-        }
-        $requestXML = $this->_getXMLinfo();
-        $responseXML = $client->request($requestXML);
-        $objParser = New ParserResponse();
-        $objParser->parseBRorgInfo($responseXML); // must be change to OO aproach
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+		$requestXML = $this->_getXMLinfo();
+		$responseXML = $client->request($requestXML);
+		$objParser = New ParserResponse();
+		$objParser->parseBRorgInfo($responseXML); // must be change to OO aproach
 
-        
-        $coderes = $objParser->get('coderes');
+		
+		$coderes = $objParser->get('coderes');
 
-        $this->set('coderes',$coderes);
-        
-        if($coderes == '2303' and $ignore){
-            return;
-        }
-        elseif($coderes != '1000') {
-            $msg = $this->errorEPP('getcontactorginfoerrorcode',$objParser,$requestXML,$responseXML);
-            throw new Exception($msg);
-        }
-        
-        $this->set('clID',$objParser->get('clID'));
+		$this->set('coderes',$coderes);
+		
+		if($coderes == '2303' and $ignore){
+			return;
+		}
+		elseif($coderes != '1000') {
+			$msg = $this->errorEPP('getcontactorginfoerrorcode',$objParser,$requestXML,$responseXML);
+			throw new Exception($msg);
+		}
+		
+		$this->set('clID',$objParser->get('clID'));
         $this->set('coderes',$objParser->get('coderes'));
         $this->set('contact',$objParser->get('contact'));
         $this->set('name',$objParser->get('name'));
@@ -63,233 +63,233 @@ class RegistroEPPBrorg extends RegistroEPP {
         $this->set('voice',$objParser->get('voice'));
         $this->set('email',$objParser->get('email'));
 
-    }
-    public function createData(){
-        require_once('ParserResponse/ParserResponse.class.php');
-        
-        $client = $this->get('netClient');
-        if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
-        }
-        $requestXML = $this->_createXML();
-        
-        $responseXML = $client->request($requestXML);
-        $objParser = New ParserResponse();
-        $objParser->parse($responseXML); 
-                
-        $coderes = $objParser->get('coderes');
-        $id = $objParser->get('id');
-        
-        $this->set('id',$id);
-        $this->set('coderes',$coderes);
-        
-        //$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
-        
-        if($coderes != '1000') {
-            $msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
-            throw new Exception($msg);
-        }
-    }
+	}
+	public function createData(){
+		require_once('ParserResponse/ParserResponse.class.php');
+		
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+		$requestXML = $this->_createXML();
+		
+		$responseXML = $client->request($requestXML);
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML); 
+				
+		$coderes = $objParser->get('coderes');
+		$id = $objParser->get('id');
+		
+		$this->set('id',$id);
+		$this->set('coderes',$coderes);
+		
+		//$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
+		
+		if($coderes != '1000') {
+			$msg = $this->errorEPP('savecontacttypeerrorcode',$objParser,$requestXML,$responseXML);
+			throw new Exception($msg);
+		}
+	}
 
-    public function createOrgData(){
-        require_once('ParserResponse/ParserResponse.class.php');
-    
-        $client = $this->get('netClient');
-        if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
-        }
-        $requestXML = $this->_createXMLOrg();
-        
+	public function createOrgData(){
+		require_once('ParserResponse/ParserResponse.class.php');
+	
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
+		$requestXML = $this->_createXMLOrg();
+		
 
-        $responseXML = $client->request($requestXML);
-        $objParser = New ParserResponse();
-        $objParser->parse($responseXML);
-    
-        $coderes = $objParser->get('coderes');
-        $id = $objParser->get('id');
-    
-        $this->set('id',$id);
-        $this->set('coderes',$coderes);
-    
-        if($coderes != '1001') {
-            $msg = $this->errorEPP('registercreateorgcontacterrorcode',$objParser,$requestXML,$responseXML);
-            throw new Exception($msg);
-        }
-    }
-    
-    public function updateInfo($OldContacts,$NewContacts){
-        require_once('ParserResponse/ParserResponse.class.php');
-    
-        $client = $this->get('netClient');
-        if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
-        }
+		$responseXML = $client->request($requestXML);
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+	
+		$coderes = $objParser->get('coderes');
+		$id = $objParser->get('id');
+	
+		$this->set('id',$id);
+		$this->set('coderes',$coderes);
+	
+		if($coderes != '1001') {
+			$msg = $this->errorEPP('registercreateorgcontacterrorcode',$objParser,$requestXML,$responseXML);
+			throw new Exception($msg);
+		}
+	}
+	
+	public function updateInfo($OldContacts,$NewContacts){
+		require_once('ParserResponse/ParserResponse.class.php');
+	
+		$client = $this->get('netClient');
+		if(empty($client)){
+			throw new Exception('net Client is not setted, check login before');
+		}
 
-        if(empty($OldContacts) || empty($NewContacts)){
-            throw new Exception('OldContacts and NewContacts params are required');
-        }
-        
-        $requestXML = $this->_updateXMLinfo($OldContacts,$NewContacts);
-        $responseXML = $client->request($requestXML);
-        $objParser = New ParserResponse();
-        $objParser->parse($responseXML);
-    
-        $coderes = $objParser->get('coderes');
-        $id = $objParser->get('id');
-    
-        $this->set('id',$id);
-        $this->set('coderes',$coderes);
-    
-        if($coderes != '1000') {
-            $msg = $this->errorEPP('savecontactorgupdateeerrorcode',$objParser,$requestXML,$responseXML);
-            throw new Exception($msg);
-        }
-    }
-    
-    
-    
-    private function _updateXMLinfo($OldContacts,$NewContacts){
-        
-        $contactID = $this->get('contactID');
-        $contactIDDigits = $this->get('contactIDDigits');
-        
-        
-        if(!$contactID){
-            throw new Exception('contactID is not set');
-        }
+		if(empty($OldContacts) || empty($NewContacts)){
+			throw new Exception('OldContacts and NewContacts params are required');
+		}
+		
+		$requestXML = $this->_updateXMLinfo($OldContacts,$NewContacts);
+		$responseXML = $client->request($requestXML);
+		$objParser = New ParserResponse();
+		$objParser->parse($responseXML);
+	
+		$coderes = $objParser->get('coderes');
+		$id = $objParser->get('id');
+	
+		$this->set('id',$id);
+		$this->set('coderes',$coderes);
+	
+		if($coderes != '1000') {
+			$msg = $this->errorEPP('savecontactorgupdateeerrorcode',$objParser,$requestXML,$responseXML);
+			throw new Exception($msg);
+		}
+	}
+	
+	
+	
+	private function _updateXMLinfo($OldContacts,$NewContacts){
+		
+		$contactID = $this->get('contactID');
+		$contactIDDigits = $this->get('contactIDDigits');
+		
+		
+		if(!$contactID){
+			throw new Exception('contactID is not set');
+		}
 
-        $name    = $this->get('name');
-        $street1 = $this->get('street1');
-        $street2 = $this->get('street2');
-        $street3 = $this->get('street3');
-        $city = $this->get('city');
-        $sp = $this->get('sp');
-        $pc = $this->get('pc');
-        $cc = $this->get('cc');
-        $voice = $this->get('voice');
-        $email = $this->get('email');
-        $responsible = $this->get('responsible');
-        
-        $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-        <command>
-            <update>
-                <contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
-                <contact:id>'.$contactIDDigits.'</contact:id>
-                <contact:chg>
-                    <contact:postalInfo type="loc">
-                        <contact:name>'.$name.'</contact:name>
-                        <contact:addr>';
+		$name 	 = $this->get('name');
+		$street1 = $this->get('street1');
+		$street2 = $this->get('street2');
+		$street3 = $this->get('street3');
+		$city = $this->get('city');
+		$sp = $this->get('sp');
+		$pc = $this->get('pc');
+		$cc = $this->get('cc');
+		$voice = $this->get('voice');
+		$email = $this->get('email');
+		$responsible = $this->get('responsible');
+		
+		$request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+		<command>
+			<update>
+				<contact:update xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
+				<contact:id>'.$contactIDDigits.'</contact:id>
+				<contact:chg>
+					<contact:postalInfo type="loc">
+				    	<contact:name>'.$name.'</contact:name>
+				    	<contact:addr>';
 if(!empty($street1)) $request.= "<contact:street>$street1</contact:street>";
 if(!empty($street2)) $request.= "<contact:street>$street2</contact:street>";
 if(!empty($street3)) $request.= "<contact:street>$street3</contact:street>";
-                        $request.='
-                        <contact:city>'.$city.'</contact:city>
-                        <contact:sp>'.$sp.'</contact:sp>
-                        <contact:pc>'.$pc.'</contact:pc>
-                        <contact:cc>'.$cc.'</contact:cc>
-                        </contact:addr>
-                    </contact:postalInfo>
-                    <contact:voice>'.$voice.'</contact:voice>
-                    <contact:email>'.$email.'</contact:email>
-                </contact:chg>
-                </contact:update>
-            </update>
-            <extension>
-                <brorg:update xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
-                    <brorg:organization>'.$contactID.'</brorg:organization>
-                    <brorg:add>
-                        <brorg:contact type="admin">'.$NewContacts["Registrant"].'</brorg:contact>
-                    </brorg:add>
-                    <brorg:rem>
-                        <brorg:contact type="admin">'.$OldContacts["Registrant"].'</brorg:contact>
-                    </brorg:rem>
-                    <brorg:chg>
-                        <brorg:responsible>'.$responsible.'</brorg:responsible>
-                    </brorg:chg>
-                </brorg:update>
-            </extension>
-            <clTRID>'.mt_rand().mt_rand().'</clTRID>
-            </command>
-            </epp>';
-                        
-        
-        return $request;        
-        
-    }
-    #terminar esse metodo
-    private function _createXMLOrg(){
-        
-        $contactID = $this->get('contactID');
-        $contactIDDigits = $this->get('contactIDDigits');
-        
-        
-        if(!$contactID){
-            throw new Exception('contactID is not set');
-        }
-        
-        $name           = $this->get('name');
-        $street1        = $this->get('street1');
-        $street2        = $this->get('street2');
-        $street3        = $this->get('street3');
-        $city           = $this->get('city');
-        $sp             = $this->get('sp');
-        $pc             = $this->get('pc');
-        $cc             = $this->get('cc');
-        $idt            = $this->get('idt');
-        $voice          = $this->get('voice');
-        $email          = $this->get('email');
-        $responsible    = $this->get('responsible');
-        
-        $request='
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-            <command>
-                <create>
-                    <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
-                        <contact:id>'.$contactIDDigits.'</contact:id>
-                        <contact:postalInfo type="loc">
-                            <contact:name>'.$name.'</contact:name>
-                            <contact:addr>';
+						$request.='
+						<contact:city>'.$city.'</contact:city>
+				    	<contact:sp>'.$sp.'</contact:sp>
+				    	<contact:pc>'.$pc.'</contact:pc>
+				    	<contact:cc>'.$cc.'</contact:cc>
+			    		</contact:addr>
+				    </contact:postalInfo>
+			    	<contact:voice>'.$voice.'</contact:voice>
+			    	<contact:email>'.$email.'</contact:email>
+				</contact:chg>
+				</contact:update>
+			</update>
+			<extension>
+				<brorg:update xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
+					<brorg:organization>'.$contactID.'</brorg:organization>
+					<brorg:add>
+						<brorg:contact type="admin">'.$NewContacts["Registrant"].'</brorg:contact>
+					</brorg:add>
+					<brorg:rem>
+						<brorg:contact type="admin">'.$OldContacts["Registrant"].'</brorg:contact>
+					</brorg:rem>
+					<brorg:chg>
+						<brorg:responsible>'.$responsible.'</brorg:responsible>
+					</brorg:chg>
+				</brorg:update>
+			</extension>
+			<clTRID>'.mt_rand().mt_rand().'</clTRID>
+			</command>
+			</epp>';
+						
+		
+		return $request;		
+		
+	}
+	#terminar esse metodo
+	private function _createXMLOrg(){
+		
+		$contactID = $this->get('contactID');
+		$contactIDDigits = $this->get('contactIDDigits');
+		
+		
+		if(!$contactID){
+			throw new Exception('contactID is not set');
+		}
+		
+		$name 	 		= $this->get('name');
+		$street1 		= $this->get('street1');
+		$street2 		= $this->get('street2');
+		$street3 		= $this->get('street3');
+		$city 			= $this->get('city');
+		$sp 			= $this->get('sp');
+		$pc 			= $this->get('pc');
+		$cc 			= $this->get('cc');
+		$idt 			= $this->get('idt');
+		$voice			= $this->get('voice');
+		$email 			= $this->get('email');
+		$responsible	= $this->get('responsible');
+		
+		$request='
+		<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+			<command>
+				<create>
+					<contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
+						<contact:id>'.$contactIDDigits.'</contact:id>
+						<contact:postalInfo type="loc">
+							<contact:name>'.$name.'</contact:name>
+				    		<contact:addr>';
 if(!empty($street1)) $request.= "<contact:street>$street1</contact:street>";
 if(!empty($street2)) $request.= "<contact:street>$street2</contact:street>";
 if(!empty($street3)) $request.= "<contact:street>$street3</contact:street>";
-                                $request.='
-                                <contact:city>'.$city.'</contact:city>
-                                <contact:sp>'.$sp.'</contact:sp>
-                                <contact:pc>'.$pc.'</contact:pc>
-                                <contact:cc>'.$cc.'</contact:cc>
-                            </contact:addr>
-                        </contact:postalInfo>
-                        <contact:voice>'.$voice.'</contact:voice>
-                        <contact:email>'.$email.'</contact:email>
-                        <contact:authInfo>
-                            <contact:pw/>
-                        </contact:authInfo>
-                    </contact:create>
-                </create>
-                <extension>
-                    <brorg:create xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
-                        <brorg:organization>'.$contactID.'</brorg:organization>
-                        <brorg:contact type="admin">'.$idt.'</brorg:contact>
-                    </brorg:create>
-                </extension>
-                <clTRID>'.mt_rand().mt_rand().'</clTRID>
-            </command>
-        </epp>';
-        
-        return $request;
-    }
+								$request.='
+								<contact:city>'.$city.'</contact:city>
+								<contact:sp>'.$sp.'</contact:sp>
+								<contact:pc>'.$pc.'</contact:pc>
+								<contact:cc>'.$cc.'</contact:cc>
+							</contact:addr>
+						</contact:postalInfo>
+						<contact:voice>'.$voice.'</contact:voice>
+						<contact:email>'.$email.'</contact:email>
+						<contact:authInfo>
+							<contact:pw/>
+						</contact:authInfo>
+					</contact:create>
+				</create>
+				<extension>
+					<brorg:create xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
+						<brorg:organization>'.$contactID.'</brorg:organization>
+						<brorg:contact type="admin">'.$idt.'</brorg:contact>
+					</brorg:create>
+				</extension>
+				<clTRID>'.mt_rand().mt_rand().'</clTRID>
+			</command>
+		</epp>';
+		
+		return $request;
+	}
 
-    private function _getXMLinfo(){
+	private function _getXMLinfo(){
 
-        
-        $contactID = $this->get('contactID');
-        $contactIDDigits = $this->get('contactIDDigits');
-        
+		
+		$contactID = $this->get('contactID');
+		$contactIDDigits = $this->get('contactIDDigits');
+		
 
-        if(!$contactIDDigits){
-            //throw new Exception('contactID is not set');
-        }
-        
+		if(!$contactIDDigits){
+    		//throw new Exception('contactID is not set');
+		}
+		
         $request = '
                 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
                     <command>
@@ -298,84 +298,84 @@ if(!empty($street3)) $request.= "<contact:street>$street3</contact:street>";
                                 <contact:id>'.$contactIDDigits.'</contact:id>
                             </contact:info>
                         </info>';
-                        if($contactID){
-                            $request.= '
-                            <extension>
-                                <brorg:info xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
-                                    <brorg:organization>'.$contactID.'</brorg:organization>
-                                </brorg:info>
-                            </extension>';
-                        }
+				        if($contactID){
+				        	$request.= '
+	        				<extension>
+	                            <brorg:info xmlns:brorg="urn:ietf:params:xml:ns:brorg-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:brorg-1.0 brorg-1.0.xsd">
+	                                <brorg:organization>'.$contactID.'</brorg:organization>
+	                            </brorg:info>
+	                        </extension>';
+				        }
         $request.='<clTRID>'.mt_rand().mt_rand().'</clTRID>
                   </command>
                 </epp>
         ';
 
-        return $request;
+		return $request;
     }
     
     private function _createXML(){
-        
-        $name  = $this->get('name');
-        $street1 = $this->get('street1');
-        $street2 = $this->get('street2');
-        $street3 = $this->get('street3');
-        $city = $this->get('city');
-        $sp = $this->get('sp');
-        $pc = $this->get('pc');
-        $cc = $this->get('cc');
-        $voice = $this->get('voice');
-        $email = $this->get('email');
+    	
+    	$name  = $this->get('name');
+    	$street1 = $this->get('street1');
+    	$street2 = $this->get('street2');
+    	$street3 = $this->get('street3');
+    	$city = $this->get('city');
+    	$sp = $this->get('sp');
+    	$pc = $this->get('pc');
+    	$cc = $this->get('cc');
+    	$voice = $this->get('voice');
+    	$email = $this->get('email');
  
-        
-        if(!$name){
-            throw new Exception('name must be set');
-        }        
-        //must check
-        
-        $request='
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-            <command>
-                <create>
-                    <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
-                        <contact:id>dummy</contact:id>
-                        <contact:postalInfo type="loc">
-                            <contact:name>'.$name.'</contact:name>
-                            <contact:addr>';
+    	
+    	if(!$name){
+    		throw new Exception('name must be set');
+    	}   	 
+    	//must check
+    	
+    	$request='
+    	<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+	    	<command>
+		    	<create>
+			    	<contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 contact-1.0.xsd">
+				    	<contact:id>dummy</contact:id>
+				    	<contact:postalInfo type="loc">
+					    	<contact:name>'.$name.'</contact:name>
+					    	<contact:addr>';
 if(!empty($street1)) $request.= "<contact:street>$street1</contact:street>";
 if(!empty($street2)) $request.= "<contact:street>$street2</contact:street>";
 if(!empty($street3)) $request.= "<contact:street>$street3</contact:street>";
-                     $request.= '
-                            <contact:city>'.$city.'</contact:city>
-                            <contact:sp>'.$sp.'</contact:sp>
-                            <contact:pc>'.$pc.'</contact:pc>
-                            <contact:cc>'.$cc.'</contact:cc>
-                            </contact:addr>
-                        </contact:postalInfo>
-                        <contact:voice>'.$voice.'</contact:voice>
-                        <contact:email>'.$email.'</contact:email>
-                        <contact:authInfo>
-                        <contact:pw/>
-                        </contact:authInfo>
-                    </contact:create>
-                </create>
-                <clTRID>'.mt_rand().mt_rand().'</clTRID>
-            </command>
-        </epp>';
-                            
-        return $request;
+				     $request.= '
+					    	<contact:city>'.$city.'</contact:city>
+					    	<contact:sp>'.$sp.'</contact:sp>
+					    	<contact:pc>'.$pc.'</contact:pc>
+					    	<contact:cc>'.$cc.'</contact:cc>
+				    		</contact:addr>
+			    		</contact:postalInfo>
+				    	<contact:voice>'.$voice.'</contact:voice>
+				    	<contact:email>'.$email.'</contact:email>
+				    	<contact:authInfo>
+				    	<contact:pw/>
+				    	</contact:authInfo>
+			    	</contact:create>
+		    	</create>
+		    	<clTRID>'.mt_rand().mt_rand().'</clTRID>
+	    	</command>
+    	</epp>';
+				         	
+    	return $request;
     }
     
 
     
     public function verifyProvider($prov,$prov_module){
-        $prov_module = trim($prov_module);
-        $prov = trim($prov);
-        
-        if($prov != $prov_module){ 
-            $msg = $this->error('getcontactnotallowed',$prov,$prov_module);
-            throw new Exception($msg);
-        }
+    	$prov_module = trim($prov_module);
+    	$prov = trim($prov);
+    	
+    	if($prov != $prov_module){ 
+    		$msg = $this->error('getcontactnotallowed',$prov,$prov_module);
+    		throw new Exception($msg);
+    	}
     }
 }
 

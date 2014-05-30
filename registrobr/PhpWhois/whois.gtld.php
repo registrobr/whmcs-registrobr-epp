@@ -26,21 +26,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__GTLD_HANDLER__'))
-    define('__GTLD_HANDLER__', 1);
+	define('__GTLD_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class gtld_handler extends WhoisClient
-    {
-    var $HANDLER_VERSION = '1.1';
+	{
+	var $HANDLER_VERSION = '1.1';
 
-    var $REG_FIELDS = array(
+	var $REG_FIELDS = array(
                         'Domain Name:' => 'regrinfo.domain.name',
                         'Registrar:' => 'regyinfo.registrar',
                         'Whois Server:' => 'regyinfo.whois',
                         'Referral URL:' => 'regyinfo.referrer',
                         'Name Server:' => 'regrinfo.domain.nserver.',  // identical descriptors
-                        'Updated Date:' => 'regrinfo.domain.changed',
+						'Updated Date:' => 'regrinfo.domain.changed',
                         'Last Updated On:' => 'regrinfo.domain.changed',
                         'EPP Status:' => 'regrinfo.domain.epp_status.',
                         'Status:' => 'regrinfo.domain.status.',
@@ -49,33 +49,33 @@ class gtld_handler extends WhoisClient
                         'Expiration Date:' => 'regrinfo.domain.expires',
                         'Updated Date:' => 'regrinfo.domain.changed',
                         'No match for ' => 'nodomain'
-                         );
+	                     );
 
-    function parse($data, $query)
-        {
-        $this->Query = array();
-        $this->SUBVERSION = sprintf('%s-%s', $query['handler'], $this->HANDLER_VERSION);
-        $this->result = generic_parser_b($data['rawdata'], $this->REG_FIELDS, 'dmy');
+	function parse($data, $query)
+		{
+		$this->Query = array();
+		$this->SUBVERSION = sprintf('%s-%s', $query['handler'], $this->HANDLER_VERSION);
+		$this->result = generic_parser_b($data['rawdata'], $this->REG_FIELDS, 'dmy');
 
-        unset($this->result['registered']);
+		unset($this->result['registered']);
 
-        if (isset($this->result['nodomain']))
-            {
-            unset($this->result['nodomain']);
-            $this->result['regrinfo']['registered'] = 'no';
-            return $this->result;
-            }
+		if (isset($this->result['nodomain']))
+			{
+			unset($this->result['nodomain']);
+			$this->result['regrinfo']['registered'] = 'no';
+			return $this->result;
+			}
 
-        if ($this->deep_whois) $this->result = $this->DeepWhois($query,$this->result);
+		if ($this->deep_whois) $this->result = $this->DeepWhois($query,$this->result);
 
-        // Next server could fail to return data
-        if (empty($this->result['rawdata']) || count($this->result['rawdata']) < 3)
-            $this->result['rawdata'] = $data['rawdata'];
+		// Next server could fail to return data
+		if (empty($this->result['rawdata']) || count($this->result['rawdata']) < 3)
+			$this->result['rawdata'] = $data['rawdata'];
 
-        // Domain is registered no matter what next server says
-        $this->result['regrinfo']['registered'] = 'yes';
+		// Domain is registered no matter what next server says
+		$this->result['regrinfo']['registered'] = 'yes';
 
-        return $this->result;
-        }
-    }
+		return $this->result;
+		}
+	}
 ?>

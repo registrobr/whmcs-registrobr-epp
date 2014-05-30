@@ -76,13 +76,13 @@ function registrobr_getConfigArray() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
     mysql_query($query);
     
-    $configarray = array(
-        "Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
-        "Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
-        "TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
-        "Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
-        "Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
-        "CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
+	$configarray = array(
+		"Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
+		"Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
+		"TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
+		"Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
+		"Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
+		"CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
         "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
         "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
@@ -93,7 +93,7 @@ function registrobr_getConfigArray() {
         "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
         
 
-    );
+	);
     return $configarray;
 
 }
@@ -113,31 +113,31 @@ function _registrobr_pear_error($client,$strerror){
 #Parse xml response from epp server
 function _registrobr_parse_response($response){
 
-    $doc= new DOMDocument();
-    $doc->loadXML($response);
-    $atts = array();
-    $atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-    $atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
-    $atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
-    $atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
-    $atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
-    $atts['doc'] = $doc;
+	$doc= new DOMDocument();
+	$doc->loadXML($response);
+	$atts = array();
+	$atts['coderes'] = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
+	$atts['msg'] = $doc->getElementsByTagName('msg')->item(0)->nodeValue;
+	$atts['reason'] = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
+	$atts['id'] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
+	$atts['contact'] = $doc->getElementsByTagName('contact')->item(0)->nodeValue;
+	$atts['doc'] = $doc;
 
-    return $atts;         
+	return $atts;         
 }
 #registro.br response error
 
 function _registrobr_server_error($strerror,$coderes,$msg,$reason,$request,$response){
 
-    $msg = _registrobr_set_encode($msg);
-    $errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
-    if (!empty($reason)) {
-        $reason = _registrobr_set_encode($reason);
-        $errormsg.= _registrobr_lang("reason").$reason."'";
-    };
-    logModuleCall("registrobr",$errormsg,$request,$response);
-    $values["error"] = $errormsg;
-    return $values;
+	$msg = _registrobr_set_encode($msg);
+	$errormsg = _registrobr_lang($strerror).$coderes._registrobr_lang('msg').$msg."'";
+	if (!empty($reason)) {
+		$reason = _registrobr_set_encode($reason);
+		$errormsg.= _registrobr_lang("reason").$reason."'";
+	};
+	logModuleCall("registrobr",$errormsg,$request,$response);
+	$values["error"] = $errormsg;
+	return $values;
 }
 
     
@@ -162,7 +162,7 @@ function registrobr_GetNameservers($params) {
     
     //external links requrires
     
-    do {
+	do {
         $request = '
         <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
             <command>
@@ -190,12 +190,12 @@ function registrobr_GetNameservers($params) {
 
         $response = $client->request($request);
   
-        # Check results 
+        # Check results	
         $answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    
+	
         if($coderes != '1000') {
             if ($coderes != '2303') {
                 return _registrobr_server_error('getnserrorcode',$coderes,$msg,$reason,$request,$response);
@@ -214,7 +214,7 @@ function registrobr_GetNameservers($params) {
         $values["error"] = _registrobr_lang('domainnotfound');
         return $values;
     }         
-    
+	
     # Parse XML
     $doc = new DOMDocument();
     $doc->preserveWhiteSpace = false;
@@ -248,18 +248,18 @@ function registrobr_SaveNameservers($params) {
         <domain:hostName>'.$nameserver1.'</domain:hostName>
         </domain:hostAttr>
         ';
-    }
+	}
 
-    if ($nameserver2 = $params["ns2"]) { 
-        $add_hosts .= '
+	if ($nameserver2 = $params["ns2"]) { 
+		$add_hosts .= '
         <domain:hostAttr>
         <domain:hostName>'.$nameserver2.'</domain:hostName>
         </domain:hostAttr>
         ';
 
-    }
+	}
 
-    if ($nameserver3 = $params["ns3"]) { 
+	if ($nameserver3 = $params["ns3"]) { 
         $add_hosts .= '
         <domain:hostAttr>
         <domain:hostName>'.$nameserver3.'</domain:hostName>
@@ -267,25 +267,25 @@ function registrobr_SaveNameservers($params) {
         ';
         }
 
-    if ($nameserver4 = $params["ns4"]) { 
+	if ($nameserver4 = $params["ns4"]) { 
         $add_hosts .= '
         <domain:hostAttr>
         <domain:hostName>'.$nameserver4.'</domain:hostName>
         </domain:hostAttr>';
-    }
+	}
 
-    if ($nameserver5 = $params["ns5"]) { 
-        $add_hosts .= '
+	if ($nameserver5 = $params["ns5"]) { 
+		$add_hosts .= '
         <domain:hostAttr>
         <domain:hostName>'.$nameserver5.'</domain:hostName>
         </domain:hostAttr>';
-    }
+	}
 
-    # Grab list of current nameservers
-    $client = _registrobr_Client();
+	# Grab list of current nameservers
+	$client = _registrobr_Client();
         # Create new EPP client
         if (PEAR::isError($client)) {
-        return _registrobr_pear_error($client,'setnsconnerror');
+	    return _registrobr_pear_error($client,'setnsconnerror');
         }
         # Create new EPP client
     
@@ -320,13 +320,13 @@ function registrobr_SaveNameservers($params) {
         
         $response = $client->request($request);
         
-        # Parse response    
+        # Parse response	
         $answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
         $doc = $answer['doc'];
-      
+	  
         # Check if result is ok
         if($coderes != '1000') {
             if ($coderes != '2303') {
@@ -361,8 +361,8 @@ function registrobr_SaveNameservers($params) {
 
     }
 
-    # Build request
-    $request='
+	# Build request
+	$request='
               <epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
                     <command>
                         <update>
@@ -397,7 +397,7 @@ function registrobr_SaveNameservers($params) {
     # Make request
     $response = $client->request($request);
 
-    # Parse results 
+    # Parse results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
@@ -458,7 +458,7 @@ function registrobr_RegisterDomain($params) {
     
     $regperiod = $params["regperiod"];
 
-    # Get registrant details    
+    # Get registrant details	
     #$RegistrantFirstName = _registrobr_set_encode($params["firstname"],'ISO-8859-1');
     $RegistrantFirstName = $params["original"]["firstname"];
     $RegistrantLastName = $params["original"]["lastname"];
@@ -489,7 +489,7 @@ function registrobr_RegisterDomain($params) {
     $client = _registrobr_Client();
     # Create new EPP client
     if (PEAR::isError($client)) {
-        return _registrobr_pear_error($client,'registerconnerror');
+		return _registrobr_pear_error($client,'registerconnerror');
     }
     # Create new EPP client
     
@@ -519,7 +519,7 @@ function registrobr_RegisterDomain($params) {
     ';
  
     $response = $client->request($request);
-    # Check results 
+    # Check results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
@@ -538,7 +538,7 @@ function registrobr_RegisterDomain($params) {
             } 
 
     } elseif($coderes != '2303') {
-        return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('registergetorgerrorcode',$coderes,$msg,$reason,$request,$response);
     } else {
         
                 # Company or individual not in the database, proceed to org contact creation
@@ -573,21 +573,21 @@ function registrobr_RegisterDomain($params) {
                             <clTRID>'.mt_rand().mt_rand().'</clTRID>
                         </command>
                         </epp>';
-        $request = _registrobr_set_encode($request,'ISO-8859-1');
+		$request = _registrobr_set_encode($request,'ISO-8859-1');
      
-        $response = $client->request($request);
-            
-        # Parse XML result
-        # Check results 
-        $answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];
-        $reason = $answer['reason'];
-        $idt = $answer['id'];
-        # Check results
+		$response = $client->request($request);
+			
+		# Parse XML result
+		# Check results	
+		$answer = _registrobr_parse_response($response);
+		$coderes = $answer['coderes'];
+		$msg = $answer['msg'];
+		$reason = $answer['reason'];
+		$idt = $answer['id'];
+		# Check results
 
         if($coderes != '1000') {
-            return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
+			return _registrobr_server_error('registercreateorgcontacterrorcode',$coderes,$msg,$reason,$request,$response);
         }                   
             
                 # Org creation
@@ -630,17 +630,17 @@ function registrobr_RegisterDomain($params) {
                                 <clTRID>'.mt_rand().mt_rand().'</clTRID>
                             </command>
                         </epp>';
-                $request = _registrobr_set_encode($request,'ISO-8859-1');
+        		$request = _registrobr_set_encode($request,'ISO-8859-1');
                 $response = $client->request($request);
 
                 # Parse XML result
 
-                # Check results 
-                $answer = _registrobr_parse_response($response);
-                $coderes = $answer['coderes'];
-                $msg = $answer['msg'];
-                $reason = $answer['reason'];
-                # Check results
+				# Check results	
+				$answer = _registrobr_parse_response($response);
+				$coderes = $answer['coderes'];
+				$msg = $answer['msg'];
+				$reason = $answer['reason'];
+				# Check results
 
         if($coderes != '1001') {
             return _registrobr_server_error('registercreateorgerrorcode',$coderes,$msg,$reason,$request,$response);
@@ -648,43 +648,43 @@ function registrobr_RegisterDomain($params) {
     }
     # Generate XML for namseverss
 
-    if ($nameserver1 = $params["ns1"]) { 
+	if ($nameserver1 = $params["ns1"]) { 
                         $add_hosts = '
                         <domain:hostAttr>
                             <domain:hostName>'.$nameserver1.'</domain:hostName>
                         </domain:hostAttr>
                         ';
-    }
-    if ($nameserver2 = $params["ns2"]) { 
+	}
+	if ($nameserver2 = $params["ns2"]) { 
                         $add_hosts .= '
                         <domain:hostAttr>
                             <domain:hostName>'.$nameserver2.'</domain:hostName>
                         </domain:hostAttr>
                         ';
-    }
-    if ($nameserver3 = $params["ns3"]) { 
+	}
+	if ($nameserver3 = $params["ns3"]) { 
                         $add_hosts .= '
                         <domain:hostAttr>
                             <domain:hostName>'.$nameserver3.'</domain:hostName>
                         </domain:hostAttr>
                         ';
-    }
-    if ($nameserver4 = $params["ns4"]) { 
+	}
+	if ($nameserver4 = $params["ns4"]) { 
                         $add_hosts .= '
                         <domain:hostAttr>
                             <domain:hostName>'.$nameserver4.'</domain:hostName>
                         </domain:hostAttr>';
-    }
-    if ($nameserver5 = $params["ns5"]) { 
+	}
+	if ($nameserver5 = $params["ns5"]) { 
                         $add_hosts .= '
                         <domain:hostAttr>
                             <domain:hostName>'.$nameserver5.'</domain:hostName>
                         </domain:hostAttr>';
-    }
+	}
 
     # Carry on to domain registration
 
-    
+	
     $request = '
                  <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -718,14 +718,14 @@ function registrobr_RegisterDomain($params) {
                 ';
 
     $response = $client->request($request);
-    # Check results 
+    # Check results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
     $reason = $answer['reason'];
     # Check results
     if($coderes != '1001') {
-    return _registrobr_server_error('registererrorcode',$coderes,$msg,$reason,$request,$response);
+	return _registrobr_server_error('registererrorcode',$coderes,$msg,$reason,$request,$response);
     }
     
     $table = "mod_registrobr";
@@ -741,16 +741,16 @@ function registrobr_RenewDomain($params) {
     # We need pear for the error handling
     require_once "PEAR.php";
 
-    # Grab variables
-    $tld = $params["tld"];
-    $sld = $params["sld"];
-    $regperiod = $params["regperiod"];
+	# Grab variables
+	$tld = $params["tld"];
+	$sld = $params["sld"];
+	$regperiod = $params["regperiod"];
 
     # Get an EPP Connection                    
     $client = _registrobr_Client();
     # Create new EPP client
     if (PEAR::isError($client)) {
-    return _registrobr_pear_error($client,'renewconnerror');
+	return _registrobr_pear_error($client,'renewconnerror');
     }
     # Create new EPP client
                         
@@ -771,7 +771,7 @@ function registrobr_RenewDomain($params) {
     $response = $client->request($request);
                                      
     # Parse XML result
-    # Check results 
+    # Check results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
@@ -780,11 +780,11 @@ function registrobr_RenewDomain($params) {
     if($coderes != '1000') {
         return _registrobr_server_error('renewinfoerrorcode',$coderes,$msg,$reason,$request,$response);
     }
-    # Sanitize expiry date
-    $expdate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
+	# Sanitize expiry date
+	$expdate = substr($doc->getElementsByTagName('exDate')->item(0)->nodeValue,0,10);
 
-    # Send request to renew
-    $request='
+	# Send request to renew
+	$request='
             <epp xmlns:epp="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
                 <command>
                     <renew>
@@ -801,7 +801,7 @@ function registrobr_RenewDomain($params) {
                                       
     $response = $client->request($request);
    
-    # Check results 
+    # Check results	
     $answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
@@ -809,7 +809,7 @@ function registrobr_RenewDomain($params) {
     # Check results
 
     if($coderes != '1000') {
-        return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('renewerrorcode',$coderes,$msg,$reason,$request,$response);
     }
     return $values;
 
@@ -820,32 +820,32 @@ function registrobr_RenewDomain($params) {
 function registrobr_GetContactDetails($params) {
 
     # Setup include dir
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 
-    # Include CPF and CNPJ stuff we need
-    require_once 'isCnpjValid.php';
-    require_once 'isCpfValid.php';
+	# Include CPF and CNPJ stuff we need
+	require_once 'isCnpjValid.php';
+	require_once 'isCpfValid.php';
     
     # We need pear for the error handling
     require_once "PEAR.php";
   
-    # Grab variables    
-    $tld = $params["tld"];
-    $sld = $params["sld"];
+	# Grab variables	
+	$tld = $params["tld"];
+	$sld = $params["sld"];
 
-    # Grab contact details
-    $client = _registrobr_Client();
+	# Grab contact details
+	$client = _registrobr_Client();
     # Create new EPP client
     if (PEAR::isError($client)) {
-    return _registrobr_pear_error($client,'getcontactconnerror');
+	return _registrobr_pear_error($client,'getcontactconnerror');
 
     }
     # Create new EPP client
     
     $request = '
         <epp xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:epp="urn:ietf:params:xml:ns:epp-1.0"
-        xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+		xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
             <command>
                 <info>
                     <domain:info xsi:schemaLocation="urn:ietf:params:xml:ns:domain-1.0 domain-1.0.xsd">
@@ -858,17 +858,17 @@ function registrobr_GetContactDetails($params) {
 
     $response = $client->request($request);
                                                               
-    # Parse XML result      
-    # Check results 
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];
-    $doc = $answer['doc'];
-    # Check results
+	# Parse XML result		
+	# Check results	
+	$answer = _registrobr_parse_response($response);
+	$coderes = $answer['coderes'];
+	$msg = $answer['msg'];
+	$reason = $answer['reason'];
+	$doc = $answer['doc'];
+	# Check results
 
     if($coderes != '1000') {
-        return _registrobr_server_error('getcontacterrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('getcontacterrorcode',$coderes,$msg,$reason,$request,$response);
 
     }
     
@@ -897,7 +897,7 @@ function registrobr_GetContactDetails($params) {
     if(isCpfValid($RegistrantTaxID)!=TRUE) { $RegistrantTaxID=substr($RegistrantTaxID,1); };
     $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
 
-    # Grab reg info
+	# Grab reg info
     $request = '
                 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -924,18 +924,18 @@ function registrobr_GetContactDetails($params) {
 
     $response = $client->request($request);
        
-    # Parse XML result
+	# Parse XML result
 
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
 
     if($coderes != '1000') {
-    return _registrobr_server_error('getcontactorginfoerrorcode',$coderes,$msg,$reason,$request,$response);
+	return _registrobr_server_error('getcontactorginfoerrorcode',$coderes,$msg,$reason,$request,$response);
     }
 
     $Contacts["Registrant"]= $contact;
@@ -967,17 +967,17 @@ function registrobr_GetContactDetails($params) {
                     $response = $client->request($request);
 
                     # Parse XML result
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    $doc = $answer['doc'];
+	$contact = $answer['contact'];
+	$doc = $answer['doc'];
 
-    # Check results
+	# Check results
                     if($coderes != '1000') {
-            return _registrobr_server_error('getcontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
+			return _registrobr_server_error('getcontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
                     }
     
                     $values[$type][_registrobr_lang("fullnamefield")] = $doc->getElementsByTagName('name')->item(0)->nodeValue;
@@ -991,7 +991,7 @@ function registrobr_GetContactDetails($params) {
                     $values[$type][_registrobr_lang("phonenumberfield")] = $doc->getElementsByTagName('voice')->item(0)->nodeValue;
                     $values[$type]["Email"] = $doc->getElementsByTagName('email')->item(0)->nodeValue;
                     }        
-    return $values;
+ 	return $values;
 }
 
 # Function to save contact details
@@ -1005,8 +1005,8 @@ function registrobr_SaveContactDetails($params) {
     }
     
     # Setup include dir
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
     
     # Include CPF and CNPJ stuff we need
     require_once 'isCnpjValid.php';
@@ -1015,18 +1015,18 @@ function registrobr_SaveContactDetails($params) {
     # We need pear for the error handling
     require_once "PEAR.php";
 
-        
+    	
     $tld = _registrobr_convert_to_punycode($params["original"]["tld"]);
     $sld = _registrobr_convert_to_punycode($params["original"]["sld"]);
-        
+    	
     $domain_punycode = $sld.'.'.$tld;
-        
+    	
 
     # Grab domain, organization and contact details
     $client = _registrobr_Client();
     # Create new EPP client
     if (PEAR::isError($client)) {
-    return _registrobr_pear_error($client,'savecontactconnerror');
+	return _registrobr_pear_error($client,'savecontactconnerror');
 
     }
     # Create new EPP client
@@ -1046,18 +1046,18 @@ function registrobr_SaveContactDetails($params) {
   
     $response = $client->request($request);
 
-    # Parse XML result      
-    # Check results 
-    $answer = _registrobr_parse_response($response);
-    $coderes = $answer['coderes'];
-    $msg = $answer['msg'];
-    $reason = $answer['reason'];    
-    $contact = $answer['contact'];
-    $doc = $answer['doc'];
-    # Check results
-    
+	# Parse XML result		
+	# Check results	
+	$answer = _registrobr_parse_response($response);
+	$coderes = $answer['coderes'];
+	$msg = $answer['msg'];
+	$reason = $answer['reason'];	
+	$contact = $answer['contact'];
+	$doc = $answer['doc'];
+	# Check results
+	
     if($coderes != '1000') {
-        return _registrobr_server_error('savecontactdomaininfoerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('savecontactdomaininfoerrorcode',$coderes,$msg,$reason,$request,$response);
 
     }
         
@@ -1077,7 +1077,7 @@ function registrobr_SaveContactDetails($params) {
 
     $Contacts=array();
     for ($i=0; $i<=2; $i++) {
-        $Contacts[ucfirst($doc->getElementsByTagName('contact')->item($i)->getAttribute('type'))]=$doc->getElementsByTagName('contact')->item($i)->nodeValue;
+    	$Contacts[ucfirst($doc->getElementsByTagName('contact')->item($i)->getAttribute('type'))]=$doc->getElementsByTagName('contact')->item($i)->nodeValue;
     }
     $NewContacts=$Contacts;
 
@@ -1101,86 +1101,86 @@ function registrobr_SaveContactDetails($params) {
     
     foreach ($ContactTypes as $type)  {
         if ($params["contactdetails"][$type]!=$params["original"][$type]) {
-            
-            if (empty($params["contactdetails"][$type][_registrobr_lang("streetnamefield")])) {
-                $contact_street1 = $params["contactdetails"][$type]["Address 1"];
-                $contact_street2 = $params["contactdetails"][$type]["Address 2"];
-            }
-            else {
-                $contact_street1 = $params["contactdetails"][$type][_registrobr_lang("streetnamefield")];
-                $contact_street2 = '';
-            }
-            $contact_street3 = $params["contactdetails"][$type][_registrobr_lang("streetnumberfield")];
-            $contact_street4 = $params["contactdetails"][$type][_registrobr_lang("addresscomplementsfield")];
-            $contact_city = $params["contactdetails"][$type]["City"];//(empty($params["contactdetails"][$type][_registrobr_lang("citynamefield")]) ? $params["contactdetails"][$type]["City"] : $params["contactdetails"][$type][_registrobr_lang("citynamefield")]);
-            $contact_province = (empty($params["contactdetails"][$type][_registrobr_lang("stateprovincefield")]) ? _registrobr_StateProvince($params["contactdetails"][$type]["State"]) : $params["contactdetails"][$type][_registrobr_lang("stateprovincefield")]);
-            $contact_zip = (empty($params["contactdetails"][$type][_registrobr_lang("zipcodefield")]) ? $params["contactdetails"][$type]["Postcode"] : $params["contactdetails"][$type][_registrobr_lang("zipcodefield")]);
-            $contact_details = (empty($params["contactdetails"][$type][_registrobr_lang("countrycodefield")]) ? $params["contactdetails"][$type]["Country"] : $params["contactdetails"][$type][_registrobr_lang("countrycodefield")]);
-            
-            # Start by creating a new contact with the updated information
-            $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                        xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
-                            <command>
-                                <create>
-                                    <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" 
-                                    xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 
-                                    contact-1.0.xsd"> 
-                                        <contact:id>dummy</contact:id>
-                                        <contact:postalInfo type="loc">
-                                            <contact:name>'.(empty($params["contactdetails"][$type]["Nome e Sobrenome"]) ? $params["contactdetails"][$type]["Full Name"] : $params["contactdetails"][$type]["Nome e Sobrenome"]).'</contact:name>
-                                            <contact:addr>
-                                                    <contact:street>'.$contact_street1.'</contact:street>
-                                                    <contact:street>'.$contact_street2.'</contact:street>
-                                                    <contact:street>'.$contact_street3.'</contact:street>
-                                                    <contact:street>'.$contact_street4.'</contact:street>
-                                                <contact:city>'.$contact_city.'</contact:city>
-                                                <contact:sp>'.$contact_province.'</contact:sp>
-                                                <contact:pc>'.$contact_zip.'</contact:pc>
-                                                <contact:cc>'.$contact_details.'</contact:cc>
-                                            </contact:addr>
-                                        </contact:postalInfo>
-                                        <contact:voice>'.substr((empty($params["contactdetails"][$type][_registrobr_lang("phonenumberfield")]) ? $params["contactdetails"][$type]["Phone Number"] : $params["contactdetails"][$type][_registrobr_lang("phonenumberfield")]),1).'</contact:voice>
-                                        <contact:email>'.$params["contactdetails"][$type]["Email"].'</contact:email>
-                                        <contact:authInfo>
-                                                    <contact:pw/>
-                                        </contact:authInfo>
-                                    </contact:create>
-                                </create>
-                                <clTRID>'.mt_rand().mt_rand().'</clTRID>
-                            </command>
-                    </epp>';
-            $response = $client->request($request);
-    
-            # Check results 
-            $answer = _registrobr_parse_response($response);
-            $coderes = $answer['coderes'];
-            $msg = $answer['msg'];
-            $reason = $answer['reason'];
-            $contact = $answer['contact'];
-            $doc = $answer['doc'];
-            # Check results
-            
-            if($coderes != '1000') {
-                return _registrobr_server_error('savecontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
-            }
-            $NewContacts[$type] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
+        	
+			if (empty($params["contactdetails"][$type][_registrobr_lang("streetnamefield")])) {
+				$contact_street1 = $params["contactdetails"][$type]["Address 1"];
+				$contact_street2 = $params["contactdetails"][$type]["Address 2"];
+			}
+			else {
+				$contact_street1 = $params["contactdetails"][$type][_registrobr_lang("streetnamefield")];
+				$contact_street2 = '';
+			}
+			$contact_street3 = $params["contactdetails"][$type][_registrobr_lang("streetnumberfield")];
+			$contact_street4 = $params["contactdetails"][$type][_registrobr_lang("addresscomplementsfield")];
+			$contact_city = $params["contactdetails"][$type]["City"];//(empty($params["contactdetails"][$type][_registrobr_lang("citynamefield")]) ? $params["contactdetails"][$type]["City"] : $params["contactdetails"][$type][_registrobr_lang("citynamefield")]);
+			$contact_province = (empty($params["contactdetails"][$type][_registrobr_lang("stateprovincefield")]) ? _registrobr_StateProvince($params["contactdetails"][$type]["State"]) : $params["contactdetails"][$type][_registrobr_lang("stateprovincefield")]);
+			$contact_zip = (empty($params["contactdetails"][$type][_registrobr_lang("zipcodefield")]) ? $params["contactdetails"][$type]["Postcode"] : $params["contactdetails"][$type][_registrobr_lang("zipcodefield")]);
+			$contact_details = (empty($params["contactdetails"][$type][_registrobr_lang("countrycodefield")]) ? $params["contactdetails"][$type]["Country"] : $params["contactdetails"][$type][_registrobr_lang("countrycodefield")]);
+			
+			# Start by creating a new contact with the updated information
+	        $request='<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
+	                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	                    xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"> 
+	                        <command>
+	                            <create>
+	                                <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" 
+	                                xsi:schemaLocation="urn:ietf:params:xml:ns:contact-1.0 
+	                                contact-1.0.xsd"> 
+	                                    <contact:id>dummy</contact:id>
+	                                    <contact:postalInfo type="loc">
+	                                        <contact:name>'.(empty($params["contactdetails"][$type]["Nome e Sobrenome"]) ? $params["contactdetails"][$type]["Full Name"] : $params["contactdetails"][$type]["Nome e Sobrenome"]).'</contact:name>
+	                                        <contact:addr>
+													<contact:street>'.$contact_street1.'</contact:street>
+													<contact:street>'.$contact_street2.'</contact:street>
+													<contact:street>'.$contact_street3.'</contact:street>
+	                                            	<contact:street>'.$contact_street4.'</contact:street>
+	                                            <contact:city>'.$contact_city.'</contact:city>
+	                                            <contact:sp>'.$contact_province.'</contact:sp>
+	                                            <contact:pc>'.$contact_zip.'</contact:pc>
+	                                            <contact:cc>'.$contact_details.'</contact:cc>
+	                                        </contact:addr>
+	                                    </contact:postalInfo>
+	                                    <contact:voice>'.substr((empty($params["contactdetails"][$type][_registrobr_lang("phonenumberfield")]) ? $params["contactdetails"][$type]["Phone Number"] : $params["contactdetails"][$type][_registrobr_lang("phonenumberfield")]),1).'</contact:voice>
+	                                    <contact:email>'.$params["contactdetails"][$type]["Email"].'</contact:email>
+	                                    <contact:authInfo>
+	                                                <contact:pw/>
+	                                    </contact:authInfo>
+	                                </contact:create>
+	                            </create>
+	                            <clTRID>'.mt_rand().mt_rand().'</clTRID>
+	                        </command>
+	                </epp>';
+	        $response = $client->request($request);
+	
+			# Check results	
+			$answer = _registrobr_parse_response($response);
+			$coderes = $answer['coderes'];
+			$msg = $answer['msg'];
+			$reason = $answer['reason'];
+			$contact = $answer['contact'];
+			$doc = $answer['doc'];
+			# Check results
+			
+	        if($coderes != '1000') {
+				return _registrobr_server_error('savecontacttypeerrorcode',$coderes,$msg,$reason,$request,$response);
+	        }
+	        $NewContacts[$type] = $doc->getElementsByTagName('id')->item(0)->nodeValue;
 
-            if ($type!="Registrant") {
-                    $DomainUpdate=TRUE;
-            }
-            else {
-                    $OrgUpdate=TRUE;
-                    $OrgContactXML=$request;
-            }   
+	        if ($type!="Registrant") {
+	        		$DomainUpdate=TRUE;
+	        }
+	        else {
+	            	$OrgUpdate=TRUE;
+	            	$OrgContactXML=$request;
+	        }   
         }
     }
 
     if ($DomainUpdate==TRUE) {
 
-        //print_r($NewContacts);print_r("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");print_r($Contacts);
+    	//print_r($NewContacts);print_r("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");print_r($Contacts);
         
-        $NewContacts["Billing"]=$NewContacts["Admin"];
+    	$NewContacts["Billing"]=$NewContacts["Admin"];
         $request='
             <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -1205,15 +1205,15 @@ function registrobr_SaveContactDetails($params) {
             </epp>';
                             
         $response = $client->request($request);
-        # Check results 
-        $answer = _registrobr_parse_response($response);
-        $coderes = $answer['coderes'];
-        $msg = $answer['msg'];  
-        $reason = $answer['reason'];
-        $contact = $answer['contact'];
-        # Check results
+        # Check results	
+		$answer = _registrobr_parse_response($response);
+		$coderes = $answer['coderes'];
+		$msg = $answer['msg'];	
+		$reason = $answer['reason'];
+		$contact = $answer['contact'];
+		# Check results
         if($coderes != '1000') {
-            return _registrobr_server_error('savecontactdomainupdateerrorcode',$coderes,$msg,$reason,$request,$response);
+	    	return _registrobr_server_error('savecontactdomainupdateerrorcode',$coderes,$msg,$reason,$request,$response);
         }
         
 
@@ -1249,16 +1249,16 @@ function registrobr_SaveContactDetails($params) {
             $response = $client->request($request);
             
             # Parse XML result
-            # Check results 
-            $answer = _registrobr_parse_response($response);
-            $coderes = $answer['coderes'];
-            $msg = $answer['msg'];
-            $reason = $answer['reason'];
-            $contact = $answer['contact'];
-            $doc = $answer['doc'];
-            # Check results
+			# Check results	
+			$answer = _registrobr_parse_response($response);
+			$coderes = $answer['coderes'];
+			$msg = $answer['msg'];
+			$reason = $answer['reason'];
+			$contact = $answer['contact'];
+			$doc = $answer['doc'];
+			# Check results
             if($coderes != '1000') {
-                return _registrobr_server_error('savecontactorginfoeerrorcode',$coderes,$msg,$reason,$request,$response);
+		    	return _registrobr_server_error('savecontactorginfoeerrorcode',$coderes,$msg,$reason,$request,$response);
             }
 
             # Get current org contact
@@ -1328,15 +1328,15 @@ function registrobr_SaveContactDetails($params) {
 
             # Parse XML result
 
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
             if($coderes != '1000') {
-            return _registrobr_server_error('savecontactorgupdateeerrorcode',$coderes,$msg,$reason,$request,$response);
+		    return _registrobr_server_error('savecontactorgupdateeerrorcode',$coderes,$msg,$reason,$request,$response);
             }           
 
     }
@@ -1377,12 +1377,12 @@ function registrobr_RequestDelete($params) {
     $response = $client->request($request);
 
     # Parse XML
-    $answer = _registrobr_parse_response($response);
+	$answer = _registrobr_parse_response($response);
     $coderes = $answer['coderes'];
     $msg = $answer['msg'];
     $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
     if($coderes != '1000') {
         
         #If unknown domain, could be a ticket
@@ -1470,20 +1470,20 @@ function _registrobr_SyncRequest($client,$params) {
     
     $response = $client->request($request);
     
-    # Parse XML result      
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+	# Parse XML result		
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
     
     # Check if result is ok
-    if($coderes != '1000') {
-            if ($coderes != '2303') {
-            return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
-            }
+	if($coderes != '1000') {
+        	if ($coderes != '2303') {
+			return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
+        	}
         
     # See if domain not found is due to domain still being a ticket
     $request = '
@@ -1509,13 +1509,13 @@ function _registrobr_SyncRequest($client,$params) {
         
     $response = $client->request($request);
         
-    # Check results 
-    $answer = _registrobr_parse_response($response);
+    # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    
+	$contact = $answer['contact'];
+	
     # Check results
     if($coderes == '1000') {
             #Guess: no info equals pending
@@ -1523,7 +1523,7 @@ function _registrobr_SyncRequest($client,$params) {
     }
         
     if ($coderes != '2303') {
-        return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('syncerrorcode',$coderes,$msg,$reason,$request,$response);
     }
     
     $values["error"] = _registrobr_lang('Domain').$domain._registrobr_lang('syncdomainnotfound');
@@ -1726,19 +1726,19 @@ function _registrobr_Poll($client) {
         $response = $client->request($request);
 
         # Decipher XML
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
         
 
 
         # Check result
         if($coderes != '1000') {
-        return _registrobr_server_error('pollackerrorcode',$coderes,$msg,$reason,$request,$response);
+		return _registrobr_server_error('pollackerrorcode',$coderes,$msg,$reason,$request,$response);
         }
     
     #brace below close msg if
@@ -1756,26 +1756,26 @@ function _registrobr_Poll($client) {
 
 function _registrobr_Client() {
 
-    # Setup include dir
-    $include_path = dirname(__FILE__);
-    set_include_path($include_path . ':' . get_include_path());
+	# Setup include dir
+	$include_path = dirname(__FILE__);
+	set_include_path($include_path . ':' . get_include_path());
     
 
-    # Include EPP stuff we need
-    require_once dirname(__FILE__) . '/Net/EPP/Client.php';
-    require_once dirname(__FILE__) . '/Net/EPP/Protocol.php';
+	# Include EPP stuff we need
+	require_once dirname(__FILE__) . '/Net/EPP/Client.php';
+	require_once dirname(__FILE__) . '/Net/EPP/Protocol.php';
     
     # We need pear for the error handling
     require_once "PEAR.php";
 
-    # Grab module parameters
+	# Grab module parameters
 
-    $moduleparams = getregistrarconfigoptions('registrobr');
+	$moduleparams = getregistrarconfigoptions('registrobr');
     
-    if (!isset($moduleparams['TestMode']) && empty($moduleparams['Certificate'])) {
-        $errormsg =  _registrobr_lang("specifypath") ;
-        logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
-        return $errormsg ;
+	if (!isset($moduleparams['TestMode']) && empty($moduleparams['Certificate'])) {
+		$errormsg =  _registrobr_lang("specifypath") ;
+		logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
+		return $errormsg ;
     }
 
     if (!isset($moduleparams['TestMode']) && !file_exists($moduleparams['Certificate'])) {
@@ -1784,7 +1784,7 @@ function _registrobr_Client() {
         return $errormsg ;
     }
 
-    if (!isset($moduleparams['TestMode']) && empty($moduleparams['Passphrase'])) {
+	if (!isset($moduleparams['TestMode']) && empty($moduleparams['Passphrase'])) {
         $errormsg =   _registrobr_lang("specifypassphrase")  ;
         logModuleCall ("registrobr",_registrobr_lang("configerr"),$moduleparams,$errormsg);
         return $errormsg ;
@@ -1792,9 +1792,9 @@ function _registrobr_Client() {
 
     # Use OT&E if test mode is set
 
-    if (!isset($moduleparams['TestMode'])) {
+ 	if (!isset($moduleparams['TestMode'])) {
           $Server = 'epp.registro.br' ;
-          $Options = array (
+		  $Options = array (
                             'ssl' => array (
                                             'passphrase' => $moduleparams['Passphrase'],
                                             'local_cert' => $moduleparams['Certificate']));
@@ -1809,25 +1809,25 @@ function _registrobr_Client() {
     # Create SSL context
     $context = stream_context_create ($Options) ;
 
-    # Create EPP client
-    $client = new Net_EPP_Client();
+	# Create EPP client
+	$client = new Net_EPP_Client();
 
-    # Connect
-    $Port = 700;
-    $use_ssl = true;
-    $res = $client->connect($Server, $Port, 3 , $use_ssl, $context);
+	# Connect
+	$Port = 700;
+	$use_ssl = true;
+	$res = $client->connect($Server, $Port, 3 , $use_ssl, $context);
 
     
     
-    # Check for error
-    if (PEAR::isError($res)) {
-        logModuleCall("registrobr",_registrobr_lang("eppconnect"),"tls://".$Server.":".$Port,$res);
-        return $res;
+	# Check for error
+	if (PEAR::isError($res)) {
+		logModuleCall("registrobr",_registrobr_lang("eppconnect"),"tls://".$Server.":".$Port,$res);
+		return $res;
 
-    }
+	}
 
-    # Perform login
-    $request='
+	# Perform login
+	$request='
             <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
                 <command>
                     <login>
@@ -1856,16 +1856,16 @@ function _registrobr_Client() {
         ';
     
    $response = $client->request($request);
-        # Check results 
-    $answer = _registrobr_parse_response($response);
+        # Check results	
+	$answer = _registrobr_parse_response($response);
         $coderes = $answer['coderes'];
         $msg = $answer['msg'];
         $reason = $answer['reason'];
-    $contact = $answer['contact'];
-    # Check results
+	$contact = $answer['contact'];
+	# Check results
     if($coderes != '1000') {
-        return _registrobr_server_error('epplogin',$coderes,$msg,$reason,$request,$response);
-        //before,the code wasn't returning the error
+		return _registrobr_server_error('epplogin',$coderes,$msg,$reason,$request,$response);
+		//before,the code wasn't returning the error
     }
     return $client;
 }
@@ -1939,63 +1939,63 @@ function _registrobr_StateProvince($sp) {
                             
 
 function _registrobr_identify_env_encode() {
-    #Encoding default UTF-8
+	#Encoding default UTF-8
 
 
-    if(!empty($CONFIG['Charset'])){
+	if(!empty($CONFIG['Charset'])){
                 
-        return $CONFIG['Charset'];
-    }
-    else {
-            $table = "tblconfiguration";
-            $fields = "Charset";
-            $where = array();
-            $result = select_query($table,$fields,$where);
-            $data = mysql_fetch_array($result);
+		return $CONFIG['Charset'];
+	}
+	else {
+    		$table = "tblconfiguration";
+    		$fields = "Charset";
+    		$where = array();
+    		$result = select_query($table,$fields,$where);
+    		$data = mysql_fetch_array($result);
 
-            if($data['Charset']) {
-            return $data['Charset'];
-        }
-        else {
-            return 'UTF-8';
-        }
-    }
+    		if($data['Charset']) {
+			return $data['Charset'];
+		}
+		else {
+			return 'UTF-8';
+		}
+	}
 
 }
 function _registrobr_convert_to_punycode($string){
 
-    # Setup include dir
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-    
-    require_once('Idna/idna_convert.class.php');
-        
-    $IDN = new idna_convert(array('idn_version' => '2008'));
-    
-    $encoded = $IDN->encode($string);
-    
-    return $encoded;
-    
+	# Setup include dir
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+	set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+	
+	require_once('Idna/idna_convert.class.php');
+		
+	$IDN = new idna_convert(array('idn_version' => '2008'));
+	
+	$encoded = $IDN->encode($string);
+	
+	return $encoded;
+	
 }
 function _registrobr_detect_encode($text){
-    $current_encoding = mb_detect_encoding($text, 'auto');
-    if(empty($current_encoding)){
-        return 'UTF-8';
-    }
-    else {
-        return $current_encoding;
-    }
-    
+	$current_encoding = mb_detect_encoding($text, 'auto');
+	if(empty($current_encoding)){
+		return 'UTF-8';
+	}
+	else {
+		return $current_encoding;
+	}
+	
 }
 
 function _registrobr_set_encode($text,$encode) {
-    
-    $current_encoding = _registrobr_detect_encode($text);
+	
+	$current_encoding = _registrobr_detect_encode($text);
     if(empty($encode)){
-        $to_encode = _registrobr_identify_env_encode();
+    	$to_encode = _registrobr_identify_env_encode();
     }
     else {
-        $to_encode = $encode."//TRANSLIT";
+    	$to_encode = $encode."//TRANSLIT";
     }
 
     $text = iconv($current_encoding, $to_encode, $text);

@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__PUBLICDOMAINREGISTRY_HANDLER__'))
-    define('__PUBLICDOMAINREGISTRY_HANDLER__', 1);
+	define('__PUBLICDOMAINREGISTRY_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class publicdomainregistry_handler
-    {
-    function parse($data_str, $query)
-        {
-        $items = array(
+	{
+	function parse($data_str, $query)
+		{
+		$items = array(
               'owner' => 'Registrant:',
               'owner#' => '(Registrant):',
               'admin' => 'Administrative Contact',
@@ -48,10 +48,10 @@ class publicdomainregistry_handler
               'domain.created#' => 'Creation Date:',
               'domain.expires' => 'Record expires on',
               'domain.expires#' => 'Expiration Date:',
-              'domain.status'   => 'Status:'
-                  );
+              'domain.status'	=> 'Status:'
+		          );
 
-        return easy_parser($data_str, $items, 'mdy', false, true, true);
-        }
-    }
+		return easy_parser($data_str, $items, 'mdy', false, true, true);
+		}
+	}
 ?>
