@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__DIRECTNIC_HANDLER__'))
-####define('__DIRECTNIC_HANDLER__', 1);
+    define('__DIRECTNIC_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class directnic_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
               'owner' => 'Registrant:',
               'admin' => 'Administrative Contact',
               'tech' => 'Technical Contact',
@@ -45,9 +45,9 @@ class directnic_handler
               'domain.created' => 'Record created on ',
               'domain.expires' => 'Record expires on ',
               '' => 'By submitting a WHOIS query'
-########          );
+                  );
 
-########return easy_parser($data_str, $items, 'mdy',false,false,true);
-########}
-####}
+        return easy_parser($data_str, $items, 'mdy',false,false,true);
+        }
+    }
 ?>

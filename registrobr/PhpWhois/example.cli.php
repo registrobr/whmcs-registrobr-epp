@@ -29,9 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 include('whois.main.php');
 
 if (isset($argv[1]))
-####$domain = $argv[1];
+    $domain = $argv[1];
 else
-####$domain = 'example.com';
+    $domain = 'example.com';
 
 $whois = new Whois();
 $result = $whois->Lookup($domain);

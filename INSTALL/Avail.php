@@ -39,11 +39,11 @@ define('DEFAULT_COOKIE', '00000000000000000000');
 define('MAX_RETRIES', 3);
 define('RETRY_TIMEOUT', 5);
 
-#############################################################
+                                                            #
 ##                                                         ##
 ##  Class responsible for parsing a Domain Check response  ##
 ##                                                         ##
-#############################################################
+                                                            #
 class AvailResponseParser {
     
     var $status = -1;
@@ -281,11 +281,11 @@ class AvailResponseParser {
 
 }
 
-############################################################
+                                                            
 ##                                                        ##
 ## Class responsible for sending a query thru the network ##
 ##                                                        ##
-############################################################
+                                                            
 class AvailClient {
 
     var $lang = 0;

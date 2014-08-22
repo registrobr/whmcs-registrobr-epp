@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__GODADDY_HANDLER__'))
-####define('__GODADDY_HANDLER__', 1);
+    define('__GODADDY_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class godaddy_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                   'owner' => 'Registrant:',
                   'admin' => 'Administrative Contact',
                   'tech' => 'Technical Contact',
@@ -44,13 +44,13 @@ class godaddy_handler
                   'domain.expires' => 'Expires on:',
                   'domain.changed' => 'Last Updated on:',
                   'domain.sponsor' => 'Registered through:'
-########              );
+                      );
 
-########$r = get_blocks($data_str, $items);
-########$r['owner'] = get_contact($r['owner']);
-########$r['admin'] = get_contact($r['admin'],false,true);
-########$r['tech'] = get_contact($r['tech'],false,true);
-########return format_dates($r, 'dmy');
-########}
-####}
+        $r = get_blocks($data_str, $items);
+        $r['owner'] = get_contact($r['owner']);
+        $r['admin'] = get_contact($r['admin'],false,true);
+        $r['tech'] = get_contact($r['tech'],false,true);
+        return format_dates($r, 'dmy');
+        }
+    }
 ?>

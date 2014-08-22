@@ -26,20 +26,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__ME_HANDLER__'))
-####define('__ME_HANDLER__', 1);
+    define('__ME_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class me_handler
-####{
-####function parse($data_str, $query)
-########{
-########$r['regrinfo'] = generic_parser_b($data_str['rawdata']);
-########$r['regyinfo'] = array(
+    {
+    function parse($data_str, $query)
+        {
+        $r['regrinfo'] = generic_parser_b($data_str['rawdata']);
+        $r['regyinfo'] = array(
                           'referrer' => 'http://domain.me',
                           'registrar' => 'doMEn'
                           );
-########return $r;
-########}
-####}
+        return $r;
+        }
+    }
 ?>

@@ -26,17 +26,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__DOMAINPEOPLE_HANDLER__'))
-####define('__DOMAINPEOPLE_HANDLER__', 1);
+    define('__DOMAINPEOPLE_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class domainpeople_handler
-####{
+    {
 
-####function parse($data_str, $query)
-########{
+    function parse($data_str, $query)
+        {
 
-########$items = array(
+        $items = array(
                   'owner' => 'Registrant Contact:',
                   'admin' => 'Administrative Contact:',
                   'tech' => 'Technical Contact:',
@@ -48,12 +48,12 @@ class domainpeople_handler
                   'domain.expires' => 'Expiration date:',
 //                  'domain.changed' => 'Record last updated on',
                   'domain.status' => 'Status:'
-########              );
+                      );
 
-########$r = easy_parser($data_str, $items, 'dmy', false, false, true);
-########if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
-########$r['domain']['sponsor'] = $r['domain']['sponsor'][0];
-########return $r;
-########}
-####}
+        $r = easy_parser($data_str, $items, 'dmy', false, false, true);
+        if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
+        $r['domain']['sponsor'] = $r['domain']['sponsor'][0];
+        return $r;
+        }
+    }
 ?>

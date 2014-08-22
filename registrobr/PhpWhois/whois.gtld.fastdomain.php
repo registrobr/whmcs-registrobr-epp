@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__FASTDOMAIN_HANDLER__'))
-####define('__FASTDOMAIN_HANDLER__', 1);
+    define('__FASTDOMAIN_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class fastdomain_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                   'owner' => 'Registrant Info:',
                   'admin' => 'Administrative Info:',
                   'tech' => 'Technical Info:',
@@ -46,33 +46,33 @@ class fastdomain_handler
                   'domain.expires' => 'Expires on..............:',
                   'domain.changed' => 'Last modified on........:',
                   'domain.status' => 'Status:'
-########              );
+                      );
 
-########while (list($key, $val) = each($data_str))
-############{
-############$faststr = strpos($val, ' (FAST-');
-############if ($faststr)
-################$data_str[$key] = substr($val, 0, $faststr);
-############}
+        while (list($key, $val) = each($data_str))
+            {
+            $faststr = strpos($val, ' (FAST-');
+            if ($faststr)
+                $data_str[$key] = substr($val, 0, $faststr);
+            }
 
-########$r = easy_parser($data_str, $items, 'dmy', false, false, true);
+        $r = easy_parser($data_str, $items, 'dmy', false, false, true);
 
-########if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
+        if (isset($r['domain']['sponsor']) && is_array($r['domain']['sponsor']))
 
-########$r['domain']['sponsor'] = $r['domain']['sponsor'][0];
+        $r['domain']['sponsor'] = $r['domain']['sponsor'][0];
 
-########if (isset($r['domain']['nserver']))
-############{
-############reset($r['domain']['nserver']);
-############$endnserver = false;
-############while (list($key, $val) = each($r['domain']['nserver']))
-################{
-################if ($val == '=-=-=-=')
-####################unset($r['domain']['nserver'][$key]);
-################}
-############}
+        if (isset($r['domain']['nserver']))
+            {
+            reset($r['domain']['nserver']);
+            $endnserver = false;
+            while (list($key, $val) = each($r['domain']['nserver']))
+                {
+                if ($val == '=-=-=-=')
+                    unset($r['domain']['nserver'][$key]);
+                }
+            }
 
-########return $r;
-########}
-####}
+        return $r;
+        }
+    }
 ?>

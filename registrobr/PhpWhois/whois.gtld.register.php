@@ -26,25 +26,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__REGISTER_HANDLER__'))
-####define('__REGISTER_HANDLER__', 1);
+    define('__REGISTER_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class register_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                   'owner#0' => 'Registrant Info:',
                   'owner#1' => 'Organization:',
                   'owner#2' => 'Registrant:',
-                  'owner#3'####=> 'Registrant Contact:',
+                  'owner#3'    => 'Registrant Contact:',
                   'admin' => 'Administrative',
                   'tech' => 'Technical',
                   'zone' => 'Zone',
                   'domain.sponsor#0' => 'Registrar Name....:',
                   'domain.sponsor#1' => 'Registration Service Provided By:',
-                  'domain.referrer'####=> 'Registrar Homepage:',
+                  'domain.referrer'    => 'Registrar Homepage:',
                   'domain.nserver' => 'Domain servers in listed order:',
                   'domain.nserver' => 'DNS Servers:',
                   'domain.name' => 'Domain name:',
@@ -54,9 +54,9 @@ class register_handler
                   'domain.expires#1' => 'Expiration date:',
                   'domain.changed' => 'Record last updated on..:',
                   'domain.status' => 'Status:'
-########            );
+                    );
 
-########return easy_parser($data_str, $items, 'ymd');
-########}
-####}
+        return easy_parser($data_str, $items, 'ymd');
+        }
+    }
 ?>

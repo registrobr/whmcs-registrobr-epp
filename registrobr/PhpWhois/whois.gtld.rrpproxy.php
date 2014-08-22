@@ -26,15 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__RRPPROXY_HANDLER__'))
-####define('__RRPPROXY_HANDLER__', 1);
+    define('__RRPPROXY_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class rrpproxy_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
                   'created-date:' => 'domain.created',
                   'updated-date:' => 'domain.changed',
                   'registration-expiration-date:' => 'domain.expires',
@@ -84,9 +84,9 @@ class rrpproxy_handler
                   'billing-phone:' => 'billing.phone',
                   'billing-fax:' => 'billing.fax',
                   'billing-email:' => 'billing.email'
-########              );
+                      );
 
-########return generic_parser_b($data_str, $items);
-########}
-####}
+        return generic_parser_b($data_str, $items);
+        }
+    }
 ?>

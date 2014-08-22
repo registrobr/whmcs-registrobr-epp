@@ -26,16 +26,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__ASSORTED_HANDLER__'))
-####define('__ASSORTED_HANDLER__', 1);
+    define('__ASSORTED_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class assorted_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
-                'owner'####=> 'Registrant:',
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
+                'owner'    => 'Registrant:',
                 'admin' => 'Administrative Contact:',
                 'tech' => 'Technical Contact:',
                 'domain.name' => 'Domain Name:',
@@ -43,9 +43,9 @@ class assorted_handler
                 'domain.created' => 'Record created on',
                 'domain.expires' => 'Record expires on',
                 'domain.changed' => 'Record last updated'
-########            );
+                    );
 
-########return easy_parser($data_str, $items, 'ymd',false,false,true);
-########}
-####}
+        return easy_parser($data_str, $items, 'ymd',false,false,true);
+        }
+    }
 ?>

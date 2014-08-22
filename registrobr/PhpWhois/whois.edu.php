@@ -26,37 +26,37 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 if (!defined('__EDU_HANDLER__'))
-####define('__EDU_HANDLER__', 1);
+    define('__EDU_HANDLER__', 1);
 
 require_once('whois.parser.php');
 
 class edu_handler
-####{
-####function parse($data_str, $query)
-########{
-########$items = array(
-################'domain.name' => 'Domain name:',
+    {
+    function parse($data_str, $query)
+        {
+        $items = array(
+                'domain.name' => 'Domain name:',
                 'domain.sponsor' => 'Registrar:',
                 'domain.nserver' => 'Name Servers:',
                 'domain.changed' => 'Domain record last updated:',
                 'domain.created' => 'Domain record activated:',
-                'owner'####=> 'Registrant:',
+                'owner'    => 'Registrant:',
                 'admin' => 'Administrative Contact:',
                 'tech' => 'Technical Contact:',
                 'billing' => 'Billing Contact:'
-########            );
+                    );
 
-########$r['regrinfo'] = easy_parser($data_str['rawdata'], $items, 'dmy');
+        $r['regrinfo'] = easy_parser($data_str['rawdata'], $items, 'dmy');
 
-########if (isset($b['tech']))
-############{
-############if ($r['regrinfo']['tech']['name'] == 'Same as above')
-################$r['regrinfo']['tech'] = $r['regrinfo']['admin'];
-############}
+        if (isset($b['tech']))
+            {
+            if ($r['regrinfo']['tech']['name'] == 'Same as above')
+                $r['regrinfo']['tech'] = $r['regrinfo']['admin'];
+            }
 
-########$r['regyinfo']['referrer'] = 'http://whois.educause.net';
-########$r['regyinfo']['registrar'] = 'EDUCASE';
-########return ($r);
-########}
-####}
+        $r['regyinfo']['referrer'] = 'http://whois.educause.net';
+        $r['regyinfo']['registrar'] = 'EDUCASE';
+        return ($r);
+        }
+    }
 ?>
