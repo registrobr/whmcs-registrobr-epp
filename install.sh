@@ -86,6 +86,9 @@ chgrp -R $httpuser $whmcsdir/modules/registrars/registrobr
 find $whmcsdir/modules/registrars/registrobr/ -iname "*.php" -exec chmod 640 {} \;
 find $whmcsdir/modules/registrars/registrobr/ -type d -exec chmod 711 {} \;
 chmod 711 $whmcsdir/modules/registrars/registrobr
+
+#Add WHMCS root dir to poll script
+sed -e "s,WHMCSINSTALLDIRSCRIPTREPLACE,$whmcsdir,g" registrobrpoll-partial.php > registrobrpoll.php
 install -m 640 -o root -g root registrobrpoll.php $whmcscrons
 
 
@@ -112,5 +115,6 @@ fi
 crontab crontabtmp.txt
 
 #remove tmpfiles
+rm registrobrpoll.php
 rm tmplist.php
 rm crontabtmp.txt 

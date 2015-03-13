@@ -27,11 +27,16 @@
 # NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
 
 
+#
+#define('ROOTDIR','/var/www/whmcs');
+#actual directory defined by install.sh script
+
 # Include Registro.br stuff we need
-require_once dirname(__FILE__) . '/registrobr.php';
-require_once dirname(__FILE__) . '/../../../dbconnect.php';
-require_once dirname(__FILE__) . '/../../../includes/functions.php';
-require_once dirname(__FILE__) . '/../../../includes/registrarfunctions.php';
+define('ROOTDIR','WHMCSINSTALLDIRSCRIPTREPLACE');
+require_once ROOTDIR . '/registrobr.php';
+require_once ROOTDIR . '/../../../dbconnect.php';
+require_once ROOTDIR . '/../../../includes/functions.php';
+require_once ROOTDIR . '/../../../includes/registrarfunctions.php';
 
 
 
