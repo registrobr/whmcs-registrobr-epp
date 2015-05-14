@@ -33,10 +33,10 @@
 
 # Include Registro.br stuff we need
 define('ROOTDIR','WHMCSINSTALLDIRSCRIPTREPLACE');
-require_once ROOTDIR . '/registrobr.php';
-require_once ROOTDIR . '/../../../dbconnect.php';
-require_once ROOTDIR . '/../../../includes/functions.php';
-require_once ROOTDIR . '/../../../includes/registrarfunctions.php';
+require_once ROOTDIR . '/modules/registrar/registrobr/registrobr.php';
+require_once ROOTDIR . '/dbconnect.php';
+require_once ROOTDIR . '/includes/functions.php';
+require_once ROOTDIR . '/includes/registrarfunctions.php';
 
 
 
