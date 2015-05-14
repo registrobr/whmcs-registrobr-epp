@@ -57,6 +57,8 @@ fi
 #location of PHP binary
 php=`whereis -b php | cut -f2 -d " "`
 
+#location of PHP.ini
+phpini=`php -r 'print php_ini_loaded_file();'`
 
 if [ ! -x $php ]; then
 echo "Couldn't locate PHP binary, please edit install.sh"
@@ -100,7 +102,7 @@ crontab -l 2>/dev/null > crontabtmp.txt
 grep -q "registrobrpoll" crontabtmp.txt
 if [ ! $? -eq 0 ]; then
 	minute=$((RANDOM % 60))
-	printf "$minute * * * * $php -q $poll\n" >> crontabtmp.txt
+	printf "$minute * * * * $php -c $phpini -q $poll\n" >> crontabtmp.txt
 fi
 
 #if domain sync is available, add it to crontab as well
@@ -108,7 +110,7 @@ if [ -e "$whmcscrons/domainsync.php" ]; then
     grep -q "domainsync" crontabtmp.txt
     if [ ! $? -eq 0 ];  then
     	minute=$((RANDOM % 60))
-    printf "$minute */4 * * * $php -q $whmcscrons""/domainsync.php\n" >> crontabtmp.txt
+    printf "$minute */4 * * * $php -c $phpini -q $whmcscrons""/domainsync.php\n" >> crontabtmp.txt
     fi
 fi
 
