@@ -40,17 +40,17 @@ require_once ROOTDIR . '/includes/registrarfunctions.php';
 
 
 
-echo "Registro.br Poll" ;
+# echo "Registro.br Poll" ;
 
 registrobr_Poll();
 
-echo "Fim do Poll";
+#echo "Fim do Poll";
 
 
 
 function registrobr_Poll(){
 
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
+    $include_path = ROOTDIR . '/modules/registrar/registrobr';
     set_include_path($include_path . PATH_SEPARATOR . get_include_path());
     
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
