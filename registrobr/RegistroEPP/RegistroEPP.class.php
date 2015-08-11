@@ -119,19 +119,19 @@ abstract class RegistroEPP {
                 
         # Grab module parameters
         
-        if empty($moduleparams['Certificate']) {
+        if (empty($moduleparams['Certificate'])) {
                 $errormsg = $this->_registrobr_lang("specifypath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if !file_exists($moduleparams['Certificate']) {
+        if (!file_exists($moduleparams['Certificate'])) {
                 $errormsg = $this->_registrobr_lang("invalidpath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if empty($moduleparams['Passphrase'])) {
+        if (empty($moduleparams['Passphrase'])) {
                 $errormsg = $this->_registrobr_lang("specifypassphrase")  ;
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
