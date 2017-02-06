@@ -81,7 +81,6 @@ function registrobr_getConfigArray() {
     $configarray = array(
         "Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
         "Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
-        "TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
         "Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
         "Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
         "CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
@@ -117,23 +116,6 @@ function registrobr_getConfigArray() {
     $moduleparams = getregistrarconfigoptions('registrobr');
     
     
-    #if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
-
-        //case1 => register a domain
-        //case2 => check nameservers,contacts and delete the domain
-        //case3 => check nameservers,contacts and renew the domain
-        
-        //Check few minutes later if the domain was correct registered (whois -hbeta.registro.br domain)
-        //If the domain is ok, change testtype to 0 and load the url below again
-    
-        #require_once('RegistroEPP/RegistroEPPFactory.class.php');
-        
-        #$objRegistroEPPTest = RegistroEPPFactory::build('RegistroEPPTest');
-
-        #//Register a new domain, with DNS OK
-        #$objRegistroEPPTest->testCase($moduleparams);
-
-    #}
     
 
     return $configarray;
@@ -165,7 +147,6 @@ function registrobr_GetNameservers($params) {
     [Password] => 
     [TechC] => 
     [TechDept] => 1
-    [TestMode] => on
     [Username] => 237
     )
     
@@ -266,8 +247,7 @@ function registrobr_SaveNameservers($params) {
      [Password] =>  
      [TechC] => 
      [TechDept] => 1 
-     [TestMode] => on 
-     [Username] => 237 
+     [Username] => 237
      )  
      
      */
@@ -623,7 +603,6 @@ function registrobr_GetContactDetails($params) {
     [Password] => 
     [TechC] => 
     [TechDept] => 1
-    [TestMode] => on
     [Username] => 237
     )
      */
@@ -921,7 +900,6 @@ function registrobr_SaveContactDetails($params) {
     [Password] => 
     [TechC] => 
     [TechDept] => 1
-    [TestMode] => on
     [Username] => 237
 )
 ﻿
@@ -1298,7 +1276,6 @@ function registrobr_Sync($params) {
     [Sender] => root
     [TechC] => 
     [TechDept] => 2
-    [TestMode] => on
     [Username] => 237
     [domainid] => 78
     [domain] => toccos28.com.br
@@ -1333,10 +1310,7 @@ function registrobr_Sync($params) {
     $ticket = $data['ticket'];
     
     
-    #if($TESTMODE){
-    #_registrobr_test($domainid,$domain,$moduleparams);
-    #}
-    
+ 
     
     $objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
 
