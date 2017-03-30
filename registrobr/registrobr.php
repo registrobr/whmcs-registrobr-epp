@@ -117,6 +117,7 @@ function registrobr_getConfigArray() {
     $moduleparams = getregistrarconfigoptions('registrobr');
     
     
+    #print_r($moduleparams);exit;
     #if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
         //case1 => register a domain
@@ -347,8 +348,8 @@ function registrobr_RegisterDomain($params){
 
     
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
-    require_once ('isCnpjValid.php');
-    require_once ('isCpfValid.php');
+    require_once('isCnpjValid.php');
+    require_once('isCpfValid.php');
     
     $domain = $params["original"]["sld"].".".$params["original"]["tld"];
             
@@ -359,9 +360,7 @@ function registrobr_RegisterDomain($params){
 
     if (!isCpfValid($RegistrantTaxID)) {
         $RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
-
-                    ##
-
+	#################################################################
         $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
         $objRegistroEPP->set('domain',$domain);
         $objRegistroEPP->set('language',$params['Language']);
@@ -373,7 +372,7 @@ function registrobr_RegisterDomain($params){
                 $values["error"] = $e->getMessage();
                 return $values;
         }
-                    #
+	#################################################################
     
         $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
  
@@ -384,7 +383,6 @@ function registrobr_RegisterDomain($params){
         }
     }
  
-
     $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
     if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
         $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2);
@@ -410,10 +408,6 @@ function registrobr_RegisterDomain($params){
         }
     }
     
-    
-
-
-    
     # Domain information and check provider
     
     $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
@@ -429,7 +423,6 @@ function registrobr_RegisterDomain($params){
         $objRegistroEPPBrorg->getInfo(true);
         
         $coderes = $objRegistroEPPBrorg->get('coderes');
-        
         if($coderes == '1000'){
             # If it's already on the database, verify new domains can be registered    
             $providerID = $objRegistroEPPBrorg->get('clID');
@@ -437,16 +430,14 @@ function registrobr_RegisterDomain($params){
         }
         else {
             # Company or individual not in the database, proceed to org contact creation
-            
-            
-            $street1    = $params["original"]["address1"];
-            $street2    = $params["original"]["address2"];
-            $city         = $params["original"]["city"];
-            $sp            = $objRegistroEPPBrorg->StateProvince($params["original"]["state"]);
-            $pc            = $params["original"]["postcode"];
-            $cc            = $params["original"]["country"];
-            $email        = $params["original"]["email"];
-            $voice        = substr($params["original"]["fullphonenumber"],1);
+            $street1	= $params["original"]["address1"];
+            $street2	= $params["original"]["address2"];
+            $city	= $params["original"]["city"];
+            $sp		= $objRegistroEPPBrorg->StateProvince($params["original"]["state"]);
+            $pc		= $params["original"]["postcode"];
+            $cc		= $params["original"]["country"];
+            $email	= $params["original"]["email"];
+            $voice	= substr($params["original"]["fullphonenumber"],1);
                         
             $objRegistroEPPBrorg->set('domain',$domain);            
             $objRegistroEPPBrorg->set('name',$name);
@@ -488,9 +479,6 @@ function registrobr_RegisterDomain($params){
             $objRegistroEPPRegistrant->set('email',$email);
             
             $objRegistroEPPRegistrant->createOrgData();
-        
-                
-                            
         }
         
     }

@@ -140,8 +140,7 @@ abstract class RegistroEPP {
         
         # Use OT&E if test mode is set
         
-        $local_cert = dirname(__FILE__) . '/../test-client.pem';
-        
+	$local_cert = dirname(dirname(__FILE__)).'/test-client.pem';
         
         if (!isset($moduleparams['TestMode'])) {
             $Server = 'epp.registro.br' ;
@@ -153,12 +152,16 @@ abstract class RegistroEPP {
         else {
             $Server = 'beta.registro.br' ;
             $Options = array (
-            'ssl' => array (
-                    'local_cert' => $local_cert  ));
+		'ssl' => array (
+			'allow_self_signed' => TRUE,
+			'local_cert' => $local_cert,
+			'verify_peer' => FALSE
+		));
         }
-        
+
+
         # Create SSL context
-        $context = stream_context_create ($Options) ;
+        $context = stream_context_create($Options) ;
         
         # Create EPP client
         $client = new Net_EPP_Client();
@@ -175,14 +178,14 @@ abstract class RegistroEPP {
             $msg = $this->error('eppconnect',$param1,$errormsg);
             throw new Exception($msg);
         }
-        $requestXML = $this->loginXML();
-         $responseXML = $client->request($requestXML);
-         $objParser = New ParserResponse();
-         $objParser->parse($responseXML);
+	$requestXML = $this->loginXML();
+	$responseXML = $client->request($requestXML);
+	$objParser = New ParserResponse();
+	$objParser->parse($responseXML);
          
-         # Check results
-         $coderes = $objParser->get('coderes');
-         $this->set('netClient',$client); //set NET client to others requests
+	# Check results
+	$coderes = $objParser->get('coderes');
+	$this->set('netClient',$client); //set NET client to others requests
          
          
         if($coderes != '1000') {

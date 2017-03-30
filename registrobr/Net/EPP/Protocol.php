@@ -68,7 +68,7 @@ class Net_EPP_Protocol {
     * @param resource $socket a socket connected to the remote peer
     * @return PEAR_Error|string either an error or a string
     */
-    static function getFrame($socket) {
+    public static function getFrame($socket) {
         // Read header
         if (PEAR::isError($hdr = Net_EPP_Protocol::_fread_nb($socket,4))) {
                    return $hdr;
