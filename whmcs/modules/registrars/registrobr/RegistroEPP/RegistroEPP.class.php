@@ -119,19 +119,19 @@ abstract class RegistroEPP {
                 
         # Grab module parameters
         
-        if (!isset($moduleparams['TestMode']) && empty($moduleparams['Certificate'])) {
+        if empty($moduleparams['Certificate']) {
                 $errormsg = $this->_registrobr_lang("specifypath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (!isset($moduleparams['TestMode']) && !file_exists($moduleparams['Certificate'])) {
+        if !file_exists($moduleparams['Certificate']) {
                 $errormsg = $this->_registrobr_lang("invalidpath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (!isset($moduleparams['TestMode']) && empty($moduleparams['Passphrase'])) {
+        if empty($moduleparams['Passphrase']) {
                 $errormsg = $this->_registrobr_lang("specifypassphrase")  ;
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
@@ -142,22 +142,16 @@ abstract class RegistroEPP {
         
 	$local_cert = dirname(dirname(__FILE__)).'/test-client.pem';
         
-        if (!isset($moduleparams['TestMode'])) {
-            $Server = 'epp.registro.br' ;
-            $Options = array (
-            'ssl' => array (
-            'passphrase' => $moduleparams['Passphrase'],
-            'local_cert' => $moduleparams['Certificate']));
-        } 
-        else {
-            $Server = 'beta.registro.br' ;
-            $Options = array (
-		'ssl' => array (
-			'allow_self_signed' => TRUE,
-			'local_cert' => $local_cert,
-			'verify_peer' => FALSE
+    
+        $Server = $moduleparams['Server'] ;
+        $Options = array (
+		      'ssl' => array (
+			             'allow_self_signed' => TRUE,
+                        'passphrase' => $moduleparams['Passphrase'],
+                'local_cert' => $moduleparams['Certificate'],
+                'verify_peer' => FALSE
 		));
-        }
+        
 
 
         # Create SSL context

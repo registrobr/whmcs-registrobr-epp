@@ -79,13 +79,13 @@ function registrobr_getConfigArray() {
     mysql_query($query);
     
     $configarray = array(
-        "Username" => array( "Type" => "text", "Size" => "16", "Description" => "Provider ID(numerical)" ),
-        "Password" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password" ),
-        "TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),
-        "Certificate" => array( "Type" => "text", "Description" => "Path of certificate .pem" ),
-        "Passphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the certificate file" ),
-        "CPF" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for individuals Tax Payer IDs", "Default" => "1"),
-        "CNPJ" => array( "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Custom field index for corporations Tax Payer IDs (can be same as above)", "Default" => "1"),
+        "BetaUsername" => array( "Type" => "text", "Size" => "16", "Description" => "Numerical Provider ID for Beta (OT&E)" ),
+        "BetaPassword" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password for Beta (OT&E)" ),
+        "ProdUsername" => array( "Type" => "text", "Size" => "16", "Description" => "Numerical Provider ID for Production" ),
+        "ProdPassword" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password for Production" ),
+        "ProdCertificate" => array( "Type" => "text", "Description" => "Path of production certificate .pem" ),
+        "ProdPassphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the production certificate file" ),
+        "TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),        
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
         "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
@@ -97,7 +97,7 @@ function registrobr_getConfigArray() {
                          #"UT-NameServer2" => array( "Type" => "text", "Description" => "Domain name server #2 for unity testing"),
                          
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
-        "Description" => array("Type" => "System", "Value"=>"http://registro.br/provedor/epp/"),
+        "Description" => array("Type" => "System", "Value"=>"https://registro.br/tecnologia/provedor-hospedagem.html?secao=epp"),
 
         "dnsserver" => array (
             "FriendlyName" => "Enable optional DNS Server integration",
@@ -137,7 +137,7 @@ function registrobr_getConfigArray() {
     #}
     
 
-    return $configarray;
+    return _registrobr_Selector($configarray);
 
 }
 
@@ -1399,5 +1399,25 @@ function _registrobr_getTickets($clID,$domainid,$domain){
     return $ticket;
 }
 
+function _registrobr_selector($params){
+    
+    $output = $params;
+    if ($params["TestMode"] == True) {
+        $output.["Server"] = "beta.registro.br" ;
+        $output.["Certificate"] = "client-pwd.pem";
+        $output.["Username"] = $params.["BetaUsername"];
+        $output.["Password"] = $params.["BetaPassword"];
+        $output.["Passphrase"] = "shepp";
+    }
+    else {
+        $output.["Server"] = "epp.registro.br" ;
+        $output.["Certificate"] = $params.["ProdCertificate"];
+        $output.["Username"] = $params.["ProdUsername"];
+        $output.["Password"] = $params.["ProdPassword"];
+        $output.["Passphrase"] = $params.["ProdPassphrase"];
+    }
+    
+    return $output;
+}
 
 ?>
