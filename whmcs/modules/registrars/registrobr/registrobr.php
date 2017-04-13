@@ -114,9 +114,8 @@ function registrobr_getConfigArray() {
 
     );
     
-    $moduleparams = getregistrarconfigoptions('registrobr');
-    
-    
+    #$moduleparams = getregistrarconfigoptions('registrobr');
+      
     #print_r($moduleparams);exit;
     #if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
@@ -137,7 +136,7 @@ function registrobr_getConfigArray() {
     #}
     
 
-    return _registrobr_Selector($configarray);
+    return $configarray;
 
 }
 
@@ -180,8 +179,7 @@ function registrobr_GetNameservers($params) {
 
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
-
+    $moduleparams = _registrobr_Selector();
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
     $objRegistroEPP->set('language',$params['Language']);
@@ -1399,22 +1397,22 @@ function _registrobr_getTickets($clID,$domainid,$domain){
     return $ticket;
 }
 
-function _registrobr_selector($params){
+function _registrobr_Selector(){
     
-    $output = $params;
-    if ($params["TestMode"] == True) {
-        $output.["Server"] = "beta.registro.br" ;
-        $output.["Certificate"] = "client-pwd.pem";
-        $output.["Username"] = $params.["BetaUsername"];
-        $output.["Password"] = $params.["BetaPassword"];
-        $output.["Passphrase"] = "shepp";
+    $output = getregistrarconfigoptions('registrobr');
+    if ($output["TestMode"] == True) {
+        $output["Server"] = "beta.registro.br" ;
+        $output["Certificate"] = "client-pwd.pem";
+        $output["Username"] = $params["BetaUsername"];
+        $output["Password"] = $params["BetaPassword"];
+        $output["Passphrase"] = "shepp";
     }
     else {
-        $output.["Server"] = "epp.registro.br" ;
-        $output.["Certificate"] = $params.["ProdCertificate"];
-        $output.["Username"] = $params.["ProdUsername"];
-        $output.["Password"] = $params.["ProdPassword"];
-        $output.["Passphrase"] = $params.["ProdPassphrase"];
+        $output["Server"] = "epp.registro.br" ;
+        $output["Certificate"] = $params["ProdCertificate"];
+        $output["Username"] = $params["ProdUsername"];
+        $output["Password"] = $params["ProdPassword"];
+        $output["Passphrase"] = $params["ProdPassphrase"];
     }
     
     return $output;
