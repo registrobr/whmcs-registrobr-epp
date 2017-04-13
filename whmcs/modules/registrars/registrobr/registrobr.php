@@ -371,22 +371,22 @@ function registrobr_RegisterDomain($params){
     $isCPF = FALSE ;
     $isCNPJ = FALSE ;
     
-    if (!empty($params['additionalfields'.'CPF']) {
+    if (!empty($params['additionalfields'.'CPF'])) {
         $RegistrantTaxID = $params['additionalfields'.'CPF'] ;
         $isCPF = isCpfValid($RegistrantTaxID) ;
     } 
     
-    if (!empty($params['additionalfields'.'CNPJ']) {
+    if (!empty($params['additionalfields'.'CNPJ'])) {
         $RegistrantTaxID = $params['additionalfields'.'CNPJ'] ;
         $isCNPJ = isCnpjValid($RegistrantTaxID) ;
     }
     
-    if (!empty($params['additionalfields'.'CPF ou CNPJ']) {
+    if (!empty($params['additionalfields'.'CPF ou CNPJ'])) {
         $RegistrantTaxID = $params['additionalfields'.'CPF ou CNPJ'] ;
-        if isCpfValid($RegistrantTaxID) {
+        if ($isCpfValid($RegistrantTaxID)) {
             $isCPF = TRUE ;
         }
-        if isCnpjValid($RegistrantTaxID) {
+        if ($isCnpjValid($RegistrantTaxID)) {
             $isCNPJ = TRUE ;
         }
     }
@@ -1422,7 +1422,7 @@ function _registrobr_Selector(){
     
     if ($params["TestMode"] == "Beta") {
         $output["Server"] = "beta.registro.br" ;
-        $output["Certificate"] = ROOTDIR . '/modules/registrars/registrobr' . "client-pwd.pem";
+        $output["Certificate"] = ROOTDIR . '/modules/registrars/registrobr/client-pwd.pem';
         $output["Username"] = $params["BetaUsername"];
         $output["Password"] = $params["BetaPassword"];
         $output["Passphrase"] = "shepp";
