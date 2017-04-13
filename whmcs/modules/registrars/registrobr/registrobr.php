@@ -85,7 +85,7 @@ function registrobr_getConfigArray() {
         "ProdPassword" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password for Production" ),
         "ProdCertificate" => array( "Type" => "text", "Description" => "Path of production certificate .pem" ),
         "ProdPassphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the production certificate file" ),
-        "TestMode" => array( "Type" => "yesno" , "Description" => "If active connects to beta.registro.br instead of production server"),        
+        "TestMode" => array( "Type" => "radio" , "Options" => "Beta,Prod" "Description" => "If Beta connects to beta.registro.br instead of production server", "Default" => "Beta"),        
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
         "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
@@ -1400,7 +1400,7 @@ function _registrobr_getTickets($clID,$domainid,$domain){
 function _registrobr_Selector(){
     
     $output = getregistrarconfigoptions('registrobr');
-    if ($output["TestMode"]) {
+    if ($output["TestMode"] == "Beta") {
         $output["Server"] = "beta.registro.br" ;
         $output["Certificate"] = "client-pwd.pem";
         $output["Username"] = $output["BetaUsername"];
