@@ -353,12 +353,8 @@ function registrobr_RegisterDomain($params){
             
     # Grab module parameters
     $moduleparams = _registrobr_Selector();
-
-    $RegistrantTaxID = $params['customfields'.$moduleparams['CPF']];
-
-    if (!isCpfValid($RegistrantTaxID)) {
-        $RegistrantTaxID = $params['customfields'.$moduleparams['CNPJ']] ;
-	#################################################################
+    
+    #################################################################
         $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
         $objRegistroEPP->set('domain',$domain);
         $objRegistroEPP->set('language',$params['Language']);
@@ -371,18 +367,40 @@ function registrobr_RegisterDomain($params){
                 return $values;
         }
 	#################################################################
-    
-        $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
  
-        if (!isCnpjValid($RegistrantTaxID)) {
+    $isCPF = FALSE ;
+    $isCNPJ = FALSE ;
+    
+    if (!empty($params['additionalfields'.'CPF']]) {
+        $RegistrantTaxID = $params['additionalfields'.'CPF']] ;
+        $isCPF = isCpfValid($RegistrantTaxID) ;
+    } 
+    
+    if (!empty($params['additionalfields'.'CNPJ']]) {
+        $RegistrantTaxID = $params['additionalfields'.'CNPJ']] ;
+        $isCNPJ = isCnpjValid($RegistrantTaxID) ;
+    }
+    
+    if (!empty($params['additionalfields'.'CPF ou CNPJ']]) {
+        $RegistrantTaxID = $params['additionalfields'.'CPF ou CNPJ']] ;
+        if isCpfValid($RegistrantTaxID) {
+            $isCPF = TRUE ;
+        }
+        if isCnpjValid($RegistrantTaxID) {
+            $isCNPJ = TRUE ;
+        }
+    }
+    
+    
+    if (($isCPF == FALSE) and ($isCNPJ == FALSE)) {
             $values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
             logModuleCall("registrobr",$values["error"],$params);
             return $values;
-        }
     }
- 
+        
+    
     $RegistrantTaxIDDigits = preg_replace("/[^0-9]/","",$RegistrantTaxID);
-    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
+    if (isCPF == TRUE) {
         $RegistrantTaxID = substr($RegistrantTaxIDDigits,0,3).".".substr($RegistrantTaxIDDigits,3,3).".".substr($RegistrantTaxIDDigits,6,3)."-".substr($RegistrantTaxIDDigits,9,2);
     } 
     else {
@@ -395,7 +413,7 @@ function registrobr_RegisterDomain($params){
     # Get registrant details
     $name = $params["original"]["firstname"]." ".$params["original"]["lastname"];
     
-    if (isCpfValid($RegistrantTaxIDDigits)==TRUE) {
+    if (isCPF == TRUE) {
         $RegistrantOrgName = substr($RegistrantContactName,0,40);
     
     } else {
@@ -1404,7 +1422,7 @@ function _registrobr_Selector(){
     
     if ($params["TestMode"] == "Beta") {
         $output["Server"] = "beta.registro.br" ;
-        $output["Certificate"] = "client-pwd.pem";
+        $output["Certificate"] = ROOTDIR . '/modules/registrars/registrobr' . "client-pwd.pem";
         $output["Username"] = $params["BetaUsername"];
         $output["Password"] = $params["BetaPassword"];
         $output["Passphrase"] = "shepp";
