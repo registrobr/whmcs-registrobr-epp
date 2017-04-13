@@ -11,7 +11,7 @@ REQUISITOS
 - WHMCS versão 7.x ou superior
 - Todos as dependências do WHMCS tais como Apache, MySQL etc.
 - Ambiente POSIX (Linux, FreeBSD e demais atendem este requisito)
-- PHP versão 5.6 ou superior
+- PHP versão 5.6 ou superior (testado apenas com PHP v7)
 - Suporte a SSL/TLS 
 - Ambiente exclusivo (VPS ou dedicado) para armazenamento seguro da chave privada SSL
 - Permissão de firewall para portas TCP 443 e TCP 700 nos servidores beta.registro.br, 
@@ -21,7 +21,7 @@ registro.br e epp.registro.br
 
 INSTALAÇÃO
 
-Copiar o conteúdo dos diretórios modules e resources para a pasta do WHMCS
+Copiar o conteúdo dos diretórios em whmcs a pasta do WHMCS (ex: sudo cp -R whmcs /var/www)
 Notar que se já houverem arquivos whois.json e additionalfields.php no
 diretório $WHMCS/resources/domains, ao invés de copiar deve-se fazer adição do conteúdo
 Caso já hajam arquivos em $WHMCS/modules/registrars/registrobr, basta sobrescrever.
@@ -36,17 +36,15 @@ CONFIGURAÇÃO
 
 3) Ative o módulo do Registro.br e depois em Configure.
 
-4) Preencha os seus dados de autenticação. Notar que Username se trata do número do provedor 
-EPP (ex: 001) e não do ID do provedor (ex: FAN). 
-
-   Por enquanto deixa a opção TestMode ativada. O certificado para utilização da 
+4) Preencha os seus dados de autenticação do ambiente beta.registro.br. Notar que Username se trata do número do provedor 
+EPP (ex: 001) e não do ID do provedor (ex: FAN). Por enquanto deixe a opção TestMode ativada. O certificado para utilização da 
    beta.registro.br já vem como parte da distribuição do módulo. 
 
 5) O preenchimento de TechC é opcional; sem ele os domínios são criados com contato 
 técnico igual ao registrante. 
 
 6)  Para o correto processamento das mensagens de retorno("Poll") é necessário 
-configurar Cron (Menu System, Opção Automation) e tambémdepartamentos de suporte no WHMCS e atribuir usuários a eles. 
+configurar Cron (Menu System, Opção Automation) e também departamentos de suporte no WHMCS e atribuir usuários a eles. 
 Na opção "Sender Username", utilize um Username que esteja em sua lista de 
 administradores ('../whmcs/admin/configadmins.php'), tal como root, ou cadastre um. 
  
@@ -61,12 +59,12 @@ Para testes de software verificar mais detalhes no arquivo TESTES
  
 ATIVAÇÃO EM PRODUÇÃO
 
-- Copie o arquivo .pem recebido para uma área fora do diretório de documentos do Apache 
+- Gere uma requisiço de certificado como descrito em https://registro.br/tecnologia/provedor-hospedagem.html?secao=epp 
+- Copie o arquivo .pem gerado da agregaço da chave privada com o certificado para uma área fora do diretório de documentos do Apache 
 - Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars -> 
-Registro.br, desabilitar a opção TESTMODE, mudar usuário e senha para as informação 
+Registro.br, desabilitar a opção TESTMODE, preencher usuário e senha para as informações
 de produção  e informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
-- Faça um registro teste sem cadastro de DNS para verificar que um ticket consegue ser 
-gerado; não configure DNS para esse domínio para evitar cobrança dessa transação. 
+ 
 
  
 
