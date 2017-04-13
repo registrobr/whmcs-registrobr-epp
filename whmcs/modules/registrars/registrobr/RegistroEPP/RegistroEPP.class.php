@@ -66,10 +66,12 @@ abstract class RegistroEPP {
 
     protected function _convert_to_puny_code($string){
         
+        require_once('Idna/idna_convert.class.php');
         
-        $encoded = idn_to_ascii($string,IDNA_NONTRANSITIONAL_TO_ASCII,INTL_IDNA_VARIANT_UTS46) ;
+        $IDN = new idna_convert(array('idn_version' => '2008'));
         
-              
+        $encoded = $IDN->encode($string);
+        
         return $encoded;
         
     }
@@ -117,19 +119,19 @@ abstract class RegistroEPP {
                 
         # Grab module parameters
         
-        if (empty($moduleparams['Certificate'])) {
+        if empty($moduleparams['Certificate']) {
                 $errormsg = $this->_registrobr_lang("specifypath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (!file_exists($moduleparams['Certificate'])) {
+        if !file_exists($moduleparams['Certificate']) {
                 $errormsg = $this->_registrobr_lang("invalidpath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (empty($moduleparams['Passphrase'])) {
+        if empty($moduleparams['Passphrase']) {
                 $errormsg = $this->_registrobr_lang("specifypassphrase")  ;
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
