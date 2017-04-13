@@ -371,18 +371,18 @@ function registrobr_RegisterDomain($params){
     $isCPF = FALSE ;
     $isCNPJ = FALSE ;
     
-    if (!empty($params['additionalfields'.'CPF']]) {
-        $RegistrantTaxID = $params['additionalfields'.'CPF']] ;
+    if (!empty($params['additionalfields'.'CPF']) {
+        $RegistrantTaxID = $params['additionalfields'.'CPF'] ;
         $isCPF = isCpfValid($RegistrantTaxID) ;
     } 
     
-    if (!empty($params['additionalfields'.'CNPJ']]) {
-        $RegistrantTaxID = $params['additionalfields'.'CNPJ']] ;
+    if (!empty($params['additionalfields'.'CNPJ']) {
+        $RegistrantTaxID = $params['additionalfields'.'CNPJ'] ;
         $isCNPJ = isCnpjValid($RegistrantTaxID) ;
     }
     
-    if (!empty($params['additionalfields'.'CPF ou CNPJ']]) {
-        $RegistrantTaxID = $params['additionalfields'.'CPF ou CNPJ']] ;
+    if (!empty($params['additionalfields'.'CPF ou CNPJ']) {
+        $RegistrantTaxID = $params['additionalfields'.'CPF ou CNPJ'] ;
         if isCpfValid($RegistrantTaxID) {
             $isCPF = TRUE ;
         }
