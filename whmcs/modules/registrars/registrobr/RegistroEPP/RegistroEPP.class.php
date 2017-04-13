@@ -111,8 +111,7 @@ abstract class RegistroEPP {
         require_once('ParserResponse/ParserResponse.class.php');
         require_once('Net/EPP/Client.php');
         require_once('Net/EPP/Protocol.php');
-        require_once('PEAR.php');
-        
+                
         $username = $this->set('username',$moduleparams['Username']);
         $password = $this->set('password',$moduleparams['Password']);
         $language = $this->set('language',$moduleparams['Language']);
@@ -163,12 +162,11 @@ abstract class RegistroEPP {
         # Connect
         $Port = 700;
         $use_ssl = true;
-        $res = $client->connect($Server, $Port, 3 , $use_ssl, $context);
-
-        # Check for error
-        if (PEAR::isError($res)) {
+        try {
+            $client->connect($Server, $Port, 3 , $use_ssl, $context);
+        } catch (Exception $e) {
             $param1 = "tls://".$Server.":".$Port;
-            $errormsg = $res->getMessage();
+            $errormsg = $e->getMessage();
             $msg = $this->error('eppconnect',$param1,$errormsg);
             throw new Exception($msg);
         }
