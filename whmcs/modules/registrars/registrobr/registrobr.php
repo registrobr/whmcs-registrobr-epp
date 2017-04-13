@@ -355,17 +355,17 @@ function registrobr_RegisterDomain($params){
     $moduleparams = _registrobr_Selector();
     
     #################################################################
-        $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
-        $objRegistroEPP->set('domain',$domain);
-        $objRegistroEPP->set('language',$params['Language']);
-
-        try {
-                $objRegistroEPP->login($moduleparams);
-        }
-        catch (Exception $e){
-                $values["error"] = $e->getMessage();
-                return $values;
-        }
+    #    $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
+    #    $objRegistroEPP->set('domain',$domain);
+    #    $objRegistroEPP->set('language',$params['Language']);
+    #
+    #    try {
+    #            $objRegistroEPP->login($moduleparams);
+    #    }
+    #    catch (Exception $e){
+    #            $values["error"] = $e->getMessage();
+    #            return $values;
+    #    }
 	#################################################################
  
     $isCPF = FALSE ;
@@ -391,6 +391,7 @@ function registrobr_RegisterDomain($params){
         }
     }
     
+    $objRegistroEPPBrorg = RegistroEPPFactory::build('RegistroEPPBrorg');
     
     if (($isCPF == FALSE) and ($isCNPJ == FALSE)) {
             $values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
