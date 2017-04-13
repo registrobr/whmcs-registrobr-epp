@@ -279,7 +279,7 @@ function registrobr_SaveNameservers($params) {
     
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
     
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
@@ -352,7 +352,7 @@ function registrobr_RegisterDomain($params){
     $domain = $params["original"]["sld"].".".$params["original"]["tld"];
             
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
 
     $RegistrantTaxID = $params['customfields'.$moduleparams['CPF']];
 
@@ -554,7 +554,7 @@ function registrobr_RenewDomain($params){
     
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
     
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('language',$params['Language']);
@@ -622,7 +622,7 @@ function registrobr_GetContactDetails($params) {
     #require_once('ParserResponse/ParserResponse.class.php');
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
         
     $domain = $params["sld"].".".$params["tld"];    
     
@@ -929,7 +929,7 @@ function registrobr_SaveContactDetails($params) {
     //must be used the original info  
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
     
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
@@ -1227,7 +1227,7 @@ function registrobr_RequestDelete($params) {
     $domain = $params["sld"].".".$params["tld"];
     
     # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
     
     $objRegistroEPPDomain = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPPDomain->set('domain',$domain);
@@ -1305,7 +1305,7 @@ function registrobr_Sync($params) {
     
     # Grab variables
     $domain = $params['domain'];
-    $moduleparams = getregistrarconfigoptions('registrobr');
+    $moduleparams = _registrobr_Selector();
     $table = "mod_registrobr";
     $fields = "clID,domainid,domain,ticket";
     $where = array(
