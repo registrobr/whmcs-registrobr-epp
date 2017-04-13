@@ -1400,19 +1400,19 @@ function _registrobr_getTickets($clID,$domainid,$domain){
 function _registrobr_Selector(){
     
     $output = getregistrarconfigoptions('registrobr');
-    if ($output["TestMode"] == True) {
+    if ($output["TestMode"]) {
         $output["Server"] = "beta.registro.br" ;
         $output["Certificate"] = "client-pwd.pem";
-        $output["Username"] = $params["BetaUsername"];
-        $output["Password"] = $params["BetaPassword"];
+        $output["Username"] = $output["BetaUsername"];
+        $output["Password"] = $output["BetaPassword"];
         $output["Passphrase"] = "shepp";
     }
     else {
         $output["Server"] = "epp.registro.br" ;
-        $output["Certificate"] = $params["ProdCertificate"];
-        $output["Username"] = $params["ProdUsername"];
-        $output["Password"] = $params["ProdPassword"];
-        $output["Passphrase"] = $params["ProdPassphrase"];
+        $output["Certificate"] = $output["ProdCertificate"];
+        $output["Username"] = $output["ProdUsername"];
+        $output["Password"] = $output["ProdPassword"];
+        $output["Passphrase"] = $output["ProdPassphrase"];
     }
     
     return $output;
