@@ -85,7 +85,7 @@ function registrobr_getConfigArray() {
         "ProdPassword" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password for Production" ),
         "ProdCertificate" => array( "Type" => "text", "Description" => "Path of production certificate .pem" ),
         "ProdPassphrase" => array( "Type" => "password", "Size" => "20", "Description" => "Passphrase to the production certificate file" ),
-        "TestMode" => array( "Type" => "radio" , "Options" => "Beta,Prod" "Description" => "If Beta connects to beta.registro.br instead of production server", "Default" => "Beta"),        
+        "TestMode" => array( "Type" => "radio" , "Options" => "Beta,Prod", "Description" => "If Beta connects to beta.registro.br instead of production server", "Default" => "Beta"),        
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
         "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
         "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
@@ -1399,20 +1399,22 @@ function _registrobr_getTickets($clID,$domainid,$domain){
 
 function _registrobr_Selector(){
     
-    $output = getregistrarconfigoptions('registrobr');
-    if ($output["TestMode"] == "Beta") {
+    $params = getregistrarconfigoptions('registrobr');
+    $output = $params;
+    
+    if ($params["TestMode"] == "Beta") {
         $output["Server"] = "beta.registro.br" ;
         $output["Certificate"] = "client-pwd.pem";
-        $output["Username"] = $output["BetaUsername"];
-        $output["Password"] = $output["BetaPassword"];
+        $output["Username"] = $params["BetaUsername"];
+        $output["Password"] = $params["BetaPassword"];
         $output["Passphrase"] = "shepp";
     }
     else {
         $output["Server"] = "epp.registro.br" ;
-        $output["Certificate"] = $output["ProdCertificate"];
-        $output["Username"] = $output["ProdUsername"];
-        $output["Password"] = $output["ProdPassword"];
-        $output["Passphrase"] = $output["ProdPassphrase"];
+        $output["Certificate"] = $params["ProdCertificate"];
+        $output["Username"] = $params["ProdUsername"];
+        $output["Password"] = $params["ProdPassword"];
+        $output["Passphrase"] = $params["ProdPassphrase"];
     }
     
     return $output;
