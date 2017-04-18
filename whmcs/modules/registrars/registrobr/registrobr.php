@@ -371,22 +371,22 @@ function registrobr_RegisterDomain($params){
     $isCPF = FALSE ;
     $isCNPJ = FALSE ;
     
-    if (!empty($params['additionalfields'.'CPF'])) {
-        $RegistrantTaxID = $params['additionalfields'.'CPF'] ;
+    if (!empty($params['additionalfields']['CPF'])) {
+        $RegistrantTaxID = $params['additionalfields']['CPF'] ;
         $isCPF = isCpfValid($RegistrantTaxID) ;
     } 
     
-    if (!empty($params['additionalfields'.'CNPJ'])) {
-        $RegistrantTaxID = $params['additionalfields'.'CNPJ'] ;
+    if (!empty($params['additionalfields']['CNPJ'])) {
+        $RegistrantTaxID = $params['additionalfields']['CNPJ'] ;
         $isCNPJ = isCnpjValid($RegistrantTaxID) ;
     }
     
-    if (!empty($params['additionalfields'.'CPF ou CNPJ'])) {
-        $RegistrantTaxID = $params['additionalfields'.'CPF ou CNPJ'] ;
-        if ($isCpfValid($RegistrantTaxID)) {
+    if (!empty($params['additionalfields']['CPF ou CNPJ'])) {
+        $RegistrantTaxID = $params['additionalfields']['CPF ou CNPJ'] ;
+        if (isCpfValid($RegistrantTaxID)) {
             $isCPF = TRUE ;
         }
-        if ($isCnpjValid($RegistrantTaxID)) {
+        if (isCnpjValid($RegistrantTaxID)) {
             $isCNPJ = TRUE ;
         }
     }
@@ -396,6 +396,7 @@ function registrobr_RegisterDomain($params){
     if (($isCPF == FALSE) and ($isCNPJ == FALSE)) {
             $values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
             logModuleCall("registrobr",$values["error"],$params);
+
             return $values;
     }
         
