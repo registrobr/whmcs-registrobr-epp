@@ -155,7 +155,7 @@ if (!$items)
                 'Name Server:' => 'domain.nserver.',
                 'Nameservers:' => 'domain.nserver.',
                 'Maintainer:' => 'domain.referer',
-                 
+
                 'Domain Registration Date:' => 'domain.created',
                 'Domain Create Date:' => 'domain.created',
                 'Domain Expiration Date:' => 'domain.expires',
@@ -166,7 +166,7 @@ if (!$items)
                 'Created On:' => 'domain.created',
                 'Last Updated On:' => 'domain.changed',
                 'Expiration Date:' => 'domain.expires',
-                 
+
                 'Registrant ID:' => 'owner.handle',
                 'Registrant Name:' => 'owner.name',
                 'Registrant Organization:' => 'owner.organization',
@@ -323,7 +323,7 @@ if (!$items)
                 'Billing FAX:' => 'billing.fax',
                 'Billing Email:' => 'billing.email',
                 'Billing E-mail:' => 'billing.email',
-                
+
                 'Zone ID:' => 'zone.handle',
                 'Zone Organization:' => 'zone.organization',
                 'Zone Name:' => 'zone.name',
@@ -548,10 +548,10 @@ if (isset($array['tech']))
 
 if (isset($array['zone']))
     $array['zone'] = get_contact($array['zone'], $extra_items, $has_org);
-            
+
 if (isset($array['admin']))
     $array['admin'] = get_contact($array['admin'], $extra_items, $has_org);
-        
+
 if (isset($array['owner']))
     $array['owner'] = get_contact($array['owner'], $extra_items, $has_org);
 
@@ -717,7 +717,7 @@ if ($has_org && count($array)>0)
 
 if (isset($r['name']) && is_array($r['name']))
     {
-    $r['name'] = implode($r['name'],' ');
+    $r['name'] = implode(' ', $r['name']);
     }
 
 if (!empty($array))

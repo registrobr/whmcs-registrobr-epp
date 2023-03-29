@@ -86,88 +86,88 @@ class Net_EPP_Simple extends Net_EPP_Client {
 
 	function checkDomains($domains) {
 	}
-	
+
 	function checkHost($host) {
 	}
-	
+
 	function checkHosts($host) {
 	}
-	
+
 	function checkContact($contact) {
 	}
-	
+
 	function checkContacts($contacts) {
 	}
-	
+
 	function domainInfo($domain, $authInfo=NULL) {
 	}
-	
+
 	function hostInfo($host, $authInfo=NULL) {
 	}
-	
+
 	function contactInfo($contact, $authInfo=NULL) {
 	}
-	
+
 	function domainTransferQuery($domain) {
 	}
-	
+
 	function domainTransferCancel($domain) {
 	}
-	
+
 	function domainTransferRequest($domain, $authInfo, $period, $unit='y') {
 	}
-	
+
 	function domainTransferApprove($domain) {
 	}
-	
+
 	function domainTransferReject($domain) {
 	}
-	
+
 	function contactTransferQuery($contact) {
 	}
-	
+
 	function contactTransferCancel($contact) {
 	}
-	
+
 	function contactTransferRequest($contact, $authInfo) {
 	}
-	
+
 	function contactTransferApprove($contact) {
 	}
-	
+
 	function contactTransferReject($contact) {
 	}
-	
+
 	function createDomain($domain) {
 	}
-	
+
 	function createHost($host) {
 	}
-	
+
 	function createContact($contact) {
 	}
-	
+
 	function updateDomain($domain, $add, $rem, $chg) {
 	}
-	
+
 	function updateContact($contact, $add, $rem, $chg) {
 	}
-	
+
 	function updateHost($host, $add, $rem, $chg) {
 	}
-	
+
 	function deleteDomain($domain) {
 	}
-	
+
 	function deleteHost($host) {
 	}
-	
+
 	function deleteContact($contact) {
 	}
-	
+
 	function renewDomain($domain, $period, $unit='y') {
 	}
-	
+
 	function ping() {
 	}
 
@@ -192,7 +192,7 @@ class Net_EPP_Simple extends Net_EPP_Client {
 		$response = $this->getFrame();
 		return $response;
 	}
-	
+
 	/*
 	* send a <logout> to the server
 	* @throws Net_EPP_Exception
@@ -232,7 +232,7 @@ class Net_EPP_Simple extends Net_EPP_Client {
 	function getFrame() {
 		$xml = parent::getFrame();
 		foreach (explode("\n", str_replace('><', ">\n<", trim($xml))) as $line) $this->debug("S: %s", $line);
-		return DOMDocument::loadXML($xml);
+		return (new DOMDocument())->loadXML($xml);
 	}
 
 	/*
