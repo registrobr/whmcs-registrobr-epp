@@ -55,7 +55,7 @@ configurar Cron (Menu System, Opção Automation) e também departamentos de sup
 Na opção "Sender Username", utilize um Username que esteja em sua lista de
 administradores ('../whmcs/admin/configadmins.php'), tal como root, ou cadastre um.
 
-8) Sugerimos muito fortemente que seja habilitado o módulo de log
+7) Sugerimos muito fortemente que seja habilitado o módulo de log
 em Utilities -> Log -> Module Log mesmo para uso em produção, para facilitar
 o diagnóstico de
 problemas reportados por clientes. Assim, não será necessário solicitar ao cliente
