@@ -35,8 +35,6 @@ $include_path = ROOTDIR . '/modules/registrars/registrobr';
 set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 
 
-# dns server addon
-require_once("registrobr.dnsserver.php");
 
 
 function registrobr_getConfigArray() {
@@ -100,16 +98,12 @@ function registrobr_getConfigArray() {
         "Description" => array("Type" => "System", "Value"=>"https://registro.br/tecnologia/provedor-hospedagem.html?secao=epp"),
 
         "dnsserver" => array (
-            "FriendlyName" => "Enable optional DNS Server integration",
+            "FriendlyName" => "Use Registro.br DNS servers for domain creation",
             "Type" => "radio",
-            "Description" => "Will insert new domains into DNS Server database to complete RegistroBr ticket processing",
-            "Options" => "none,powerdns",
-            "Default" => "none"
+            "Description" => "Will use auto.dns.br servers to speed up domain creation",
+            "Options" => "yes,no",
+            "Default" => "yes"
         ),
-        "dnsserver_hostname" => array( "Type" => "text", "Size" => "60", "FriendlyName" => "DNS Server hostname" ),
-        "dnsserver_database" => array( "Type" => "text", "Size" => "16", "FriendlyName" => "DNS Server extra", "Description" => "Use database name for PowerDNS dns server"),
-        "dnsserver_username" => array( "Type" => "text", "Size" => "16", "FriendlyName" => "DNS Server username" ),
-        "dnsserver_password" => array( "Type" => "password", "Size" => "16", "FriendlyName" => "DNS Server password" ),
 
 
     );
@@ -510,12 +504,21 @@ function registrobr_RegisterDomain($params){
         # Create domain
 
 
+    if (isset($params['dnsserver']) && $params['dnsserver'] == 'yes') {
+        $Nameservers["ns1"] = "a.auto.dns.br";
+        $Nameservers["ns2"] = "b.auto.dns.br";
+        $Nameservers["ns3"] = "";
+        $Nameservers["ns4"] = "";
+        $Nameservers["ns5"] = "";
+    } else {
+    
     $Nameservers["ns1"] = $params["ns1"];
     $Nameservers["ns2"] = $params["ns2"];
     $Nameservers["ns3"] = $params["ns3"];
     $Nameservers["ns4"] = $params["ns4"];
     $Nameservers["ns5"] = $params["ns5"];
-
+    }
+    
     $objRegistroEPPNewDomain = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPPNewDomain->set('language',$params['Language']);
     $objRegistroEPPNewDomain->set('netClient',$objRegistroEPPBrorg->get('netClient'));
@@ -545,11 +548,6 @@ function registrobr_RegisterDomain($params){
         $newid = insert_query($table,$values);
 
 
-        /* create zone at dnsserver */
-        if (isset($params['dnsserver']) && $params['dnsserver'] != 'none') {
-            $dnsserver = new dnsserver($params);
-            $dnsserver->createZone($params['domainname']);
-        }
 
     }
     catch (Exception $e){
