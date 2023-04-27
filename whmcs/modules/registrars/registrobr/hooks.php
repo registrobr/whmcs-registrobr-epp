@@ -6,30 +6,31 @@ add_hook('ClientAreaFooterOutput', 1, function ($domain) {
         echo <<<HTML
         <script type="text/javascript">
             window.addEventListener("DOMContentLoaded", (event) => {
-                const docInput = document.querySelector("[id='inputDomainfield[0][0]']")
-                docInput.maxLength = 18
-                docInput.minLength = 14
+                const docInput = document.getElementById('cpf-cnpj-rgbr-formatter').parentElement.firstChild
 
-                docInput.addEventListener('input', e => {
-                    // Source: https://gist.github.com/marceloneppel/dd9c17a01c1a8031c760b034dad0efd9
-                    const rawValue = e.target.value.replace(/\D/g, '')
+                if (docInput) {
+                    docInput.maxLength = 18
+                    docInput.minLength = 14
 
-                    if (rawValue.length >= 11) {
-                        if (rawValue.length === 11) {
-                            e.target.value = rawValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g, "\$1.\$2.\$3-\$4")
+                    docInput.addEventListener('input', e => {
+                        // Source: https://gist.github.com/marceloneppel/dd9c17a01c1a8031c760b034dad0efd9
+                        const rawValue = e.target.value.replace(/\D/g, '')
+
+                        if (rawValue.length >= 11) {
+                            if (rawValue.length === 11) {
+                                e.target.value = rawValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g, "\$1.\$2.\$3-\$4")
+
+                                return
+                            }
+
+                            e.target.value = rawValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/g, "\$1.\$2.\$3/\$4-\$5")
 
                             return
+                        } else {
+                            e.target.value = rawValue
                         }
-
-                        e.target.value = rawValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/g, "\$1.\$2.\$3/\$4-\$5")
-
-                        return
-                    } else {
-                        e.target.value = rawValue
-                    }
-                })
-
-                console.log(docInput)
+                    })
+                }
             });
         </script>
 HTML;
