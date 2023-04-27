@@ -34,7 +34,13 @@
 $include_path = ROOTDIR . '/modules/registrars/registrobr';
 set_include_path($include_path . PATH_SEPARATOR . get_include_path());
 
-
+function registrobr_MetaData() {
+    return array(
+        'DisplayName' => 'Registro.br',
+        'APIVersion' => '1.1',
+        'NonLinearRegistrationPricing' => false,
+    );
+}
 
 
 function registrobr_getConfigArray() {
