@@ -1,6 +1,6 @@
 TESTS
 
-Testing code still have known issues; we advise caution. In order to use Unity Testing, please remove comment marks from lines 90 to 93 and 104 to 120 of file
+Testing code still have known issues; we advise caution. In order to use Unity Testing, please remove comments where indicated at file
 registrobr/registrobr.php and follow the steps below:
 
 1) Enable the module in Utilities Logs -> Log -> Log Module
