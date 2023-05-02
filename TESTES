@@ -1,7 +1,8 @@
 
 TESTES
 
-O código de teste ainda tem bugs; sugerimos cautela na sua utilização. Para fazê-lo, descomente as linhas 90 a 93 e 104 a 120 do arquivo registrobr/registrobr.php e proceda aos passos abaixo:
+O código de teste ainda tem bugs; sugerimos cautela na sua utilização. Para fazê-lo, descomente as linhas marcadas com comentários sobre unity testing
+como indicado no arquivo registrobr/registrobr.php e proceda aos passos abaixo:
 
 1) Habilite o módulo de Logs em Utilities -> Log -> Module Log
 2) Confirme que a opção TestMode está ativada em "Domain Registrars"
