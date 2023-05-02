@@ -148,7 +148,11 @@ abstract class RegistroEPP {
 			             'allow_self_signed' => TRUE,
                         'passphrase' => $moduleparams['Passphrase'],
                 'local_cert' => $moduleparams['Certificate'],
-                'verify_peer' => FALSE
+        # if NIC.br EPP root.pem is added to ca-certificates, change verify_peer below to TRUE
+                'verify_peer' => FALSE,
+                'verify_peer_name' => TRUE,
+
+                              
 		));
         
 
