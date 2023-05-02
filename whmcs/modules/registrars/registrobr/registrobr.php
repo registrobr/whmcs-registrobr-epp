@@ -117,6 +117,8 @@ function registrobr_getConfigArray() {
     #$moduleparams = getregistrarconfigoptions('registrobr');
 
     #print_r($moduleparams);exit;
+    
+    # Remove # from the comments bellow to perform unity testing
     #if(($moduleparams['TestMode'] == 'on' )and ($moduleparams['UnityTesting'] != 'Normal')){
 
         //case1 => register a domain
