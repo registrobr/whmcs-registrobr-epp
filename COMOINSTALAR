@@ -3,15 +3,14 @@ Para informações não contidas neste texto por favor verifique https://github.
 
 Suporte comunitário em língua portuguesa pode ser obtido em um destes fóruns:
 - https://eng.registro.br/mailman/listinfo/eppnicbr
-- http://www.webhostingtalk.com.br/
 - http://portaldohost.com.br/forum/
 
 REQUISITOS
 
-- WHMCS versão 7.x ou superior
-- Todos as dependências do WHMCS tais como Apache, MySQL etc.
+- WHMCS versão 8.6 ou superior (testado apenas com WHMCS 8.7.2)
+- Todos as dependências do WHMCS (incluindo ionCube loader)
 - Ambiente POSIX (Linux, FreeBSD e demais atendem este requisito)
-- PHP versão 5.6 ou superior (testado apenas com PHP v7)
+- PHP versão 8.1 ou superior (testado apenas com PHP 8.1)
 - Suporte a SSL/TLS
 - Ambiente exclusivo (VPS ou dedicado) para armazenamento seguro da chave privada SSL
 - Permissão de firewall para portas TCP 443 e TCP 700 nos servidores beta.registro.br,
@@ -37,7 +36,7 @@ No arquivo `additionalfields.php`, mantenha o `<input type='hidden' id='cpf-cnpj
 
 CONFIGURAÇÃO
 
-1) No painel de controle do WHMCS, linha do topo, clique em "Setup"
+1) No painel de controle do WHMCS, vá até linha do topo, clique em "Setup"
 
 2) Clique então em "Products/Services" => "Domain Registrars"
 
@@ -48,7 +47,7 @@ EPP (ex: 001) e não do ID do provedor (ex: FAN). Por enquanto deixe a opção T
    beta.registro.br já vem como parte da distribuição do módulo.
 
 5) O preenchimento de TechC é opcional; sem ele os domínios são criados com contato
-técnico igual ao registrante.
+técnico igual ao titular. O contato técnico só poderá alterar o domínio se for feita remoção do provedor de serviço, mas sempre aparecerá no WHOIS/RDAP.
 
 6)  Para o correto processamento das mensagens de retorno("Poll") é necessário
 configurar Cron (Menu System, Opção Automation) e também departamentos de suporte no WHMCS e atribuir usuários a eles.
@@ -66,8 +65,10 @@ Para testes de software verificar mais detalhes no arquivo TESTES
 
 ATIVAÇÃO EM PRODUÇÃO
 
-- Gere uma requisiço de certificado como descrito em https://registro.br/tecnologia/provedor-hospedagem.html?secao=epp
-- Copie o arquivo .pem gerado da agregaço da chave privada com o certificado para uma área fora do diretório de documentos do Apache
+- Gere uma requisição de certificado como descrito em https://registro.br/tecnologia/provedores-de-hospedagem/epp/solicitacao-certificado/
+- Envie o CSR para epp@registro.br, sem enviar a chave privada
+- Copie o certificado recebido e a chave privada em unico arquivo .pem 
+- Copie o arquivo .pem gerado para uma área fora do diretório de documentos do servidor Web
 - Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars ->
-Registro.br, desabilitar a opção TESTMODE, preencher usuário e senha para as informações
-de produção  e informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
+Registro.br, colocar a opção TESTMODE como produção , preencher usuário e senha para as informações
+de produção, informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
