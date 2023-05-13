@@ -1,4 +1,26 @@
 <?php
+/**
+ * Based on WHMCS SDK Sample Registrar Module Hooks File
+ *
+ * @see https://developers.whmcs.com/hooks/
+ *
+ * @copyright Copyright (c) WHMCS Limited 2016
+ * @license https://www.whmcs.com/license/ WHMCS Eula
+ */
+
+// Require any libraries needed for the module to function.
+// require_once __DIR__ . '/path/to/library/loader.php';
+//
+// Also, perform any initialization required by the service's library.
+
+/**
+ * Register a hook with WHMCS.
+ *
+ * add_hook(string $hookPointName, int $priority, string|array|Closure $function)
+ */
+add_hook('AdminHomeWidgets', 1, function() {
+    return new registrobrModuleWidget();
+});
 
 add_hook('ClientAreaFooterOutput', 1, function ($domain) {
     if (strpos($domain['currentpagelinkback'], 'cart.php?a=confdomains') !== false) {
@@ -36,3 +58,95 @@ add_hook('ClientAreaFooterOutput', 1, function ($domain) {
 HTML;
     }
 });
+
+/**
+ * Code based on WHMCS Sample Registrar Module Admin Dashboard Widget.
+ *
+ */
+class registrobrModuleWidget extends \WHMCS\Module\AbstractWidget
+{
+    protected $title = 'Registro.br';
+    protected $description = '';
+    protected $weight = 150;
+    protected $columns = 1;
+    protected $cache = false;
+    protected $cacheExpiry = 120;
+    protected $requiredPermission = '';
+
+    public function getData()
+    {
+	$include_path = ROOTDIR . '/modules/registrars/registrobr';
+        set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+
+        require_once('TLDs.php');
+
+	require_once ROOTDIR . '/includes/registrarfunctions.php';
+	$moduleparams = getRegistrarConfigOptions('registrobr');
+
+	if ($moduleparams["ReprovisionTLDs"] == "No") {
+		return (array ('success' => true)); } ;
+	
+        $firstyearprice = $moduleparams['firstyearprice'];
+
+
+        $renewalprice = $moduleparams['renewalprice'];
+        
+        $registerpricearray = array (1 => $firstyearprice, 2 => $firstyearprice + $renewalprice, 3 => $firstyearprice + 2 * $renewalprice, 4 => $firstyearprice + 3 * $renewalprice, 5 => $firstyearprice + 4 * $renewalprice, 6 => $firstyearprice + 5 * $renewalprice, 7 => $firstyearprice + 6 * $renewalprice, 8 => $firstyearprice + 7 * $renewalprice, 9 => $firstyearprice + 8 * $renewalprice, 10 => $firstyearprice + 9 * $renewalprice);
+        
+        $renewpricearray = array (1 => $renewalprice, 2 => 2 * $renewalprice, 3 =>  3 * $renewalprice, 4 => 4 * $renewalprice, 5 => 5 * $renewalprice, 6 => 6 * $renewalprice, 7 => 7 * $renewalprice, 8 => 8 * $renewalprice, 9 => 9 * $renewalprice);
+        
+
+        $success=true ;
+
+	
+        
+        foreach ($registrobr_AllTLDs as &$registrobr_TLD) {
+            $command = 'CreateOrUpdateTLD';
+            $postData = array(
+                'extension' => $registrobr_TLD,
+                'id_protection' => false,
+                'dns_management' => false,
+                'email_forwarding' => false,
+                'epp_required' => false,
+                'auto_registrar' => 'registrobr',
+                'currency_code' => 'BRL',
+                'grace_period_days' => '104',
+                'grace_period_fee' => '-1',
+                'redemption_period_fee' => '0.00',
+                'register' => $registerpricearray,
+                'renew' => $renewpricearray,
+                'transfer' => array(1 => '-1.00'),
+            );
+            
+            $results = localAPI($command, $postData);
+            if ($results['result'] != 'success') {
+                $success=false ;
+            }
+	}        
+
+	$moduleparams['ReprovisionTLDs'] = "No";
+
+	$command = 'UpdateModuleConfiguration';
+	$postData = array(
+    'moduleType' => 'registrar',
+    'moduleName' => 'registrobr',
+    'parameters' => $moduleparams);
+	$results = localAPI($command, $postData);
+	if ($results['result'] != 'success') {
+                $success=false ;
+	}        
+	return array('success' => $success);
+    }
+
+    public function generateOutput($data)
+    {
+	$message = ($data['success'] == true) ?  'ok' : 'failed' ;
+
+        return <<<EOF
+<div class="widget-content-padded">
+    Registro.br TLDs $message
+</div>
+EOF;
+    }
+}
+
