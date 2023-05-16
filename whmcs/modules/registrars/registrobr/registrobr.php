@@ -108,14 +108,22 @@ function registrobr_getConfigArray() {
 
     
 
-    //$command = 'GetSupportDepartments';
-    //$postData = array();
-    //$results = localAPI($command, $postData, $adminUsername);
-    //if ($results['result']=='success') {
-    //
-    //} else {
+
+    $results = localAPI('GetSupportDepartments', array());
+    if (($results['result']=='success')&&($results['totalresults'] > 0)) {
+        $numdepts = $results['totalresults'];
+        foreach ($results['departments']['department'] as &$dept) {
+            $deptoptions = $deptoptions . $dept['id'] . "," ;
+            $deptnames = $deptnames . $dept['id'] . '-' . $dept['name'] . ",";
+            
+        }
+        $deptoptions = rtrim($deptoptions,",");
+        $deptnames = rtrim($deptnames,",");
         
-    //}
+    } else {
+       $deptoptions = "1";
+       $deptnames = "1 - Undefined";
+    }
     
     $configarray = array(
         "BetaUsername" => array( "Type" => "text", "Size" => "16", "Description" => "Numerical Provider ID for Beta (OT&E)" ),
@@ -129,9 +137,8 @@ function registrobr_getConfigArray() {
         "renewalprice" => array ("Type" => "text", "Size" >= "16", "Description" => "Renewal and additional years price .br for domain registrations", "Default" => "40.00"),
         "ReprovisionTLDs" => array ("Type" => "radio", "Options" => "Unconfigured,No,Yes", "Description" => "Force reprovision of .br TLDs (required to update pricing)", "Default" => "Unconfigured"),
         "TechC" => array( "FriendlyName" => "Tech Contact", "Type" => "text", "Size" => "20", "Description" => "Tech Contact used in new registrations; blank will make registrant the Tech contact" ),
-        "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Tech Department ID within ticketing system", "Default" => "1"),
-        "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => "1,2,3,4,5,6,7,8,9", "Description" => "Index for Finance Department ID within ticketing system (can be same as above)", "Default" => "1"),
-        "Sender" => array( "FriendlyName" => "Sender Username", "Type" => "text", "Size" => "16", "Description" => "Sender of tickets (usually root)", "Default" => "root"),
+        "TechDept" => array( "FriendlyName" => "Tech Department ID", "Type" => "dropdown", "Options" => $deptoptions, "Description" => $deptnames, "Default" => "1"),
+        "FinanceDept" => array( "FriendlyName" => "Finance Department ID", "Type" => "dropdown", "Options" => $deptoptions, "Description" => $deptnames, "Default" => "1"),
         "Language" => array ( "Type" => "radio", "Options" => "English,Portuguese", "Description" => "Escolha Portuguese para mensagens em Portugu&ecircs", "Default" => "English"),
                          #"UnityTesting" => array ( "Type" => "radio", "Options" => "Normal,Case1,Case2,Case3","Description" => "Use only for code quality testing", "Default" => "Normal"),
                          #"UT-Domain" => array( "Type" => "text", "Description" => "Domain name for unity testing"),

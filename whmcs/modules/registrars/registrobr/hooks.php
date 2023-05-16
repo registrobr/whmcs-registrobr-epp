@@ -1,4 +1,7 @@
 <?php
+
+use WHMCS\Database\Capsule;
+
 /**
  * Based on WHMCS SDK Sample Registrar Module Hooks File
  *
@@ -247,24 +250,33 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
         $issue["domain"] =$domain;
 
         if (empty($ticket)) {
-            $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
-            $data = mysql_fetch_array($queryresult);
-
+            $data = Capsule::table('mod_registrobr')
+                ->where(clID,"=",$moduleparams['Username'])
+                ->where(domain,"=",$domain)
+                ->get();
+            
+            
             # if there is only one domain with this name, we can match it to a domainid without a ticket
             if (count($data)==1) {
                 $domainid = $data['domainid'];
             }
         }
         else {
-            $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
-            $data = mysql_fetch_array($queryresult);
+            $data = Capsule::table('mod_registrobr')
+                ->where(clID,"=",$moduleparams['Username'])
+                ->where(ticket,"=",$ticket)
+                ->get();
+            
             $domainid = $data['domainid'];
         }
 
+        // Refactor opportunity: changing this code to use Domain Model instead of tbldomains
         if (!empty($domainid)) {
             $issue["domainid"] = $domainid;
-            $queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
-            $data = mysql_fetch_array($queryresult);
+            $data = Capsule::table('tbldomains')
+                ->where(id,"=",$domainid)
+                ->get();
+
             $issue["clientid"]=$data['userid'];
         }
     }
@@ -275,18 +287,12 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
 
     $issue["subject"] = "Mensagem de Poll relativa a dominios .br";
     $issue["message"] = $content;
-    $user = $moduleparams['Sender'];
-    $queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
-    $data = mysql_fetch_array($queryresult);
-
-
-    $issue["name"] = $data["firstname"]." ".$data["lastname"];
-    $issue["email"] = $data["email"];
-
-    $results = localAPI("openticket",$issue,$user);
+   
+   
+    $results = localAPI("OpenTicket",$issue);
 
     if ($results['result']!="success") {
-        $msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
+        $msg = $objRegistroEPPPoll->error('epppollerror','poll receiver',$results);
         return false;
     }
     else {
