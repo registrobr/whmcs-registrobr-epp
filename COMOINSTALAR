@@ -15,7 +15,7 @@ REQUISITOS
 - Ambiente exclusivo (VPS ou dedicado) para armazenamento seguro da chave privada SSL
 - Permissão de firewall para portas TCP 443 e TCP 700 nos servidores beta.registro.br,
 registro.br e epp.registro.br
-- Data correta no servidor (NTP recomendado mas não obrigatório)
+- Data correta no servidor (NTP recomendado mas não obrigatório; veja https://ntp.br para mais informações)
 
 
 INSTALAÇÃO
@@ -59,6 +59,9 @@ em Utilities -> Log -> Module Log mesmo para uso em produção, para facilitar
 o diagnóstico de
 problemas reportados por clientes. Assim, não será necessário solicitar ao cliente
 que refaça uma transação para que seja diagnosticado um problema.
+
+8) Apesar do módulo criar os TLDs de todas as categorias do .br que não tenham requisitos adicionais, no ambiente beta.registro.br devem ser usados apenas
+os TLDs .com.br (CPF ou CNPJ) e .eng.br (apenas CPF)
 
 Para testes de software verificar mais detalhes no arquivo TESTES
 
