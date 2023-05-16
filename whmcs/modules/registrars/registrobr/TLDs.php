@@ -1,14 +1,12 @@
 <?php
 
-if (!defined("WHMCS")) {
-    die("This file cannot be accessed directly");
-}
 
 // These are all .br TLDs that can be registered with either CPF or CNPJ, not including TLDs requiring documentation such as org.br.
 unset ($registrobr_GenericTLDs);
 unset ($registrobr_CPFTLDs);
 unset ($registrobr_CNPJTLDs);
 unset ($registrobr_AllTLDs);
+
 
 $registrobr_GenericTLDs = array ( ".app.br", ".art.br", ".com.br" , ".dev.br", ".eco.br", ".log.br", ".net.br", ".ong.br", ".tec.br", ".9guacu.br", ".abc.br", ".aju.br", ".anani.br", ".aparecida.br", ".barueri.br", ".belem.br", ".bhz.br", ".boavista.br", ".bsb.br", ".campinagrande.br", ".campinas.br", ".caxias.br", ".curitiba.br", ".feira.br", ".floripa.br", ".fortal.br", ".foz.br", ".goiania.br", ".gru.br", ".jab.br", ".jampa.br", ".jdf.br", ".joinville.br", ".londrina.br", ".macapa.br", ".maceio.br", ".manaus.br", ".maringa.br", ".morena.br", ".natal.br", ".niteroi.br", ".osasco.br", ".palmas.br", ".poa.br", ".pvh.br", ".recife.br", ".ribeirao.br", ".rio.br", ".riobranco.br", ".riopreto.br", ".salvador.br", ".sampa.br", ".santamaria.br", ".santoandre.br", ".saobernardo.br", ".saogonca.br", ".sjc.br", ".slz.br", ".sorocaba.br", ".the.br", ".udi.br", ".vix.br");
 // .emp.br not listed since it requires additional MoU

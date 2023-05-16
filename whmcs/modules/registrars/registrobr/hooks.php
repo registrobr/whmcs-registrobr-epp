@@ -8,19 +8,12 @@
  * @license https://www.whmcs.com/license/ WHMCS Eula
  */
 
-// Require any libraries needed for the module to function.
-// require_once __DIR__ . '/path/to/library/loader.php';
-//
-// Also, perform any initialization required by the service's library.
-
-/**
- * Register a hook with WHMCS.
- *
- * add_hook(string $hookPointName, int $priority, string|array|Closure $function)
- */
 add_hook('AdminHomeWidgets', 1, function() {
     return new registrobrModuleWidget();
 });
+
+add_hook('AfterCronJob', 1, 'registrobrPoll');
+
 
 add_hook('ClientAreaFooterOutput', 1, function ($domain) {
     if (strpos($domain['currentpagelinkback'], 'cart.php?a=confdomains') !== false) {
@@ -148,5 +141,157 @@ class registrobrModuleWidget extends \WHMCS\Module\AbstractWidget
 </div>
 EOF;
     }
+}
+
+
+function registrobrPoll() {
+
+    define('ROOTDIR','WHMCSINSTALLDIRSCRIPTREPLACE');
+    require_once ROOTDIR . '/modules/registrar/registrobr/registrobr.php';
+    require_once ROOTDIR . '/dbconnect.php';
+    require_once ROOTDIR . '/includes/functions.php';
+    require_once ROOTDIR . '/includes/registrarfunctions.php';
+    
+    $include_path = ROOTDIR . '/modules/registrar/registrobr';
+    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
+    
+    require_once('RegistroEPP/RegistroEPPFactory.class.php');
+
+    # Grab module parameters
+    $moduleparams = getregistrarconfigoptions('registrobr');
+
+    $objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
+
+    try {
+        $objRegistroEPPPoll->login($moduleparams);
+
+    }
+    catch (Exception $e){
+        echo $e->getMessage();
+    }
+    $i = 0;
+
+    do {
+
+        try {
+            $objRegistroEPPPoll->getMessages($moduleparams);
+
+        }
+        catch (Exception $e){
+            echo $e->getMessage();
+        }
+        $coderes = $objRegistroEPPPoll->get('coderes');
+
+        
+        $last = 0;
+
+        # This is the last one
+        if ($coderes == 1300) {
+            $last = 1;
+        }
+        else {
+            
+
+            $msgid = $objRegistroEPPPoll->get('msgQ');
+            $reason = $objRegistroEPPPoll->get('reason');
+            $code = $objRegistroEPPPoll->get('code');
+            $content = $objRegistroEPPPoll->get('content');
+            $objectId = $objRegistroEPPPoll->get('objectId');
+
+            $ok = _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll);
+
+            if($ok){
+                $objRegistroEPPPoll->sendAck();
+            }
+        }
+
+        $i++;
+
+    } while($last != 1 and $i < 100); //prevent inbox flooding
+
+}
+
+function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll){
+
+    $moduleparams = getregistrarconfigoptions('registrobr');
+
+    switch($code) {
+        case '1': case '22': case '28': case '29':
+            $ticket = $objRegistroEPPPoll->get('ticket');
+            #no break, poll messages with ticketNumber also have domain in objectId
+        case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18': case '20': case '107': case '108': case '304': case '305':
+            $domain = $objRegistroEPPPoll->get('objectId');
+            break;
+        case '100': case '101': case '102': case '103': case '106':
+            $taxpayerID = $objRegistroEPPPoll->get('objectId');
+            break;
+    }
+    $taxpayerID=preg_replace("/[^0-9]/","",$taxpayerID);
+
+    if (in_array($code,array('300','302','303','305'))==TRUE) {
+        $issue["priority"] = "High";
+        $issue["deptid"] = $moduleparams["FinanceDept"];
+    }
+    elseif (in_array($code,array('301','304'))==TRUE) {
+        $issue["priority"] = "Low";
+        $issue["deptid"] = $moduleparams["FinanceDept"];
+    }
+    else {
+        $issue["priority"] = "Low" ;
+        $issue["deptid"] = $moduleparams["TechDept"];
+    }
+
+    $issue["clientid"]=0;
+
+    if (!empty($domain)) {
+        $issue["domain"] =$domain;
+
+        if (empty($ticket)) {
+            $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." domain='".$domain."'");
+            $data = mysql_fetch_array($queryresult);
+
+            # if there is only one domain with this name, we can match it to a domainid without a ticket
+            if (count($data)==1) {
+                $domainid = $data['domainid'];
+            }
+        }
+        else {
+            $queryresult = mysql_query("SELECT domainid FROM mod_registrobr WHERE clID='".$moduleparams['Username']." ticket='".$ticket."'");
+            $data = mysql_fetch_array($queryresult);
+            $domainid = $data['domainid'];
+        }
+
+        if (!empty($domainid)) {
+            $issue["domainid"] = $domainid;
+            $queryresult = mysql_query("SELECT userid FROM tbldomains WHERE id='".$domainid."'");
+            $data = mysql_fetch_array($queryresult);
+            $issue["clientid"]=$data['userid'];
+        }
+    }
+    
+    if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
+        $issue["clientid"] = "1";
+    }
+
+    $issue["subject"] = "Mensagem de Poll relativa a dominios .br";
+    $issue["message"] = $content;
+    $user = $moduleparams['Sender'];
+    $queryresult = mysql_query("SELECT firstname,lastname,email FROM tbladmins WHERE username = '".$user."'");
+    $data = mysql_fetch_array($queryresult);
+
+
+    $issue["name"] = $data["firstname"]." ".$data["lastname"];
+    $issue["email"] = $data["email"];
+
+    $results = localAPI("openticket",$issue,$user);
+
+    if ($results['result']!="success") {
+        $msg = $objRegistroEPPPoll->error('epppollerror',$user,$results);
+        return false;
+    }
+    else {
+        return true;
+    }
+
 }
 

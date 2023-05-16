@@ -1,7 +1,7 @@
 [
     {
-        "extensions": ".com.br,.net.br,.eco.br,.art.br,.adv.br,.eng.br",
-        "uri": "https://registro.br/ajax/avail/",
-        "available": "\"available\":true"
+        "extensions": ".rio.br",
+        "uri": "https://registro.br/v2/ajax/avail/raw/",
+        "available": "\"status\":0"
     }
 ]

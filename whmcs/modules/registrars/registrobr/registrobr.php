@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2013, NIC.br (R)
+# Copyright (c) 2023, NIC.br (R)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,11 @@
 # NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
 
 
+use WHMCS\Domains\DomainLookup\ResultsList;
+use WHMCS\Domains\DomainLookup\SearchResult;
+
+use WHMCS\Database\Capsule;
+
 # Configuration array
 
 $include_path = ROOTDIR . '/modules/registrars/registrobr';
@@ -46,42 +51,72 @@ function registrobr_MetaData() {
 function registrobr_getConfigArray() {
 
 
+    
+    
     # Create version table if it doesn't exist
-    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr_version` (
-    `version` int(10) unsigned NOT NULL,
-    PRIMARY KEY (`version`)
-    ) ";
-    mysql_query($query);
+    if (!Capsule::schema()->hastable('mod_registrobr_version')) {
+        $version = 3 ;
+        try {
+            Capsule::schema()->create(
+                'mod_registrobr_version',
+                function ($table) {
+                    /** @var \Illuminate\Database\Schema\Blueprint $table */
+                    $table->integer('version_number');
+                }
+            );
+            Capsule::table('mod_registrobr_version')->insert( [ 'version_number' => $version ]);
+        } catch (\Exception $e) {
+            echo "Unable to create mod_registrobr_version: {$e->getMessage()}";
+        }
+    } else {
+        $version = Capsule::table('mod_registrobr_version')
+                        ->select('version_number')
+                        ->first();
+    }
 
-    $current_version = 1.01 ;
-    $queryresult = mysql_query("SELECT version FROM mod_registrobr_version");
-    $data = mysql_fetch_array($queryresult);
 
-    $version=$data['version'];
+    $current_version = 3 ;
 
+    
     if ($version!=$current_version) {
         #include code to alter table mod_registrobr
 
         #only update version if alter table above succeeds
-        mysql_query("UPDATE mod_registrobr_version SET version='".$current_version."'");
-        if (mysql_affected_rows()==0) {
-            mysql_query("insert into mod_registrobr_version (version) values ('".$current_version."')");
-            mysql_query("ALTER TABLE mod_registrobr CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci");
+        }
+    
+    # Create auxiliary table if it doesn't exist
+    
+    if (!Capsule::schema()->hastable('mod_registrobr')) {
+        try {
+            Capsule::schema()->create(
+                'mod_registrobr',
+                function ($table) {
+                    /** @var \Illuminate\Database\Schema\Blueprint $table */
+                    $table->string('clID',3);
+                    $table->integer('domainid');
+                    $table->string('domain');
+                    $table->integer('ticket');
+                    $table->unique('domainid');
+                    }
+            );
+        } catch (\Exception $e) {
+            echo "Unable to create mod_registrobr: {$e->getMessage()}";
         }
     }
 
+    
 
-    # Create auxiliary table if it doesn't exist
-    $query = "CREATE TABLE IF NOT EXISTS `mod_registrobr` (
-        `clID` varchar(16) COLLATE latin1_general_ci NOT NULL,
-        `domainid` int(10) unsigned NOT NULL,
-        `domain` varchar(200) COLLATE latin1_general_ci NOT NULL,
-        `ticket` int(10) unsigned NOT NULL,
-        PRIMARY KEY (`domainid`),
-        UNIQUE KEY `ticket` (`ticket`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
-    mysql_query($query);
+    
 
+    //$command = 'GetSupportDepartments';
+    //$postData = array();
+    //$results = localAPI($command, $postData, $adminUsername);
+    //if ($results['result']=='success') {
+    //
+    //} else {
+        
+    //}
+    
     $configarray = array(
         "BetaUsername" => array( "Type" => "text", "Size" => "16", "Description" => "Numerical Provider ID for Beta (OT&E)" ),
         "BetaPassword" => array( "Type" => "password", "Size" => "20", "Description" => "EPP Password for Beta (OT&E)" ),
@@ -145,6 +180,87 @@ function registrobr_getConfigArray() {
 
 }
 
+// Availability check
+// This code does not work yet, don't use Registro.br as lookup provider at this time
+// Run whoisjson.sh or whoisjsonbeta.sh to update whois.json for the time being
+function registrobr_CheckAvailability($params)
+{
+    // registrar configuration values
+
+    
+    $target = ($params['TestMode'] == 'Beta') ?  'https://beta.registro.br/v2/ajax/avail/raw/' : 'https://registro.br/v2/ajax/avail/raw/' ;
+
+    // availability check parameters
+    $searchTerm = $params['searchTerm'];
+    $tldsToInclude = $params['tldsToInclude'];
+
+    array_push ($tldsToInclude,$params['tld']);
+    $tldsToInclude = array_unique($tldsToInclude);
+    
+    if (!set($searchTerm)) {
+        $searchTerm = $params['sld'];
+    }
+        
+    $results = new ResultsList();
+
+    foreach ($tldsToInclude as $tld) {
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $target . $searchTerm . $tld);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 100);
+            $response = curl_exec($ch);
+            if (curl_errno($ch)) {
+                throw new \Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+            }
+            curl_close($ch);
+          
+            $result = json_decode($response, true);
+            if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
+                        throw new \Exception('Bad response received from Ajax Avail');
+                }
+            
+            $searchResult = new SearchResult($searchTerm, $tld);
+            
+            switch ($result['status']) {
+                case 0:
+                    $searchResult->setStatus(SearchResult::STATUS_NOT_REGISTERED);
+                    break;
+                case 2:
+                    $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
+                    break;
+                case 1:
+                case 3:
+                case 5:
+                case 6:
+                case 7:
+                case 9:
+                    $searchResult->setStatus(SearchResult::STATUS_RESERVED);
+                    break;
+                case 4:
+                case 8:
+                default:
+                    $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
+                    break;
+                    
+            $results->append($searchResult);
+                    
+            }
+            
+            
+            
+        } catch (\Exception $e) {
+            return array(
+                'error' => $e->getMessage(),
+            );
+        }
+    }
+    
+    return $results;
+    
+}
 
 # Function to return current nameservers
 
@@ -353,6 +469,8 @@ function registrobr_RegisterDomain($params){
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
     require_once('isCnpjValid.php');
     require_once('isCpfValid.php');
+    
+       
 
     $domain = $params["original"]["sld"].".".$params["original"]["tld"];
 
@@ -547,17 +665,17 @@ function registrobr_RegisterDomain($params){
         $name = $objRegistroEPPNewDomain->get('name');
         $ticket = $objRegistroEPPNewDomain->get('ticket');
 
-        $table = "mod_registrobr";
-
-        $values = array(
+        
+        
+        $result = Capsule::table('mod_registrobr')->insert(  [
                 "clID"         => $moduleparams['Username'],
                 "domainid"    => $params['domainid'],
                 "domain"    => $name,
                 "ticket"    => $ticket
+                                ]
         );
-
-        $newid = insert_query($table,$values);
-
+        
+       
 
 
     }
@@ -1334,18 +1452,13 @@ function registrobr_Sync($params) {
 
     # Grab variables
     $domain = $params['domain'];
+    $domainid = $params['domainid'];
     $moduleparams = _registrobr_Selector();
-    $table = "mod_registrobr";
-    $fields = "clID,domainid,domain,ticket";
-    $where = array(
-            "clID"        =>    $moduleparams['Username'],
-            "domainid"    =>    $domainid,
-            "domain"    =>    $domain
-            );
+    
+    $ticket = _registrobr_getTickets($moduleparams['Username'],$domainid,$domain);
+   
+    
 
-    $result = select_query($table,$fields,$where);
-    $data = mysql_fetch_array($result);
-    $ticket = $data['ticket'];
 
 
     #if($TESTMODE){
@@ -1411,19 +1524,23 @@ function registrobr_Sync($params) {
 
 function _registrobr_getTickets($clID,$domainid,$domain){
 
-    $table = "mod_registrobr";
-    $fields = "clID,domainid,domain,ticket";
-    $where = array(
-            "clID"        =>    $clID,
-            "domainid"  =>  $domainid,
-            "domain"    =>    $domain
-    );
-
-    $result = select_query($table,$fields,$where);
-    $data = mysql_fetch_array($result);
-    $ticket = $data['ticket'];
-
-    return $ticket;
+    if (Capsule::table('mod_registrobr')
+                    ->where('domainid','=',$domainid)
+                    ->where('domain','=',$domain)
+                    ->where('clID','=',$clID)
+                    ->exists()) {
+        return Capsule::table('mod_registrobr')
+        ->where('domainid','=',$domainid)
+        ->where('domain','=',$domain)
+        ->where('clID','=',$clID)
+        ->first()->ticket;
+        
+    }
+    
+    return NULL;
+    
+   
+    
 }
 
 function _registrobr_Selector(){
