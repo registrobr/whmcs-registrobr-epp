@@ -63,6 +63,8 @@ que refaça uma transação para que seja diagnosticado um problema.
 8) Apesar do módulo criar os TLDs de todas as categorias do .br que não tenham requisitos adicionais, no ambiente beta.registro.br devem ser usados apenas
 os TLDs .com.br (CPF ou CNPJ) e .eng.br (apenas CPF)
 
+9) O módulo implementa checagem de disponibilidade que chaveia corretamente entre o ambiente beta.registro.br e o de produção conforme se muda a opção na configuração do módulo, mas isso requer configuração do "Lookup Provider" em "Domain Pricing" como "Registro.br". Isso tem o efeito colateral de quebrar lookups de outros TLDs, então deve ser usado apenas durante testes, ou em ambientes de produção que não usem outros registrar modules. 
+
 Para testes de software verificar mais detalhes no arquivo TESTES
 
 

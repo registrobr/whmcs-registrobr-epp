@@ -188,8 +188,9 @@ function registrobr_getConfigArray() {
 }
 
 // Availability check
-// This code does not work yet, don't use Registro.br as lookup provider at this time
-// Run whoisjson.sh or whoisjsonbeta.sh to update whois.json for the time being
+// This code only implements availability check for .br domains
+// For multi-TLD installations use whois.json
+
 function registrobr_CheckAvailability($params)
 {
     // registrar configuration values
@@ -200,34 +201,39 @@ function registrobr_CheckAvailability($params)
     // availability check parameters
     $searchTerm = $params['searchTerm'];
     $tldsToInclude = $params['tldsToInclude'];
-
-    array_push ($tldsToInclude,$params['tld']);
-    $tldsToInclude = array_unique($tldsToInclude);
     
-    if (!set($searchTerm)) {
+    
+    if (empty($searchTerm)) {
         $searchTerm = $params['sld'];
     }
-        
+    
+  
     $results = new ResultsList();
 
+    
     foreach ($tldsToInclude as $tld) {
         try {
+            
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $target . $searchTerm . $tld);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 100);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
             $response = curl_exec($ch);
+            
             if (curl_errno($ch)) {
                 throw new \Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
             }
             curl_close($ch);
-          
+            
             $result = json_decode($response, true);
             if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
-                        throw new \Exception('Bad response received from Ajax Avail');
-                }
+                throw new \Exception('Bad response received from Ajax Avail');
+            }
+            
+            
             
             $searchResult = new SearchResult($searchTerm, $tld);
             
@@ -252,19 +258,24 @@ function registrobr_CheckAvailability($params)
                     $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
                     break;
                     
-            $results->append($searchResult);
-                    
             }
             
+           
+            $results->append($searchResult);
+            
+           
             
             
         } catch (\Exception $e) {
             return array(
-                'error' => $e->getMessage(),
-            );
+                         'error' => $e->getMessage(),
+                         );
         }
+
+        
     }
     
+   
     return $results;
     
 }
