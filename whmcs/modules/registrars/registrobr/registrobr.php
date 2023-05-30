@@ -188,13 +188,15 @@ function registrobr_getConfigArray() {
 }
 
 // Availability check
-// This code only implements availability check for .br domains
-// For multi-TLD installations use whois.json
+// Fall-back to WHOIS is provided
+// Even so, for multi-TLD installations whois.json is preferred
 
 function registrobr_CheckAvailability($params)
 {
     // registrar configuration values
 
+    
+    require_once('TLDs.php');
     
     $target = ($params['TestMode'] == 'Beta') ?  'https://beta.registro.br/v2/ajax/avail/raw/' : 'https://registro.br/v2/ajax/avail/raw/' ;
 
@@ -202,7 +204,7 @@ function registrobr_CheckAvailability($params)
     $searchTerm = $params['searchTerm'];
     $tldsToInclude = $params['tldsToInclude'];
     
-    
+   
     if (empty($searchTerm)) {
         $searchTerm = $params['sld'];
     }
@@ -212,66 +214,84 @@ function registrobr_CheckAvailability($params)
 
     
     foreach ($tldsToInclude as $tld) {
-        try {
-            
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $target . $searchTerm . $tld);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            $response = curl_exec($ch);
-            
-            if (curl_errno($ch)) {
-                throw new \Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
-            }
-            curl_close($ch);
-            
-            $result = json_decode($response, true);
-            if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Bad response received from Ajax Avail');
-            }
+        $searchResult = new SearchResult($searchTerm, $tld);
+        
+        if (in_array($tld, $registrobr_AllTLDs)) {
             
             
-            
-            $searchResult = new SearchResult($searchTerm, $tld);
-            
-            switch ($result['status']) {
-                case 0:
-                    $searchResult->setStatus(SearchResult::STATUS_NOT_REGISTERED);
-                    break;
-                case 2:
-                    $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
-                    break;
-                case 1:
-                case 3:
-                case 5:
-                case 6:
-                case 7:
-                case 9:
-                    $searchResult->setStatus(SearchResult::STATUS_RESERVED);
-                    break;
-                case 4:
-                case 8:
-                default:
-                    $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
-                    break;
+            try {
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $target . $searchTerm . $tld);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                $response = curl_exec($ch);
+                
+                if (curl_errno($ch)) {
+                    throw new \Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
+                }
+                curl_close($ch);
+                
+                $result = json_decode($response, true);
+                if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
+                    throw new \Exception('Bad response received from Ajax Avail');
+                }
+                
+                                                               
+                switch ($result['status']) {
+                    case 0:
+                        $searchResult->setStatus(SearchResult::STATUS_NOT_REGISTERED);
+                        break;
+                    case 2:
+                        $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
+                        break;
+                    case 1:
+                    case 3:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 9:
+                        $searchResult->setStatus(SearchResult::STATUS_RESERVED);
+                        break;
+                    case 4:
+                    case 8:
+                    default:
+                        $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
+                        break;
+                        
+                }
+                
+               
                     
+               
+                
+                
+            } catch (\Exception $e) {
+                return array(
+                             'error' => $e->getMessage(),
+                             );
             }
+        } else {
             
+                $postData = array(
+                'domain' => $searchTerm . $tld,
+            );
            
-            $results->append($searchResult);
-            
-           
-            
-            
-        } catch (\Exception $e) {
-            return array(
-                         'error' => $e->getMessage(),
-                         );
+            $whois = localAPI('DomainWhois', $postData);
+            if ($whois['result']!=='success') {
+                $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
+                } elseif ($whois['status']=='unavailable') {
+                    $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
+                } else {
+                    $searchResult->setStatus(SearchResult::STATUS_NOT_REGISTERED);
+                }
         }
-
+        
+        $results->append($searchResult);
+        
         
     }
     

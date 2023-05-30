@@ -21,8 +21,12 @@ registro.br e epp.registro.br
 INSTALAÇÃO
 
 Copiar o conteúdo dos diretórios em whmcs a pasta do WHMCS (ex: sudo cp -R whmcs /var/www)
-Notar que se já houverem arquivos whois.json e additionalfields.php no
-diretório $WHMCS/resources/domains, ao invés de copiar deve-se fazer adição do conteúdo
+No diretório do módulo, fazer sudo ./install.sh para que o arquivo additionalfields.php seja instalado e CPF/CNPJ solicitados no registro, e ao arquivo whois.json serão adicionados os TLDs do .br. 
+
+Notar que se já houver entradas de .br no arquivo whois.json elas serão duplicadas e é recomendado manter apenas um conjunto deles. 
+
+Se já houver arquivo additionalfields.php no diretório $WHMCS/resources/domains, ao invés de copiar deve-se mesclar os códigos PHP existentes. 
+
 Caso já hajam arquivos em $WHMCS/modules/registrars/registrobr, basta sobrescrever.
 
 - Formatador de CNPJ e CPF (opcional)
@@ -63,7 +67,7 @@ que refaça uma transação para que seja diagnosticado um problema.
 8) Apesar do módulo criar os TLDs de todas as categorias do .br que não tenham requisitos adicionais, no ambiente beta.registro.br devem ser usados apenas
 os TLDs .com.br (CPF ou CNPJ) e .eng.br (apenas CPF)
 
-9) O módulo implementa checagem de disponibilidade que chaveia corretamente entre o ambiente beta.registro.br e o de produção conforme se muda a opção na configuração do módulo, mas isso requer configuração do "Lookup Provider" em "Domain Pricing" como "Registro.br". Isso tem o efeito colateral de quebrar lookups de outros TLDs, então deve ser usado apenas durante testes, ou em ambientes de produção que não usem outros registrar modules. 
+9) Em "Domain Pricing" -> "Lookup Provider" escolha "Registro.br". Isso tem o efeito colateral de desabilitar o WHMCS Name Spinner, apesar de não quebrar lookups de outros TLDs pois é usado WHOIS para os demais TLDs que não .br. 
 
 Para testes de software verificar mais detalhes no arquivo TESTES
 
@@ -77,3 +81,4 @@ ATIVAÇÃO EM PRODUÇÃO
 - Na administração do WHMCS -> Setup -> General Settings -> Domain Registrars ->
 Registro.br, colocar a opção TESTMODE como produção , preencher usuário e senha para as informações
 de produção, informar o diretório onde o certificado foi copiado e a pass-phrase do certificado
+- Escolher entre deixar "Registro.br" como "Lookup Provider" ou adicionar o arquivo whois.json que está no diretório modules/registrars/registrobr em resources/domains, ou mesclar o whois.json 
