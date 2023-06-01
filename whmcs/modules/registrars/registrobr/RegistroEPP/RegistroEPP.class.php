@@ -95,14 +95,14 @@ abstract class RegistroEPP {
             $errormsg.= $this->_registrobr_lang("reason").$reason."'";
         }
         
-        logModuleCall("registrobr",$errormsg,$XmlRequest,$XmlResponse);
+        logModuleCall("registrobr",$errormsg,$XmlRequest,$XmlResponse,'',array('BetaPassword','ProdPassword','ProdPassphrase'));
         return $errormsg;     
     }
     
     public function error($StringError,$param1,$errormsg){
          
         $translate = $this->_registrobr_lang($StringError);
-        logModuleCall("registrobr",$translate,$param1,$errormsg);
+        logModuleCall("registrobr",$translate,$param1,$errormsg,'', array('BetaPassword','ProdPassword','ProdPassphrase'));
         return $errormsg;
     }
     public function login($moduleparams){

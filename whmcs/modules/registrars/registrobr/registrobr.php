@@ -557,7 +557,7 @@ function registrobr_RegisterDomain($params){
     if (($isCPF == FALSE) and ($isCNPJ == FALSE)) {
             $values["error"] =$objRegistroEPPBrorg->getMsgLang("cpfcnpjrequired");
             //logModuleCall("registrobr",$values["error"],$params);
-            logModuleCall('registrobr', 'ErroCPFCNPJ', $values["error"], $params,'','');
+            logModuleCall('registrobr', 'ErroCPFCNPJ',  $params,$values["error"],'','',array('BetaPassword','ProdPassword','ProdPassphrase'));
 
             return $values;
     }
@@ -677,6 +677,20 @@ function registrobr_RegisterDomain($params){
         $Nameservers["ns3"] = "";
         $Nameservers["ns4"] = "";
         $Nameservers["ns5"] = "";
+        $command = 'UpdateClientDomain';
+        $postData = array(
+            'domainid' => $params['domainid'],
+            'ns1' => $Nameservers["ns1"],
+            'ns2' => $Nameservers["ns2"],
+            'ns3' => $Nameservers["ns3"],
+            'ns4' => $Nameservers["ns4"],
+            'ns5' => $Nameservers["ns5"],
+                          
+        );
+        $results = localAPI($command, $postData);
+        if ($results['result']!=='success') {
+            logModuleCall('registrobr', 'Update domain with Registro.br DNS servers', $command . " " . $postData, $results,'','',array('BetaPassword','ProdPassword','ProdPassphrase'));
+        }
     } else {
     
     $Nameservers["ns1"] = $params["ns1"];
@@ -721,6 +735,9 @@ function registrobr_RegisterDomain($params){
         $values["error"] = $e->getMessage();
         return $values;
     }
+    
+    
+    
     return $values;
 
 
