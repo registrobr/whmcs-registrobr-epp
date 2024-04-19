@@ -111,43 +111,57 @@ abstract class RegistroEPP {
         require_once('ParserResponse/ParserResponse.class.php');
         require_once('Net/EPP/Client.php');
         require_once('Net/EPP/Protocol.php');
-                
-        $username = $this->set('username',$moduleparams['Username']);
-        $password = $this->set('password',$moduleparams['Password']);
-        $language = $this->set('language',$moduleparams['Language']);
-                
+        
+                       
         # Grab module parameters
         
-        if (empty($moduleparams['Certificate'])) {
+
+        $language = $this->set('language',$moduleparams['Language']);
+        
+        if ($moduleparams["TestMode"] == "Beta") {
+            $Server = "beta.registro.br" ;
+            $Certificate = ROOTDIR . '/modules/registrars/registrobr/client-pwd.pem';
+            $Passphrase = "shepp";
+            $Username = $moduleparams["BetaUsername"];
+            $Password = $moduleparams["BetaPassword"];
+            
+        }
+        else {
+            $Server = "epp.registro.br" ;
+            $Certificate = $moduleparams["ProdCertificate"];
+            $Passphrase = $moduleparams["ProdPassphrase"];
+            $Username = $moduleparams["ProdUsername"];
+            $Password = $moduleparams["ProdPassword"];
+        }
+
+        if (empty($Certificate)) {
                 $errormsg = $this->_registrobr_lang("specifypath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (!file_exists($moduleparams['Certificate'])) {
+        if (!file_exists($Certificate)) {
                 $errormsg = $this->_registrobr_lang("invalidpath");
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
         }
         
-        if (empty($moduleparams['Passphrase'])) {
+        if (empty($Passphrase)) {
                 $errormsg = $this->_registrobr_lang("specifypassphrase")  ;
                 $msg = $this->error('configerr',$moduleparams,$errormsg);
                 throw new Exception($msg);
                  
         }
         
-        # Use OT&E if test mode is set
-        
-	$local_cert = dirname(dirname(__FILE__)).'/test-client.pem';
-        
+
+        $username = $this->set('username',$Username);
+        $password = $this->set('password',$Password);
     
-        $Server = $moduleparams['Server'] ;
-        $Options = array (
+       $Options = array (
 		      'ssl' => array (
 			             'allow_self_signed' => TRUE,
-                        'passphrase' => $moduleparams['Passphrase'],
-                'local_cert' => $moduleparams['Certificate'],
+                        'passphrase' => $Passphrase,
+                'local_cert' => $Certificate,
         # if NIC.br EPP root.pem is added to ca-certificates, change verify_peer below to TRUE
                 'verify_peer' => FALSE,
                 'verify_peer_name' => TRUE,
@@ -252,7 +266,7 @@ abstract class RegistroEPP {
             "msg" => array (" mensagem '"," message '"),
             "reason" => array (" motivo '"," reason '"),
             "eppconnect" => array ("Erro de conexão EPP","EPP connect error"),
-            "configerr" => array ("Erro nas opções de configuração","Config options errorr"),
+            "configerr" => array ("Erro nas opções de configuração","Config options error"),
             "specifypath" => array ("Favor informar o caminho para o arquivo de certificado","Please specifity path to certificate file"),
             "invalidpath" => array ("Caminho para o arquivo de certificado inválido", "Invalid certificate file path"),
             "specifypassphrase" => array ("Favor especificar a frase secreta do certificado", "Please specifity certificate passphrase"),
@@ -414,18 +428,13 @@ abstract class RegistroEPP {
             return $CONFIG['Charset'];
         }
         else {
-            $table = "tblconfiguration";
-            $fields = "Charset";
-            $where = array();
-            $result = select_query($table,$fields,$where);
-            $data = mysql_fetch_array($result);
-        
-            if($data['Charset']) {
-                return $data['Charset'];
-            }
-            else {
-                return 'UTF-8';
-            }
+            $results = localAPI('GetConfigurationValue', array(
+                'setting' => 'Charset',));
+            if ($results['result']=='success'){
+                                return $results['value'];
+                                }
+            return 'utf-8';
+
         }
     }
 

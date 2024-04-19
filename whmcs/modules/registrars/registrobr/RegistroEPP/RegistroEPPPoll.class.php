@@ -19,7 +19,7 @@ class RegistroEPPPoll extends RegistroEPP {
         
         require_once('ParserResponse/ParserResponse.class.php');
         # We need XML beautifier for showing understable XML code
-        require_once('BeautyXML.class.php');        
+        require_once('BeautyXML.class.php');
         # We need EPP stuff
         require_once('Net/EPP/Frame.php');
         require_once('Net/EPP/Frame/Command.php');
@@ -27,7 +27,7 @@ class RegistroEPPPoll extends RegistroEPP {
         
         $client = $this->get('netClient');
         if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
+            throw new Exception('net Client is not set, check login before');
         }
         
         $requestXML = $this->_getXMLMessages();
@@ -70,7 +70,7 @@ class RegistroEPPPoll extends RegistroEPP {
         }
         
         
-        $content .= $this->_registrobr_lang("FullXMLBelow");
+        $content .= $this->_registrobr_lang("FullXMLBelow")."\n";
         
         $bc = new BeautyXML();
         
@@ -93,7 +93,7 @@ class RegistroEPPPoll extends RegistroEPP {
         $client = $this->get('netClient');
         
         if(empty($client)){
-            throw new Exception('net Client is not setted, check login before');
+            throw new Exception('net Client is not set, check login before');
         }
         
         $requestXML = $this->_getXMLAck();

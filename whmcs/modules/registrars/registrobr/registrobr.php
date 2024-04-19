@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2023, NIC.br (R)
+# Copyright (c) 2013-2023, NIC.br (R)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ function registrobr_getConfigArray() {
     
     # Create version table if it doesn't exist
     if (!Capsule::schema()->hastable('mod_registrobr_version')) {
-        $version = 3 ;
+        $version = 4 ;
         try {
             Capsule::schema()->create(
                 'mod_registrobr_version',
@@ -66,23 +66,49 @@ function registrobr_getConfigArray() {
             );
             Capsule::table('mod_registrobr_version')->insert( [ 'version_number' => $version ]);
         } catch (\Exception $e) {
-            echo "Unable to create mod_registrobr_version: {$e->getMessage()}";
+            logModuleCall('registrobr', 'Failed to create mod_registrobr_version in getConfigArray',  "Capsule schema create integer version_number",$e->getMessage());
+            
+
         }
     } else {
-        $version = Capsule::table('mod_registrobr_version')
-                        ->select('version_number')
-                        ->first();
+        $version = (int) Capsule::table('mod_registrobr_version')
+                        ->value('version_number');
     }
 
 
-    $current_version = 3 ;
-
     
-    if ($version!=$current_version) {
-        #include code to alter table mod_registrobr
+    $current_version = 4 ;
 
+    $caught = false;
+    if ($version!=$current_version) {
+
+        #include code to alter table mod_registrobr
+        try {
+            Capsule::schema()->table('mod_registrobr', function ($table) {
+            $table->boolean('registered')->after('ticket');
+            });
         #only update version if alter table above succeeds
+        } catch (Exception $e) {
+            $caught = true;
+            logModuleCall('registrobr', 'Failed to alter table mod_registrobr in getConfigArray',  "Capsule table boolean registered" ,$e->getMessage());
         }
+        
+        if (!$caught) {
+            try {
+                Capsule::table('mod_registrobr_version')
+                ->where('version_number', (int)$version)
+                ->update(
+                         [
+                         'version_number' => (int)$current_version,
+                         ]
+                         );
+            } catch (Exception $e) {
+                logModuleCall('registrobr', 'Failed to update mod_registrobr_version in getConfigArray',  "Capsule table where version_number ". $version . " update version_number ".$current_version ,$e->getMessage());
+            }
+
+        }
+        
+}
     
     # Create auxiliary table if it doesn't exist
     
@@ -96,11 +122,12 @@ function registrobr_getConfigArray() {
                     $table->integer('domainid');
                     $table->string('domain');
                     $table->integer('ticket');
+                    $table->boolean('registered');
                     $table->unique('domainid');
                     }
             );
         } catch (\Exception $e) {
-            echo "Unable to create mod_registrobr: {$e->getMessage()}";
+                logModuleCall('registrobr', 'Failed to create mod_registrobr in getConfigArray',  "Capsule schema create string clID integer domainid string domain integer ticket boolean registered",$e->getMessage());
         }
     }
 
@@ -341,7 +368,7 @@ function registrobr_GetNameservers($params) {
     $moduleparams = _registrobr_Selector();
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
-    $objRegistroEPP->set('language',$params['Language']);
+    $objRegistroEPP->set('language',$moduleparams['Language']);
 
     try {
         $objRegistroEPP->login($moduleparams);
@@ -350,36 +377,22 @@ function registrobr_GetNameservers($params) {
         $values["error"] = $e->getMessage();
         return $values;
     }
-    $ticket = '';
-    $i = 0;
-    do {
-        try {
+
+    $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$domain);
+    if ($ticket != '') {
+        $objRegistroEPP->set('ticket',$ticket);
+    }
+
+    try {
             //Request domain info
 
-            if ($ticket != '') {
-                $objRegistroEPP->set('ticket',$ticket);
-                $ticket = '';
-            }
             $objRegistroEPP->getInfo();
 
-        }
-        catch (Exception $e){
-            $coderes = $objRegistroEPP->get('coderes');
-            if($coderes != '2303' and $coderes != '1000'){
+    } catch (Exception $e){
                 $values["error"] = $e->getMessage();
                 return $values;
             }
-        }
-        # Check results
-        $coderes = $objRegistroEPP->get('coderes');
-
-        if ($coderes != '1000') {
-            $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
-        }
-        $i++;
-
-
-    } while ($ticket != '' and $i <=2 );
+        
 
     $nameservers = $objRegistroEPP->get('nameservers');
 
@@ -453,40 +466,20 @@ function registrobr_SaveNameservers($params) {
         return $values;
     }
 
-    $ticket = '';
-    $i = 0;
-    do {
-        try {
-            //Request domain info
-            if ($ticket != '') {
-                $objRegistroEPP->set('ticket',$ticket);
-            }
-            $objRegistroEPP->getInfo();
-            $objRegistroEPP->set('ticket','');
-
-        }
-        catch (Exception $e){
-            $coderes = $objRegistroEPP->get('coderes');
-            if($coderes != '2303' and $coderes != '1000'){
-                $values["error"] = $e->getMessage();
-                return $values;
-            }
-        }
-        # Check results
-        $coderes = $objRegistroEPP->get('coderes');
-        if ($coderes == '1000' and $ticket != '') {//Domain pending
-            $values["error"] = $objRegistroEPP->getMsgLang("domainpending");
-            return $values;
-        }
-        elseif ($coderes == '2303') {
-            $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
-        }
-        $i++;
-
-    } while ($ticket != '' and $i <= 2);
-
-
-
+    try {
+        $objRegistroEPP->getInfo();
+    }     catch (Exception $e){
+        $values["error"] = $e->getMessage();
+        return $values;
+    }
+    
+    $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
+    
+    if ($ticket != '') {
+        $objRegistroEPP->set('ticket',$ticket);
+    }
+    
+    logModuleCall('registrobr', 'save nameservers debug',$params,$objRegistroEPP);
     $OldNameservers = registrobr_GetNameservers($params);
 
     $NewNameservers["ns1"] = $params["ns1"];
@@ -495,9 +488,17 @@ function registrobr_SaveNameservers($params) {
     $NewNameservers["ns4"] = $params["ns4"];
     $NewNameservers["ns5"] = $params["ns5"];
 
-    $objRegistroEPP->updateNameServers($OldNameservers,$NewNameservers);
+    try {
+        $objRegistroEPP->updateNameServers($OldNameservers,$NewNameservers);
+    }     catch (Exception $e){
+        $values["error"] = $e->getMessage();
+        return $values;
+        
+    }
 
-    return $values;
+    return array(
+                 'success' => true,
+                 );
 }
 
 
@@ -723,7 +724,8 @@ function registrobr_RegisterDomain($params){
                 "clID"         => $moduleparams['Username'],
                 "domainid"    => $params['domainid'],
                 "domain"    => $name,
-                "ticket"    => $ticket
+                "ticket"    => $ticket,
+                "registered" => FALSE
                                 ]
         );
         
@@ -738,12 +740,14 @@ function registrobr_RegisterDomain($params){
     
     
     
-    return $values;
+    return array(
+        'success' => true,
+    );
 
 
 }
 
-# Function to register domain
+
 
 # Function to renew domain
 
@@ -757,7 +761,8 @@ function registrobr_RenewDomain($params){
 
     # Grab module parameters
     $moduleparams = _registrobr_Selector();
-
+    
+    
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('language',$params['Language']);
     $objRegistroEPP->set('domain',$domain);
@@ -784,7 +789,9 @@ function registrobr_RenewDomain($params){
     }
 
 
-    return $values;
+    return array(
+        'success' => true,
+    );
 
 }
 
@@ -830,10 +837,10 @@ function registrobr_GetContactDetails($params) {
 
     $objRegistroEPP = RegistroEPPFactory::build('RegistroEPPDomain');
     $objRegistroEPP->set('domain',$domain);
-    $objRegistroEPP->set('language',$params['Language']);
+    $objRegistroEPP->set('language',$moduleparams['Language']);
 
-    $ticket = '';
-    $i++;
+    $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$domain);
+    
 
     do {
         $i++;
@@ -1499,9 +1506,6 @@ function registrobr_Sync($params) {
 
 
 
-    $include_path = ROOTDIR . '/modules/registrars/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
 
 
@@ -1588,13 +1592,47 @@ function _registrobr_getTickets($clID,$domainid,$domain){
         ->where('domainid','=',$domainid)
         ->where('domain','=',$domain)
         ->where('clID','=',$clID)
-        ->first()->ticket;
+        ->where('registered','=',false)
+        ->value('ticket');
         
     }
     
     return NULL;
+}
+
+function _registrobr_setRegistered($clID,$domainid,$domain){
+
+    if (Capsule::table('mod_registrobr')
+                    ->where('domainid','=',$domainid)
+                    ->where('domain','=',$domain)
+                    ->where('clID','=',$clID)
+                    ->exists()) {
+            try {
+                Capsule::table('mod_registrobr')
+                ->where('domainid','=',$domainid)
+                ->where('domain','=',$domain)
+                ->where('clID','=',$clID)
+                ->update(
+                     [
+                     'registered' => true,
+                     ]
+                     );
+            } catch (Exception $e) {
+            logModuleCall('registrobr', 'Failed to set domain as registered in setRegistered',  "Capsule table update where domainid =  ".$domainid." domain = ".$domain." clID = ".$clID." registered = true".$current_version ,$e->getMessage());
+                return FALSE;
+        }
+        return true;
+        
+    }
     
-   
+    return FALSE;
+}
+
+function _registrobr_GetDomainInfo($clID,$domainid,$domain){
+    
+    require_once('RegistroEPP/RegistroEPPFactory.class.php');
+    
+    $ticket=_registrobr_getTickets($clID,$domainid,$domain);
     
 }
 

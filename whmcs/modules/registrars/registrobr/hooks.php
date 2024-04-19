@@ -1,5 +1,8 @@
 <?php
 
+if (!defined('WHMCS'))
+    die('You cannot access this file directly.');
+
 use WHMCS\Database\Capsule;
 
 /**
@@ -15,7 +18,75 @@ add_hook('AdminHomeWidgets', 1, function() {
     return new registrobrModuleWidget();
 });
 
-add_hook('AfterCronJob', 1, 'registrobrPoll');
+add_hook('AfterCronJob', 1, function($vars) {
+         
+      
+
+    require_once 'registrobr.php';
+    require_once ROOTDIR . '/includes/functions.php';
+    require_once ROOTDIR . '/includes/registrarfunctions.php';
+    
+        
+    require_once 'RegistroEPP/RegistroEPPFactory.class.php' ;
+
+    # Grab module parameters
+    $moduleparams = getregistrarconfigoptions('registrobr');
+
+    $objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
+
+    try {
+        $objRegistroEPPPoll->login($moduleparams);
+
+    }
+    catch (Exception $e){
+         logModuleCall('registrobr', 'Poll processing login failure', $moduleparams, $e->getMessage());
+    }
+    $i = 0;
+
+    do {
+
+        try {
+            $objRegistroEPPPoll->getMessages($moduleparams);
+
+        }
+        catch (Exception $e){
+         logModuleCall('registrobr', 'Poll processing login failure', $moduleparams, $e->getMessage());
+        }
+        $coderes = $objRegistroEPPPoll->get('coderes');
+
+        
+        $last = 0;
+
+        # This is the last one
+        if ($coderes == 1300) {
+            $last = 1;
+        }
+        else {
+            
+
+            $msgid = $objRegistroEPPPoll->get('msgQ');
+            $reason = $objRegistroEPPPoll->get('reason');
+            $code = $objRegistroEPPPoll->get('code');
+            $content = $objRegistroEPPPoll->get('content');
+            $objectId = $objRegistroEPPPoll->get('objectId');
+            
+            logModuleCall('registrobr', 'Poll debug', $moduleparams, "msgQ ".$msgid." reason ".$reason." code ".$code." content ".$content." objectId ".$objectId);
+        
+            $ok = _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll);
+
+            if($ok){
+                $objRegistroEPPPoll->sendAck();
+            }
+        }
+
+        $i++;
+
+    } while($last != 1 and $i < 100); //prevent inbox flooding
+
+}
+
+         );
+         
 
 
 add_hook('ClientAreaFooterOutput', 1, function ($domain) {
@@ -147,81 +218,22 @@ EOF;
 }
 
 
-function registrobrPoll() {
-
-    define('ROOTDIR','WHMCSINSTALLDIRSCRIPTREPLACE');
-    require_once ROOTDIR . '/modules/registrar/registrobr/registrobr.php';
-    require_once ROOTDIR . '/dbconnect.php';
-    require_once ROOTDIR . '/includes/functions.php';
-    require_once ROOTDIR . '/includes/registrarfunctions.php';
-    
-    $include_path = ROOTDIR . '/modules/registrar/registrobr';
-    set_include_path($include_path . PATH_SEPARATOR . get_include_path());
-    
-    require_once('RegistroEPP/RegistroEPPFactory.class.php');
-
-    # Grab module parameters
-    $moduleparams = getregistrarconfigoptions('registrobr');
-
-    $objRegistroEPPPoll = RegistroEPPFactory::build('RegistroEPPPoll');
-
-    try {
-        $objRegistroEPPPoll->login($moduleparams);
-
-    }
-    catch (Exception $e){
-        echo $e->getMessage();
-    }
-    $i = 0;
-
-    do {
-
-        try {
-            $objRegistroEPPPoll->getMessages($moduleparams);
-
-        }
-        catch (Exception $e){
-            echo $e->getMessage();
-        }
-        $coderes = $objRegistroEPPPoll->get('coderes');
-
-        
-        $last = 0;
-
-        # This is the last one
-        if ($coderes == 1300) {
-            $last = 1;
-        }
-        else {
-            
-
-            $msgid = $objRegistroEPPPoll->get('msgQ');
-            $reason = $objRegistroEPPPoll->get('reason');
-            $code = $objRegistroEPPPoll->get('code');
-            $content = $objRegistroEPPPoll->get('content');
-            $objectId = $objRegistroEPPPoll->get('objectId');
-
-            $ok = _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll);
-
-            if($ok){
-                $objRegistroEPPPoll->sendAck();
-            }
-        }
-
-        $i++;
-
-    } while($last != 1 and $i < 100); //prevent inbox flooding
-
-}
 
 function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPPoll){
 
     $moduleparams = getregistrarconfigoptions('registrobr');
+    
+    $automation = false;
+    
+    
 
     switch($code) {
         case '1': case '22': case '28': case '29':
             $ticket = $objRegistroEPPPoll->get('ticket');
             #no break, poll messages with ticketNumber also have domain in objectId
+        case '1':
+            $automation = true ; // DOMAIN_CREATE_PAN handled by code
+            #no break, domain_create_pan also has domain in objectId
         case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '10': case '11': case '12': case '13': case '14': case '15': case '16': case '17': case '18': case '20': case '107': case '108': case '304': case '305':
             $domain = $objRegistroEPPPoll->get('objectId');
             break;
@@ -239,12 +251,10 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
         $issue["priority"] = "Low";
         $issue["deptid"] = $moduleparams["FinanceDept"];
     }
-    else {
+    elseif (!$automation) {
         $issue["priority"] = "Low" ;
         $issue["deptid"] = $moduleparams["TechDept"];
     }
-
-    $issue["clientid"]=0;
 
     if (!empty($domain)) {
         $issue["domain"] =$domain;
@@ -262,12 +272,11 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
             }
         }
         else {
-            $data = Capsule::table('mod_registrobr')
+            $domainid = Capsule::table('mod_registrobr')
                 ->where(clID,"=",$moduleparams['Username'])
                 ->where(ticket,"=",$ticket)
-                ->get();
+                ->value('domainid');
             
-            $domainid = $data['domainid'];
         }
 
         // Refactor opportunity: changing this code to use Domain Model instead of tbldomains
@@ -281,23 +290,45 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
         }
     }
     
-    if (!empty($taxpayerID)&&($issue["clientid"]==0)) {
-        $issue["clientid"] = "1";
-    }
-
-    $issue["subject"] = "Mensagem de Poll relativa a dominios .br";
-    $issue["message"] = $content;
+    if ($automation) {
+        switch($code) {
+                case '1': // DOMAIN_CREATE_PAN
+                try {
+                    Capsule::table('mod_registrobr')
+                    ->where('domainid', $domainid)
+                    ->update(
+                             [
+                             'registered' => true,
+                             ]
+                             );
+                } catch (Exception $e) {
+                    logModuleCall('registrobr', 'Failed to update mod_registrobr in poll processing',  "Capsule table where domainid ". $domainid . " update registered true " ,$e->getMessage());
+                }
+                break;
+          }
+               
+                
+        
+    } else {
+        
+        if (!isset($issue["clientid"])) {
+            $issue["email"]='noreply@registro.br';
+            $issue["name"]='Registro.br EPP';
+        }
+        
+        $issue["subject"] = "Mensagem de Poll relativa a dominios .br";
+        $issue["message"] = $content;
+        $issue["admin"] = true;
    
-   
-    $results = localAPI("OpenTicket",$issue);
+        $results = localAPI("OpenTicket",$issue);
 
-    if ($results['result']!="success") {
-        $msg = $objRegistroEPPPoll->error('epppollerror','poll receiver',$results);
-        return false;
+        if ($results['result']!="success") {
+                logModuleCall("registrobr","failed to open ticket",$issue,$results);
+                return false;
+            } else {
+                return true;
+            }
     }
-    else {
-        return true;
-    }
-
+        
 }
 
