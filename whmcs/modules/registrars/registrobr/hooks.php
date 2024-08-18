@@ -228,9 +228,6 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
     
 
     switch($code) {
-        case '1': case '22': case '28': case '29':
-            $ticket = $objRegistroEPPPoll->get('ticket');
-            #no break, poll messages with ticketNumber also have domain in objectId
         case '1':
             $automation = true ; // DOMAIN_CREATE_PAN handled by code
             #no break, domain_create_pan also has domain in objectId
@@ -259,25 +256,6 @@ function _registrobr_whmcsTickets($code,$msgid,$reason,$content,$objRegistroEPPP
     if (!empty($domain)) {
         $issue["domain"] =$domain;
 
-        if (empty($ticket)) {
-            $data = Capsule::table('mod_registrobr')
-                ->where(clID,"=",$moduleparams['Username'])
-                ->where(domain,"=",$domain)
-                ->get();
-            
-            
-            # if there is only one domain with this name, we can match it to a domainid without a ticket
-            if (count($data)==1) {
-                $domainid = $data['domainid'];
-            }
-        }
-        else {
-            $domainid = Capsule::table('mod_registrobr')
-                ->where(clID,"=",$moduleparams['Username'])
-                ->where(ticket,"=",$ticket)
-                ->value('domainid');
-            
-        }
 
         // Refactor opportunity: changing this code to use Domain Model instead of tbldomains
         if (!empty($domainid)) {
