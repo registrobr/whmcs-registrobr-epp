@@ -76,6 +76,13 @@ Nem o WHMCS implementa funções equivalentes às transações lá solicitadas, 
 Sugerimos que a mesma máquina com WHMCS tenha disponível o shepp, parte da libepp-nicbr, tanto
 para homologação quanto para uso eventual em produção. 
 
+Além do shepp ou outra implementação de cliente EPP, é necessária também para homologação alguma capacidade 
+de gestão de serviço DNS autoritativo, seja próprio do provedor de serviços, seja via serviço online. 
+Alguns módulos que podem oferecer isso:
+https://www.modulesgarden.com/products/whmcs/dns-manager
+https://www.cloudns.net/whmcs-module/
+
+
 ATIVAÇÃO EM PRODUÇÃO
 
 - Gere uma requisição de certificado como descrito em https://registro.br/tecnologia/provedores-de-hospedagem/epp/solicitacao-certificado/
