@@ -69,9 +69,6 @@ os TLDs .com.br (CPF ou CNPJ) e .eng.br (apenas CPF)
 
 9) Em "Domain Pricing" -> "Lookup Provider" escolha "Registro.br". Isso tem o efeito colateral de desabilitar o WHMCS Name Spinner, apesar de não quebrar lookups de outros TLDs pois é usado WHOIS para os demais TLDs que não .br. 
 
-Para testes de software verificar mais detalhes no arquivo TESTES
-
-
 ATIVAÇÃO EM PRODUÇÃO
 
 - Gere uma requisição de certificado como descrito em https://registro.br/tecnologia/provedores-de-hospedagem/epp/solicitacao-certificado/
