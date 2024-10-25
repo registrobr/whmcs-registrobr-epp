@@ -7,7 +7,7 @@ Suporte comunitário em língua portuguesa pode ser obtido em um destes fóruns:
 
 REQUISITOS
 
-- WHMCS versão 8.6 ou superior (testado apenas com WHMCS 8.7.2)
+- WHMCS versão 8.6 ou superior (testado apenas com WHMCS 8.11.2)
 - Todos as dependências do WHMCS (incluindo ionCube loader)
 - Ambiente POSIX (Linux, FreeBSD e demais atendem este requisito)
 - PHP versão 8.1 ou superior (testado apenas com PHP 8.1)
