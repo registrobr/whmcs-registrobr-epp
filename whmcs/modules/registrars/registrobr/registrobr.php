@@ -706,16 +706,12 @@ function registrobr_GetContactDetails($params) {
     $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$domain);
     
 
-    do {
-        $i++;
+  
+    
         try {
 
             $objRegistroEPP->login($moduleparams);
 
-            if ($ticket != '') {
-                $objRegistroEPP->set('ticket',$ticket);
-                $ticket = '';
-            }
 
             $objRegistroEPP->getInfo();
             $providerID = $objRegistroEPP->get('clID');
@@ -728,11 +724,7 @@ function registrobr_GetContactDetails($params) {
                 return $values;
             }
         }
-        if ($coderes != '1000') {
-            $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
-
-        }
-    } while($ticket != '' and $i < 3);
+   
 
     $contacts = $objRegistroEPP->get('contacts');
 
@@ -1010,20 +1002,14 @@ function registrobr_SaveContactDetails($params) {
 
 
 
-    $ticket = '';
-    $i = 0;
-    do { //do while to check pending domain
         try {
 
             $objRegistroEPP->login($moduleparams);
 
             //Request domain info
-            if ($ticket != '') {
-                $objRegistroEPP->set('ticket',$ticket);
-            }
+
 
             $objRegistroEPP->getInfo();
-            $objRegistroEPP->set('ticket','');
 
             $providerID = $objRegistroEPP->get('clID');
             $objRegistroEPP->verifyProvider($providerID,$moduleparams["Username"]);
@@ -1043,12 +1029,8 @@ function registrobr_SaveContactDetails($params) {
             $values["error"] = $objRegistroEPP->getMsgLang("domainpending");
             return $values;
         }
-        elseif ($coderes == '2303') {
-            $ticket = _registrobr_getTickets($moduleparams['Username'],$params['domainid'],$objRegistroEPP->get('domain'));
-        }
-        $i++;
 
-    } while ($ticket != '' and $i <= 2);
+    
 
 
 
@@ -1412,12 +1394,8 @@ function registrobr_Sync($params) {
     $nextduedate = $objRegistroEPPDomain->get('exDate');
     $holdreasons = $objRegistroEPPDomain->get('onHoldReason');
 
-    #if ticket number is different, this is actually a new domain with the same name
-    if (!empty($ticket) and $objRegistroEPPDomain->get('ticket') != $ticket) {
-        $values['expired'] = true ;
-        $values['expirydate'] = $createdate;
-    }
-    elseif (count($holdreasons) > 0) {
+
+    if (count($holdreasons) > 0) {
         foreach ($holdreasons as $hr){
             if (array_search("billing",$hr)!=FALSE) {
                 $values['expired'] = true;
