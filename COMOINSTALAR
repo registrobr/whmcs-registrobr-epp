@@ -69,6 +69,13 @@ os TLDs .com.br (CPF ou CNPJ) e .eng.br (apenas CPF)
 
 9) Em "Domain Pricing" -> "Lookup Provider" escolha "Registro.br". Isso tem o efeito colateral de desabilitar o WHMCS Name Spinner, apesar de não quebrar lookups de outros TLDs pois é usado WHOIS para os demais TLDs que não .br. 
 
+HOMOLOGAÇÃO
+
+Este módulo não tem como objetivo aprovação no procedimento de homologação disponível em https://ftp.registro.br/pub/libepp-nicbr/pt-epp-accreditation-proc.txt
+Nem o WHMCS implementa funções equivalentes às transações lá solicitadas, nem este módulo o faz. 
+Sugerimos que a mesma máquina com WHMCS tenha disponível o shepp, parte da libepp-nicbr, tanto
+para homologação quanto para uso eventual em produção. 
+
 ATIVAÇÃO EM PRODUÇÃO
 
 - Gere uma requisição de certificado como descrito em https://registro.br/tecnologia/provedores-de-hospedagem/epp/solicitacao-certificado/
