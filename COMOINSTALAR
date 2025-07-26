@@ -7,12 +7,13 @@ Suporte comunitário em língua portuguesa pode ser obtido em um destes fóruns:
 
 REQUISITOS
 
-- WHMCS versão 8.6 ou superior (testado apenas com WHMCS 8.11.2)
+- WHMCS versão 8.6 ou superior (testado apenas com WHMCS 8.13.1)
 - Todos as dependências do WHMCS (incluindo ionCube loader)
 - Ambiente POSIX (Linux, FreeBSD e demais atendem este requisito)
-- PHP versão 8.1 ou superior (testado apenas com PHP 8.1)
+- PHP versão 8.1 ou superior (testado apenas com PHP 8.3)
 - Suporte a SSL/TLS
 - Ambiente exclusivo (VPS ou dedicado) para armazenamento seguro da chave privada SSL
+- Usuário privilegiado root ou equivalente sudo(er)
 - Permissão de firewall para portas TCP 443 e TCP 700 nos servidores beta.registro.br,
 registro.br e epp.registro.br
 - Data correta no servidor (NTP recomendado mas não obrigatório; veja https://ntp.br para mais informações)
