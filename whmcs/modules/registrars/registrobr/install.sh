@@ -3,12 +3,12 @@
 #  install.sh
 #  
 #
-#  (C) NIC.br 2024
-#  
+#  (C) NIC.br 2025
+#
 
 php whoisjson.php >> ../../../resources/domains/whois.json
 
-cp additionalfields.php ../../../resources/domains/
+cat additionalfields.php >> ../../../resources/domains/additionalfields.php
 
 
 

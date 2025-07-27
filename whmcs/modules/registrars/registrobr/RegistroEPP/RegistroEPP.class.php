@@ -52,7 +52,7 @@ abstract class RegistroEPP {
     public function set($key,$value){
         
         if($key == 'domain'){
-            $value = $this->_convert_to_puny_code($value);
+            $value = $this->idn_to_ascii($unicodeDomain, IDNA_NONTRANSITIONAL_PROCESSING, INTL_IDNA_VARIANT_UTS46);
         }
         
         if (property_exists($this, $key)) {
@@ -64,17 +64,7 @@ abstract class RegistroEPP {
         }
     }
 
-    protected function _convert_to_puny_code($string){
-        
-        require_once('Idna/idna_convert.class.php');
-        
-        $IDN = new idna_convert(array('idn_version' => '2008'));
-        
-        $encoded = $IDN->encode($string);
-        
-        return $encoded;
-        
-    }
+
     public function language($string){
         
         $this->set('language',$string);

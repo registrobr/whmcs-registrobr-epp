@@ -1,31 +1,30 @@
 <?php
 
-/*	EPP Client class for PHP, Copyright 2005 CentralNic Ltd
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
+class Net_EPP
+{
+    /**
+     * load a class by giving it's short name
+     * @return boolean
+     */
+    public static function autoload($class)
+    {
+        $prefix = __CLASS__.'_';
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+        if ($prefix == substr($class, 0, strlen($prefix))) {
+            $basedir = dirname(dirname(__FILE__));
+            syslog(LOG_INFO, "class name is {$class} from dir {$basedir}");
+            
+            $file = $basedir.'/'.str_replace('_', '/', $class).'.php';
+            if (!file_exists($file)) {
+                syslog(LOG_CRIT, "the file {$file} does not exist");
+                return false;
+            }
+            
+            return include_once($file);
+        } else {
+            return false;
+        }
+    }
+}
 
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-
-/**
-* @package Net_EPP
-* @version 0.0.4
-* @author Gavin Brown <gavin.brown@nospam.centralnic.com>
-* @revision $Id: Client.php,v 1.13 2010/10/21 11:55:07 gavin Exp $
-*/
-
-require_once dirname(__FILE__).'/EPP/Exception.php';
-require_once dirname(__FILE__).'/EPP/ObjectSpec.php';
-require_once dirname(__FILE__).'/EPP/Protocol.php';
-require_once dirname(__FILE__).'/EPP/Frame.php';
-require_once dirname(__FILE__).'/EPP/Client.php';
-require_once dirname(__FILE__).'/EPP/Simple.php';
+spl_autoload_register(array('Net_EPP', 'autoload'));

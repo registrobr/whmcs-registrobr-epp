@@ -24,7 +24,7 @@
 
 
 # More information on NIC.br(R) domain registration services, Registro.br(TM), can be found at http://registro.br
-# Information for registrars available at http://registro.br/provedor/epp
+# Information for service providers available at http://registro.br/provedor/epp
 
 # NIC.br(R) is a not-for-profit organization dedicated to domain registrations and fostering of the Internet in Brazil. No WHMCS services of any kind are available from NIC.br(R).
 
@@ -141,7 +141,7 @@ function registrobr_CheckAvailability($params)
     
     require_once('TLDs.php');
     
-    $target = ($params['TestMode'] == 'Beta') ?  'https://beta.registro.br/v2/ajax/avail/raw/' : 'https://registro.br/v2/ajax/avail/raw/' ;
+    $target = ($params['TestMode'] == 'Beta') ?  'https://rdap.beta.registro.br/domain/' : 'https://rdap.registro.br/domain/' ;
 
     // availability check parameters
     $searchTerm = $params['searchTerm'];
@@ -170,37 +170,33 @@ function registrobr_CheckAvailability($params)
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+                curl_setopt($ch, CURLOPT_HEADER, false);
+                curl_setopt($ch, CURLOPT_NOBODY, false);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
                 $response = curl_exec($ch);
                 
                 if (curl_errno($ch)) {
                     throw new \Exception('Connection Error: ' . curl_errno($ch) . ' - ' . curl_error($ch));
                 }
+                
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                
                 curl_close($ch);
                 
-                $result = json_decode($response, true);
-                if ($result === null && json_last_error() !== JSON_ERROR_NONE) {
-                    throw new \Exception('Bad response received from Ajax Avail');
-                }
-                
+               
                                                                
-                switch ($result['status']) {
-                    case 0:
+                switch ($httpcode) {
+                    case 404:
                         $searchResult->setStatus(SearchResult::STATUS_NOT_REGISTERED);
                         break;
-                    case 2:
-                        $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
+                    case 200:
+                        $result = strstr($response,"nameservers");
+                        if ($result !== false) {
+                            $searchResult->setStatus(SearchResult::STATUS_REGISTERED);
+                        } else {
+                            $searchResult->setStatus(SearchResult::STATUS_RESERVED);
+                        }
                         break;
-                    case 1:
-                    case 3:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 9:
-                        $searchResult->setStatus(SearchResult::STATUS_RESERVED);
-                        break;
-                    case 4:
-                    case 8:
                     default:
                         $searchResult->setStatus(SearchResult::STATUS_UNKNOWN);
                         break;
@@ -308,6 +304,12 @@ function registrobr_GetNameservers($params) {
 
     $nameservers = $objRegistroEPP->get('nameservers');
 
+    foreach ($nameservers as $key => $value) {
+        if (str_ends_with($value,".auto.dns.br")) {
+            $value = "";
+        }
+    }
+    
     return $nameservers;
 
     /*
@@ -385,7 +387,7 @@ function registrobr_SaveNameservers($params) {
         return $values;
     }
     
-    logModuleCall('registrobr', 'save nameservers debug',$params,$objRegistroEPP);
+    #logModuleCall('registrobr', 'save nameservers debug',$params,$objRegistroEPP);
     
     $OldNameservers = registrobr_GetNameservers($params);
 
@@ -395,6 +397,22 @@ function registrobr_SaveNameservers($params) {
     $NewNameservers["ns4"] = $params["ns4"];
     $NewNameservers["ns5"] = $params["ns5"];
 
+    $countNameservers = 0;
+    foreach ($NewNameservers as $key => $value) {
+        if (!(empty($value))) {
+            $countNameservers += 1;
+        }
+    }
+
+    if ( $countNameservers < 2) { #minimum 2 nameservers in .br policy
+        $NewNameservers["ns1"] = "a.auto.dns.br";
+        $NewNameservers["ns2"] = "b.auto.dns.br";
+        $NewNameservers["ns3"] = "";
+        $NewNameservers["ns4"] = "";
+        $NewNameservers["ns5"] = "";
+        
+    }
+    
     try {
         $objRegistroEPP->updateNameServers($OldNameservers,$NewNameservers);
     }     catch (Exception $e){
@@ -578,7 +596,8 @@ function registrobr_RegisterDomain($params){
 
         # Create domain
 
-
+    #ensure domain is created without delay; actual nameservers updated later
+    
     $Nameservers["ns1"] = "a.auto.dns.br";
     $Nameservers["ns2"] = "b.auto.dns.br";
     
@@ -692,8 +711,7 @@ function registrobr_GetContactDetails($params) {
     require_once 'isCpfValid.php';
 
     require_once('RegistroEPP/RegistroEPPFactory.class.php');
-    #require_once('ParserResponse/ParserResponse.class.php');
-
+    
     # Grab module parameters
     $moduleparams = _registrobr_Selector();
 

@@ -22,11 +22,10 @@ registro.br e epp.registro.br
 INSTALAÇÃO
 
 Copiar o conteúdo dos diretórios em whmcs a pasta do WHMCS (ex: sudo cp -R whmcs /var/www)
-No diretório do módulo, fazer sudo ./install.sh para que o arquivo additionalfields.php seja instalado e CPF/CNPJ solicitados no registro, e ao arquivo whois.json serão adicionados os TLDs do .br. 
+Rodar o script sudo ./install.sh para preparação dos arquivos whois.json (checagem de disponibilidade de domínios e additionalfields.php (solicitação de CPF/CNPJ no registro).
 
-Notar que se já houver entradas de .br no arquivo whois.json elas serão duplicadas e é recomendado manter apenas um conjunto deles. 
+Notar que se já houver entradas de .br no arquivo whois.json elas serão duplicadas e é recomendado manter apenas um conjunto deles, o mesmo se aplicando ao additionalfields.php.
 
-Se já houver arquivo additionalfields.php no diretório $WHMCS/resources/domains, ao invés de copiar deve-se mesclar os códigos PHP existentes. 
 
 Caso já hajam arquivos em $WHMCS/modules/registrars/registrobr, basta sobrescrever.
 
