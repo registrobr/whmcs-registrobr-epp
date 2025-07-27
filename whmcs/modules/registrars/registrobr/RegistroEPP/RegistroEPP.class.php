@@ -52,7 +52,7 @@ abstract class RegistroEPP {
     public function set($key,$value){
         
         if($key == 'domain'){
-            $value = $this->idn_to_ascii($unicodeDomain, IDNA_NONTRANSITIONAL_PROCESSING, INTL_IDNA_VARIANT_UTS46);
+            $value = $this->idn_to_ascii($value, IDNA_NONTRANSITIONAL_PROCESSING, INTL_IDNA_VARIANT_UTS46);
         }
         
         if (property_exists($this, $key)) {
