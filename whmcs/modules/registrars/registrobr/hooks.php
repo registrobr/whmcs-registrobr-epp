@@ -188,6 +188,7 @@ class registrobrModuleWidget extends \WHMCS\Module\AbstractWidget
             $results = localAPI($command, $postData);
             if ($results['result'] != 'success') {
                 $success=false ;
+                logModuleCall('registrobr', 'Create or Update TLD failure', $command . $postData, $results);
             }
 	}        
 
