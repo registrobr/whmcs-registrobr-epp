@@ -99,14 +99,17 @@ class ParserResponse {
                                 
                 if($coderes != 1300){
 
-                        $msgQ = $doc->getElementsByTagName('msgQ')->item(0)->getAttribute('id');
-                        $qDate = $doc->getElementsByTagName('qDate')->item(0)->nodeValue;
-                        $txt = $doc->getElementsByTagName('txt')->item(0)->nodeValue;
-                        $reason = $doc->getElementsByTagName('reason')->item(0)->nodeValue;
-                        $coderes = $doc->getElementsByTagName('result')->item(0)->getAttribute('code');
-                        $ticket = $doc->getElementsByTagName('ticketNumber')->item(0)->nodeValue;
-                        $objectId = $doc->getElementsByTagName('objectId')->item(0)->nodeValue;
+                        // PHP 8.3: Uso do nullsafe operator (?->) para evitar Fatal Errors se a tag não existir no XML
+                        $msgQ = $doc->getElementsByTagName('msgQ')->item(0)?->getAttribute('id');
+                        $qDate = $doc->getElementsByTagName('qDate')->item(0)?->nodeValue;
+                        $txt = $doc->getElementsByTagName('txt')->item(0)?->nodeValue;
+                        $reason = $doc->getElementsByTagName('reason')->item(0)?->nodeValue;
+                        $coderes = $doc->getElementsByTagName('result')->item(0)?->getAttribute('code');
+                        $ticket = $doc->getElementsByTagName('ticketNumber')->item(0)?->nodeValue;
+                        $objectId = $doc->getElementsByTagName('objectId')->item(0)?->nodeValue;
                         
+                        // CORREÇÃO DO BUG: Extraindo o valor da tag <code> corretamente
+                        $code = $doc->getElementsByTagName('code')->item(0)?->nodeValue;
         
                         $this->set('coderes',$coderes);
                         $this->set('msgQ',$msgQ);

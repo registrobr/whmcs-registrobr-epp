@@ -31,7 +31,7 @@
 
 use WHMCS\Domains\DomainLookup\ResultsList;
 use WHMCS\Domains\DomainLookup\SearchResult;
-
+use WHMCS\Database\Capsule;
 
 
 # Configuration array
@@ -49,16 +49,6 @@ function registrobr_MetaData() {
 
 
 function registrobr_getConfigArray() {
-
-
-    
-    
-
-
-    
-
-    
-
 
     $results = localAPI('GetSupportDepartments', array());
     if (($results['result']=='success')&&($results['totalresults'] > 0)) {
@@ -98,6 +88,25 @@ function registrobr_getConfigArray() {
                          #"UT-NameServer1" => array( "Type" => "text", "Description" => "Domain name server #1 for unity testing"),
                          #"UT-NameServer2" => array( "Type" => "text", "Description" => "Domain name server #2 for unity testing"),
 		"HideAutoDNS" => array( "FriendlyName" => "Hide Registro.br Auto DNS", "Type" => "radio", "Options" => "No,Yes", "Description" => "Hide Registro.br default nameservers (*.auto.dns.br) from the nameserver fields in the client panel. Select 'No' to display them to clients.", "Default" => "No"),
+        'MonitorBalance' => [
+            'FriendlyName' => 'Monitorar Saldo (Dashboard)',
+            'Type' => 'yesno',
+            'Description' => 'Ativa os alertas de saldo via Poll e falhas de registro no Widget do painel',
+            'Default' => '',
+        ],
+        'PixCopiaCola' => [
+            'FriendlyName' => 'Código Pix Copia e Cola',
+            'Type' => 'textarea',
+            'Rows' => '3',
+            'Description' => 'Cole aqui o código Pix do Registro.br. Ele será exibido no Dashboard quando o saldo estiver baixo.',
+            'Default' => '',
+        ],
+        'PixQRCodeExternal' => [
+            'FriendlyName' => 'Gerar Imagem do QR Code (API Externa)',
+            'Type' => 'yesno',
+            'Description' => 'Marque para desenhar o QR Code na tela usando uma API externa. Se desmarcado (mais seguro), exibe apenas o botão "Copiar".',
+            'Default' => '',
+        ],
         "FriendlyName" => array("Type" => "System", "Value"=>"Registro.br"),
         "Description" => array("Type" => "System", "Value"=>"https://registro.br/tecnologia/provedor-hospedagem.html?secao=epp"),
 
@@ -626,15 +635,30 @@ function registrobr_RegisterDomain($params){
 
     try {
         $objRegistroEPPNewDomain->createDomain($Nameservers);
-
     }
     catch (Exception $e){
-        $values["error"] = $e->getMessage();
+        $errorMsg = $e->getMessage();
+        
+        // Injeção de Falha de Saldo: Intercepta o erro de falta de fundos no Registro.br
+        if (($params['MonitorBalance'] ?? '') === 'on' && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
+            \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
+                ['setting' => 'RegistrobrBalanceStatus'],
+                ['value' => 'EMPTY']
+            );
+        }
+        
+        $values["error"] = $errorMsg;
         return $values;
     }
     
-    
-    
+    // Auto-Healing: Se o domínio foi registrado com sucesso, zera a flag de erro no painel
+    if (($params['MonitorBalance'] ?? '') === 'on') {
+        \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
+            ['setting' => 'RegistrobrBalanceStatus'],
+            ['value' => 'OK']
+        );
+    }
+
     return array(
         'success' => true,
     );
@@ -679,10 +703,27 @@ function registrobr_RenewDomain($params){
 
     }
     catch (Exception $e){
-        $values["error"] = $e->getMessage();
+        $errorMsg = $e->getMessage();
+        
+        // Injeção de Falha de Saldo: Intercepta o erro de falta de fundos no Registro.br
+        if (($params['MonitorBalance'] ?? '') === 'on' && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
+            \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
+                ['setting' => 'RegistrobrBalanceStatus'],
+                ['value' => 'EMPTY']
+            );
+        }
+        
+        $values["error"] = $errorMsg;
         return $values;
     }
 
+    // Auto-Healing: Se a renovação ocorreu com sucesso, zera a flag de erro no painel
+    if (($params['MonitorBalance'] ?? '') === 'on') {
+        \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
+            ['setting' => 'RegistrobrBalanceStatus'],
+            ['value' => 'OK']
+        );
+    }
 
     return array(
         'success' => true,
