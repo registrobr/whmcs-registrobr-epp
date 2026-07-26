@@ -640,7 +640,7 @@ function registrobr_RegisterDomain($params){
         $errorMsg = $e->getMessage();
         
         // Injeção de Falha de Saldo: Intercepta o erro de falta de fundos no Registro.br
-        if (($params['MonitorBalance'] ?? '') === 'on' && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
+        if (in_array($params['MonitorBalance'] ?? '', ['on', 'Yes'], true) && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
             \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
                 ['setting' => 'RegistrobrBalanceStatus'],
                 ['value' => 'EMPTY']
@@ -652,7 +652,7 @@ function registrobr_RegisterDomain($params){
     }
     
     // Auto-Healing: Se o domínio foi registrado com sucesso, zera a flag de erro no painel
-    if (($params['MonitorBalance'] ?? '') === 'on') {
+    if (in_array($params['MonitorBalance'] ?? '', ['on', 'Yes'], true)) {
         \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
             ['setting' => 'RegistrobrBalanceStatus'],
             ['value' => 'OK']
@@ -706,7 +706,7 @@ function registrobr_RenewDomain($params){
         $errorMsg = $e->getMessage();
         
         // Injeção de Falha de Saldo: Intercepta o erro de falta de fundos no Registro.br
-        if (($params['MonitorBalance'] ?? '') === 'on' && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
+        if (in_array($params['MonitorBalance'] ?? '', ['on', 'Yes'], true) && (stripos($errorMsg, 'BILLING_FAILURE') !== false || stripos($errorMsg, 'Credito insuficiente') !== false)) {
             \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
                 ['setting' => 'RegistrobrBalanceStatus'],
                 ['value' => 'EMPTY']
@@ -718,7 +718,7 @@ function registrobr_RenewDomain($params){
     }
 
     // Auto-Healing: Se a renovação ocorreu com sucesso, zera a flag de erro no painel
-    if (($params['MonitorBalance'] ?? '') === 'on') {
+    if (in_array($params['MonitorBalance'] ?? '', ['on', 'Yes'], true)) {
         \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
             ['setting' => 'RegistrobrBalanceStatus'],
             ['value' => 'OK']

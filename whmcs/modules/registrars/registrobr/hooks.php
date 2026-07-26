@@ -77,7 +77,7 @@ add_hook('AfterCronJob', 1, function($vars) {
             $strCode = (string)$code;
             $monitorBalance = $moduleparams['MonitorBalance'] ?? '';
             
-            if ($monitorBalance === 'on' && in_array($strCode, ['300', '301', '302', '303'])) {
+            if (in_array($monitorBalance, ['on', 'Yes'], true) && in_array($strCode, ['300', '301', '302', '303'])) {
                 // 300 = Low Balance | 301, 302, 303 = Depósitos/Ajustes que restauram o saldo
                 $statusValue = ($strCode === '300') ? 'LOW' : 'OK';
                 \WHMCS\Database\Capsule::table('tblconfiguration')->updateOrInsert(
@@ -273,7 +273,7 @@ class registrobrModuleWidget extends \WHMCS\Module\AbstractWidget
         
         if (isset($data['monitor']) && $data['monitor']) {
             $html .= '<hr style="margin: 10px 0; border-color: #eee;">';
-            $state = (string)$data['balanceState'];
+            $state = (string)($data['balanceState'] ?? 'OK');
             $needsRefill = false;
             
             if (str_starts_with($state, 'EMPTY')) {
@@ -290,8 +290,8 @@ class registrobrModuleWidget extends \WHMCS\Module\AbstractWidget
             }
 
             // Lógica do PIX: Exibe se precisar de recarga E se o administrador configurou o código
-            if ($needsRefill && !empty($data['pixCode'])) {
-                $pixString = htmlspecialchars($data['pixCode'], ENT_QUOTES, 'UTF-8');
+            if ($needsRefill && !empty($data['pixCode'] ?? '')) {
+                $pixString = htmlspecialchars($data['pixCode'] ?? '', ENT_QUOTES, 'UTF-8');
                 
                 if (isset($data['pixQrExternal']) && $data['pixQrExternal']) {
                     // OPÇÃO 1: Renderização COM a Imagem (Via API Externa)
